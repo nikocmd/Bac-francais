@@ -3,26 +3,37 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(request: Request) {
-  const { transcription, texte, oeuvre, auteur, typeEpreuve, grammarQuestion, grammarAnswer } = await request.json();
+  const { explicationTranscription, oeuvreTranscription, texte, oeuvre, auteur, grammarQuestion, grammarAnswer } = await request.json();
 
-  if (!transcription?.trim()) {
+  if (!explicationTranscription?.trim()) {
     return Response.json({ error: "La transcription est requise." }, { status: 400 });
   }
 
-  const prompt = `Tu es un jury officiel du Baccalauréat de français. Tu évalues une prestation d'examen dans des conditions réelles.
+  const prompt = `Tu es un jury officiel du Baccalauréat de français (épreuve orale). Tu évalues une prestation dans des conditions réelles selon le barème OFFICIEL du BOEN.
 
-**Œuvre étudiée :** ${oeuvre || "non précisé"} — ${auteur || ""}
-**Type d'épreuve :** ${typeEpreuve || "Explication de texte linéaire"}
+BARÈME OFFICIEL DE L'ORAL DU BAC DE FRANÇAIS :
+- PARTIE 1 (12 points) :
+  → Lecture à voix haute : 2 points
+  → Explication linéaire du texte : 8 points
+  → Question de grammaire : 2 points
+- PARTIE 2 (8 points) :
+  → Présentation de l'œuvre choisie : 8 points (inclut l'entretien)
+- TOTAL : 20 points
+
 **Texte soumis à l'élève :**
 ${texte || "non fourni"}
+**Œuvre :** ${oeuvre || "non précisé"} — ${auteur || ""}
 
-**Prestation de l'élève (transcription) :**
-${transcription}
-${grammarQuestion ? `
-**Question de grammaire posée :** ${grammarQuestion}
+**PARTIE 1 — Explication linéaire (transcription de l'élève) :**
+${explicationTranscription}
+
+**Question de grammaire posée :** ${grammarQuestion || "Aucune question configurée"}
 **Réponse de l'élève :** ${grammarAnswer || "Pas de réponse fournie"}
-` : ""}
-Tu dois noter cette prestation avec la plus grande HONNÊTETÉ, comme le ferait un vrai jury de Bac. Ne sois ni trop clément ni trop sévère. Applique strictement les critères du BOEN.
+
+**PARTIE 2 — Présentation de l'œuvre (transcription de l'élève) :**
+${oeuvreTranscription || "L'élève n'a pas fait la partie 2"}
+
+Note avec la plus grande HONNÊTETÉ. Applique strictement le barème officiel.
 
 Réponds UNIQUEMENT avec un objet JSON valide (sans markdown) :
 {
@@ -32,37 +43,31 @@ Réponds UNIQUEMENT avec un objet JSON valide (sans markdown) :
   "encouragement": "<message d'encouragement personnalisé>",
   "criteres": [
     {
-      "nom": "Compréhension et analyse du texte",
+      "nom": "Lecture à voix haute",
+      "note": <0-2>,
+      "sur": 2,
+      "commentaire": "<évaluation de la qualité de lecture : fluidité, expressivité, articulation>"
+    },
+    {
+      "nom": "Explication linéaire",
       "note": <0-8>,
       "sur": 8,
-      "commentaire": "<commentaire précis>"
+      "commentaire": "<évaluation : compréhension, analyse des procédés, structure, interprétation>"
     },
-    {
-      "nom": "Qualité de la méthode (structure, procédés)",
-      "note": <0-6>,
-      "sur": 6,
-      "commentaire": "<commentaire précis>"
-    },
-    {
-      "nom": "Expression et clarté à l'oral",
-      "note": <0-3>,
-      "sur": 3,
-      "commentaire": "<commentaire précis>"
-    },
-    {
-      "nom": "Culture littéraire et ouverture",
-      "note": <0-3>,
-      "sur": 3,
-      "commentaire": "<commentaire précis>"
-    }${grammarQuestion ? `,
     {
       "nom": "Question de grammaire",
-      "note": <0-3>,
-      "sur": 3,
-      "commentaire": "<évaluation de la réponse à la question de grammaire>"
-    }` : ""}
+      "note": <0-2>,
+      "sur": 2,
+      "commentaire": "<évaluation de la réponse grammaticale>"
+    },
+    {
+      "nom": "Présentation de l'œuvre",
+      "note": <0-8>,
+      "sur": 8,
+      "commentaire": "<évaluation : connaissance de l'œuvre, argumentation, pertinence, qualité de l'expression>"
+    }
   ],
-  "points_essentiels_manquants": ["<point manquant 1>", "<point manquant 2>"],
+  "points_essentiels_manquants": ["<point manquant 1>", "<point manquant 2>", "<point manquant 3>"],
   "reussites": ["<réussite 1>", "<réussite 2>"]
 }`;
 
