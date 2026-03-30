@@ -25,7 +25,8 @@ Réponds de manière pédagogique, claire et adaptée au niveau lycée. Structur
 
 Si l'élève demande des questions d'entraînement, fournis-en 5 de difficulté croissante avec les éléments de réponse attendus.
 
-Réponds en français, avec un ton bienveillant et encourageant.`;
+Réponds en français, avec un ton bienveillant et encourageant.
+IMPORTANT : N'utilise AUCUN formatage markdown (pas de **, pas de *, pas de #, pas de tirets de liste). Écris en texte brut uniquement, avec des sauts de ligne pour structurer.`;
 
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
