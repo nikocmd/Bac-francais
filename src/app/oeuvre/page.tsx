@@ -1,12 +1,46 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { Library, Loader2, Send, Bot, User, Sparkles } from "lucide-react";
+import { Library, Loader2, Send, Bot, User, Sparkles, Search, X } from "lucide-react";
 import { addXP } from "@/lib/gamification";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
 }
+
+const OEUVRES_PROGRAMME = [
+  { titre: "Les Fleurs du mal", auteur: "Charles Baudelaire", parcours: "Alchimie poétique : la boue et l'or" },
+  { titre: "Les Contemplations", auteur: "Victor Hugo", parcours: "Les Mémoires d'une âme" },
+  { titre: "Alcools", auteur: "Guillaume Apollinaire", parcours: "Modernité poétique ?" },
+  { titre: "Mes forêts", auteur: "Hélène Dorion", parcours: "La poésie, la nature, l'intime" },
+  { titre: "La Rage de l'expression", auteur: "Francis Ponge", parcours: "Dans l'atelier du poète" },
+  { titre: "Cahier d'un retour au pays natal", auteur: "Aimé Césaire", parcours: "La poésie, la nature, l'intime" },
+  { titre: "Les Caractères", auteur: "Jean de La Bruyère", parcours: "La comédie sociale" },
+  { titre: "La Déclaration des droits de la femme et de la citoyenne", auteur: "Olympe de Gouges", parcours: "Écrire et combattre pour l'égalité" },
+  { titre: "Déclaration des droits de la femme et de la citoyenne", auteur: "Olympe de Gouges", parcours: "Écrire et combattre pour l'égalité" },
+  { titre: "Manon Lescaut", auteur: "Abbé Prévost", parcours: "Personnages en marge, plaisirs du romanesque" },
+  { titre: "La Peau de chagrin", auteur: "Honoré de Balzac", parcours: "Les romans de l'énergie : création et destruction" },
+  { titre: "Sido suivi de Les Vrilles de la vigne", auteur: "Colette", parcours: "La célébration du monde" },
+  { titre: "Mémoires d'Hadrien", auteur: "Marguerite Yourcenar", parcours: "Soi-même comme un autre" },
+  { titre: "Le Malade imaginaire", auteur: "Molière", parcours: "Spectacle et comédie" },
+  { titre: "Les Fausses Confidences", auteur: "Marivaux", parcours: "Théâtre et stratagème" },
+  { titre: "Le Barbier de Séville", auteur: "Beaumarchais", parcours: "Théâtre et stratagème" },
+  { titre: "Oh les beaux jours", auteur: "Samuel Beckett", parcours: "Un théâtre de la condition humaine" },
+  { titre: "Juste la fin du monde", auteur: "Jean-Luc Lagarce", parcours: "Crise personnelle, crise familiale" },
+  { titre: "Gargantua", auteur: "François Rabelais", parcours: "Rire et savoir" },
+  { titre: "Essais (Des Cannibales / Des Coches)", auteur: "Michel de Montaigne", parcours: "Notre monde vient d'en trouver un autre" },
+  { titre: "Lettres persanes", auteur: "Montesquieu", parcours: "Le regard éloigné" },
+  { titre: "Le Rouge et le Noir", auteur: "Stendhal", parcours: "Le personnage de roman, esthétiques et valeurs" },
+  { titre: "Madame Bovary", auteur: "Gustave Flaubert", parcours: "Le personnage de roman, esthétiques et valeurs" },
+  { titre: "Les Misérables", auteur: "Victor Hugo", parcours: "Le personnage de roman, esthétiques et valeurs" },
+  { titre: "Le Mariage de Figaro", auteur: "Beaumarchais", parcours: "La comédie du valet" },
+  { titre: "On ne badine pas avec l'amour", auteur: "Alfred de Musset", parcours: "Les jeux du cœur et de la parole" },
+  { titre: "Phèdre", auteur: "Jean Racine", parcours: "Passion et tragédie" },
+  { titre: "Hernani", auteur: "Victor Hugo", parcours: "La bataille d'Hernani" },
+  { titre: "Candide", auteur: "Voltaire", parcours: "Le conte philosophique" },
+  { titre: "L'Ingénu", auteur: "Voltaire", parcours: "Le conte philosophique" },
+  { titre: "Les Châtiments", auteur: "Victor Hugo", parcours: "La poésie engagée" },
+];
 
 const SUGGESTIONS = [
   "Quels sont les thèmes principaux de cette œuvre ?",
@@ -19,12 +53,34 @@ const SUGGESTIONS = [
 export default function OeuvrePage() {
   const [oeuvre, setOeuvre] = useState("");
   const [auteur, setAuteur] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const [userId, setUserId] = useState<string | undefined>(undefined);
+
+  const oeuvreSelected = oeuvre.trim().length > 0;
+
+  const filteredOeuvres = searchQuery.trim()
+    ? OEUVRES_PROGRAMME.filter(o =>
+        o.titre.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        o.auteur.toLowerCase().includes(searchQuery.toLowerCase())
+      ).slice(0, 8)
+    : OEUVRES_PROGRAMME.slice(0, 8);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -81,35 +137,72 @@ export default function OeuvrePage() {
       </div>
 
       {/* Œuvre config */}
-      <div className="flex-shrink-0 bg-[#12121a] rounded-2xl border border-[#1e1e2e] p-4">
-        <div className="grid md:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-[#9ca3af]">Titre de l&apos;œuvre</label>
-            <input
-              className="w-full bg-[#0a0a0f] border border-[#2a2a3e] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 transition-colors"
-              placeholder="ex: Les Misérables"
-              value={oeuvre}
-              onChange={e => setOeuvre(e.target.value)}
-            />
+      <div className="flex-shrink-0 bg-[#12121a] rounded-2xl border border-[#1e1e2e] p-4 space-y-3">
+        {!oeuvreSelected ? (
+          <div ref={dropdownRef} className="relative">
+            <label className="text-sm font-medium text-emerald-400 mb-2 block">Choisis ton œuvre au programme</label>
+            <div className="relative">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7280]" />
+              <input
+                className="w-full bg-[#0a0a0f] border border-[#2a2a3e] rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+                placeholder="Recherche une œuvre ou un auteur..."
+                value={searchQuery}
+                onChange={e => { setSearchQuery(e.target.value); setShowDropdown(true); }}
+                onFocus={() => setShowDropdown(true)}
+              />
+            </div>
+            {showDropdown && (
+              <div className="absolute z-20 mt-1 w-full bg-[#12121a] border border-[#2a2a3e] rounded-xl shadow-xl max-h-[280px] overflow-y-auto">
+                {filteredOeuvres.map((o, i) => (
+                  <button key={i} onClick={() => { setOeuvre(o.titre); setAuteur(o.auteur); setSearchQuery(""); setShowDropdown(false); }}
+                    className="w-full text-left px-4 py-3 hover:bg-emerald-500/10 transition-colors border-b border-[#1e1e2e] last:border-0">
+                    <p className="text-sm text-white font-medium">{o.titre}</p>
+                    <p className="text-xs text-[#9ca3af]">{o.auteur} · <span className="text-emerald-400/70">{o.parcours}</span></p>
+                  </button>
+                ))}
+                {filteredOeuvres.length === 0 && (
+                  <div className="px-4 py-3 space-y-2">
+                    <p className="text-sm text-[#6b7280]">Aucun résultat</p>
+                    <button onClick={() => { setShowDropdown(false); }}
+                      className="text-xs text-emerald-400 hover:underline">Saisir manuellement</button>
+                  </div>
+                )}
+              </div>
+            )}
+            <p className="text-xs text-[#6b7280] mt-2">Ou entre le titre manuellement :</p>
+            <div className="grid md:grid-cols-2 gap-3 mt-2">
+              <input className="w-full bg-[#0a0a0f] border border-[#2a2a3e] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+                placeholder="Titre de l'œuvre" value={oeuvre} onChange={e => setOeuvre(e.target.value)} />
+              <input className="w-full bg-[#0a0a0f] border border-[#2a2a3e] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+                placeholder="Auteur" value={auteur} onChange={e => setAuteur(e.target.value)} />
+            </div>
           </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-[#9ca3af]">Auteur</label>
-            <input
-              className="w-full bg-[#0a0a0f] border border-[#2a2a3e] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 transition-colors"
-              placeholder="ex: Victor Hugo"
-              value={auteur}
-              onChange={e => setAuteur(e.target.value)}
-            />
+        ) : (
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-white font-bold">{oeuvre}</p>
+              <p className="text-sm text-[#9ca3af]">{auteur}</p>
+            </div>
+            <button onClick={() => { setOeuvre(""); setAuteur(""); setMessages([]); }}
+              className="p-2 rounded-lg hover:bg-[#2a2a3e] transition-colors text-[#6b7280] hover:text-white">
+              <X size={16} />
+            </button>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Chat */}
       <div className="flex-1 overflow-y-auto space-y-4 min-h-0">
-        {messages.length === 0 && (
+        {!oeuvreSelected && messages.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-12 text-center space-y-3">
+            <Library size={40} className="text-[#2a2a3e]" />
+            <p className="text-[#6b7280] text-sm">Sélectionne ton œuvre ci-dessus pour commencer</p>
+          </div>
+        )}
+        {oeuvreSelected && messages.length === 0 && (
           <div className="space-y-4">
             <p className="text-center text-[#6b7280] text-sm py-4">
-              Commence par renseigner ton œuvre, puis pose ta première question 👆
+              Pose ta première question sur <span className="text-emerald-400 font-medium">{oeuvre}</span>
             </p>
             <div className="grid md:grid-cols-2 gap-2">
               {SUGGESTIONS.map(s => (
@@ -169,15 +262,16 @@ export default function OeuvrePage() {
         {error && <p className="text-red-400 text-sm mb-2">{error}</p>}
         <div className="flex gap-3">
           <input
-            className="flex-1 bg-[#12121a] border border-[#1e1e2e] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 transition-colors"
-            placeholder="Pose ta question sur l'œuvre..."
+            className="flex-1 bg-[#12121a] border border-[#1e1e2e] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            placeholder={oeuvreSelected ? "Pose ta question sur l'œuvre..." : "Sélectionne d'abord une œuvre ci-dessus"}
             value={input}
             onChange={e => setInput(e.target.value)}
-            onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(input); } }}
+            onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey && oeuvreSelected) { e.preventDefault(); sendMessage(input); } }}
+            disabled={!oeuvreSelected}
           />
           <button
             onClick={() => sendMessage(input)}
-            disabled={loading || !input.trim()}
+            disabled={loading || !input.trim() || !oeuvreSelected}
             className="px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-all"
           >
             <Send size={16} />
