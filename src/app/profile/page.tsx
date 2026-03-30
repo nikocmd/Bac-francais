@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { Loader2, Camera, Save, LogOut, User, Mail, PenLine, Plus, Trash2 } from "lucide-react";
 import { getRankInfo, loadHunter } from "@/lib/gamification";
@@ -23,8 +22,9 @@ export default function ProfilePage() {
   const hunter = typeof window !== "undefined" ? loadHunter() : null;
 
   useEffect(() => {
-    const supabase = createClient();
     async function load() {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
       setUser({ id: user.id, email: user.email ?? "" });
@@ -57,6 +57,7 @@ export default function ProfilePage() {
 
   async function handleSave() {
     if (!user) return;
+    const { createClient } = await import("@/lib/supabase/client");
     const supabase = createClient();
     setSaving(true);
     setError("");
@@ -89,6 +90,7 @@ export default function ProfilePage() {
   }
 
   async function handleLogout() {
+    const { createClient } = await import("@/lib/supabase/client");
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/login");
