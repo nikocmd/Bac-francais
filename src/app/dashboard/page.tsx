@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { BookOpen, Mic, Library, GraduationCap, PenLine, ChevronRight } from "lucide-react";
 import {
   loadHunter, loadHunterFromDB, getRankInfo, getTodayQuestStatus,
-  DAILY_QUESTS, type HunterData,
+  DAILY_QUESTS, RANKS, type HunterData,
 } from "@/lib/gamification";
 
 /* ── Rank badge ─────────────────────────────────────────────────────── */
@@ -107,7 +108,7 @@ function QuestCard({ quest, done, onClick }: {
         <span className="text-xs font-mono text-[#00d9ff] font-bold">+{quest.xp} XP</span>
       </div>
       <div className="flex items-center justify-between">
-        <span className="text-xs text-[#a0b0d0]">Récompense : +10 {{ INT: "ACT", CHA: "ELQ", WIS: "ERDT", STR: "RIG", LCK: "DST" }[quest.stat]}</span>
+        <span className="text-xs text-[#a0b0d0]">Récompense : +10 {{ INT: "Acuité", CHA: "Éloquence", WIS: "Érudition", STR: "Rigueur", LCK: "Destin" }[quest.stat]}</span>
         {!done && (
           <Link href={hrefs[quest.id]} onClick={onClick}
             className="flex items-center gap-1 text-xs text-[#1a9fff] hover:text-[#00d9ff] font-bold transition-colors">
@@ -124,6 +125,8 @@ export default function Dashboard() {
   const [hunter, setHunter] = useState<HunterData | null>(null);
   const [notif, setNotif] = useState<string | null>(null);
   const [showLevelUp, setShowLevelUp] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [username, setUsername] = useState<string>("");
 
   useEffect(() => {
     setHunter(loadHunter());
@@ -133,8 +136,13 @@ export default function Dashboard() {
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          const h = await loadHunterFromDB(user.id);
+          const [h, { data: profile }] = await Promise.all([
+            loadHunterFromDB(user.id),
+            supabase.from("profiles").select("avatar_url, username").eq("id", user.id).single(),
+          ]);
           setHunter(h);
+          if (profile?.avatar_url) setAvatarUrl(profile.avatar_url);
+          if (profile?.username) setUsername(profile.username);
         }
       } catch { /* garde les données locales */ }
     }
@@ -197,8 +205,12 @@ export default function Dashboard() {
             <div className="relative">
               <div className={`w-20 h-20 rounded-full bg-gradient-to-br from-[#0a1543] to-[#19327f]
                 flex items-center justify-center border-2 ${RANK_STYLES[hunter.rank]}
-                shadow-[0_0_30px_rgba(26,159,255,0.4)]`}>
-                <PenLine size={36} className="text-[#1a9fff]" />
+                shadow-[0_0_30px_rgba(26,159,255,0.4)] overflow-hidden`}>
+                {avatarUrl ? (
+                  <Image src={avatarUrl} alt="Avatar" width={80} height={80} className="w-full h-full object-cover" />
+                ) : (
+                  <PenLine size={36} className="text-[#1a9fff]" />
+                )}
               </div>
               <div className={`absolute -bottom-2 -right-2 w-8 h-8 rounded border-2 flex items-center
                 justify-center text-sm font-black ${RANK_BG[hunter.rank]} ${RANK_STYLES[hunter.rank]}`}>
@@ -316,11 +328,13 @@ export default function Dashboard() {
             ✦ Progression des Rangs
           </p>
           <div className="flex items-center gap-3 overflow-x-auto pb-2">
-            {["E","D","C","B","A","S"].map((r) => {
-              const isCurrentOrPast = ["E","D","C","B","A","S"].indexOf(r) <= ["E","D","C","B","A","S"].indexOf(hunter.rank);
+            {RANKS.map((rankInfo) => {
+              const r = rankInfo.rank;
+              const allRanks = ["E","D","C","B","A","S"];
+              const isCurrentOrPast = allRanks.indexOf(r) <= allRanks.indexOf(hunter.rank);
               const isCurrent = r === hunter.rank;
               return (
-                <div key={r} className="flex flex-col items-center gap-1.5 flex-shrink-0">
+                <div key={r} className="flex flex-col items-center gap-1.5 flex-shrink-0 min-w-[70px]">
                   <div className={`w-12 h-12 rounded-xl border-2 flex items-center justify-center
                     font-black text-lg transition-all
                     ${isCurrent
@@ -331,16 +345,19 @@ export default function Dashboard() {
                     }`}>
                     {r}
                   </div>
-                  <span className={`text-[8px] font-bold tracking-widest ${isCurrent ? "text-[#00d9ff] animate-pulse" : "invisible"}`}>
-                    ACTUEL
+                  <span className={`text-[9px] font-bold tracking-wider text-center leading-tight ${
+                    isCurrent ? "text-[#00d9ff]" : isCurrentOrPast ? "text-[#a0b0d0]/70" : "text-[#2a3a6e]"
+                  }`}>
+                    {rankInfo.title.split(" ").slice(-1)[0]}
                   </span>
+                  {isCurrent && <span className="text-[7px] font-bold tracking-widest text-[#FFD700] animate-pulse">ACTUEL</span>}
                 </div>
               );
             })}
             <div className="ml-4 flex-1 min-w-[150px]">
               <p className="text-xs text-[#a0b0d0]">
                 {hunter.rank === "S"
-                  ? "Rang maximum atteint — Tu es un Monarque !"
+                  ? "Rang maximum atteint — Tu es un Génie Littéraire !"
                   : `Prochain rang dans ${hunter.xpToNext - hunter.xp} XP`}
               </p>
             </div>
