@@ -25,13 +25,19 @@ export default function Navbar() {
 
   useEffect(() => {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    if (!supabaseUrl || supabaseUrl === "METS_TON_URL_ICI") return;
+    if (!supabaseUrl || supabaseUrl === "METS_TON_URL_ICI") { setAuthReady(true); return; }
     let sub: { unsubscribe: () => void } | null = null;
+    let firstLoad = true;
     import("@/lib/supabase/client").then(({ createClient }) => {
       const supabase = createClient();
       async function load() {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) { setProfile(null); setUserId(null); setAuthReady(true); return; }
+        if (!user) {
+          setProfile(null);
+          setUserId(null);
+          setAuthReady(true);
+          return;
+        }
         setUserId(user.id);
         const { data } = await supabase.from("profiles").select("username, avatar_url").eq("id", user.id).single();
         if (data) setProfile(data);
@@ -39,7 +45,10 @@ export default function Navbar() {
         setAuthReady(true);
       }
       load();
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(() => load());
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event) => {
+        if (firstLoad) { firstLoad = false; return; }
+        load();
+      });
       sub = subscription;
     });
     return () => sub?.unsubscribe();
