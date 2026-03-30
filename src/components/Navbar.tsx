@@ -69,7 +69,7 @@ export default function Navbar() {
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 font-bold text-lg">
-          <span className="text-2xl">📚</span>
+          <img src="/logo.svg" alt="logo" className="w-7 h-7" />
           <span className="gradient-text">BacFrançais.ai</span>
         </Link>
 

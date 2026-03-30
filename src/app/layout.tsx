@@ -9,6 +9,11 @@ export const metadata: Metadata = {
   title: "BacFrançais.ai — Réussis ton Bac de Français",
   description:
     "Analyses linéaires, préparation à l'oral, œuvre personnelle et mode examen avec IA.",
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({

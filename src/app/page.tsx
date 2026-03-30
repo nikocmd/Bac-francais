@@ -1,151 +1,187 @@
 import Link from "next/link";
-import { BookOpen, Mic, Library, GraduationCap, ArrowRight, Sparkles, CheckCircle } from "lucide-react";
-
-const features = [
-  {
-    href: "/analyse",
-    icon: BookOpen,
-    color: "from-violet-600 to-purple-600",
-    bg: "bg-violet-500/10 border-violet-500/20",
-    title: "Analyse linéaire",
-    desc: "Colle ton texte, obtiens une analyse structurée en mouvements avec procédés stylistiques, effets et citations — prête pour l'oral.",
-    badge: "Texte → Analyse complète",
-  },
-  {
-    href: "/oral",
-    icon: Mic,
-    color: "from-blue-600 to-cyan-600",
-    bg: "bg-blue-500/10 border-blue-500/20",
-    title: "Accompagnement oral",
-    desc: "Entraîne-toi à voix haute. L'IA transcrit, analyse ta prestation et te donne un feedback précis sur le fond et la forme.",
-    badge: "Parle → Feedback instantané",
-  },
-  {
-    href: "/oeuvre",
-    icon: Library,
-    color: "from-emerald-600 to-teal-600",
-    bg: "bg-emerald-500/10 border-emerald-500/20",
-    title: "Œuvre personnelle",
-    desc: "Travaille ton œuvre au programme : résumé, thèmes, personnages, questions d'entretien. L'IA t'accompagne chapitre par chapitre.",
-    badge: "Questions → Réponses guidées",
-  },
-  {
-    href: "/examen",
-    icon: GraduationCap,
-    color: "from-amber-600 to-orange-600",
-    bg: "bg-amber-500/10 border-amber-500/20",
-    title: "Mode examen",
-    desc: "Simule les conditions réelles du Bac. L'IA joue le jury, écoute ta présentation et te note selon les vrais critères officiels.",
-    badge: "Simulation jury officielle",
-  },
-];
-
-const stats = [
-  { value: "20 min", label: "durée moyenne d'une analyse" },
-  { value: "/20", label: "notation officielle bac" },
-  { value: "100%", label: "basé sur les critères BOEN" },
-];
-
-const benefits = [
-  "Analyses rédigées selon la méthode officielle",
-  "Notation honnête basée sur les critères du Bac",
-  "Feedback personnalisé sur ta prestation orale",
-  "Préparation aux questions du jury d'entretien",
-];
+import { BookOpen, Mic, Library, GraduationCap, ArrowRight, CheckCircle, Crown, Zap, Lock } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="max-w-6xl mx-auto px-4 py-12 space-y-20">
-      {/* Hero */}
-      <section className="text-center space-y-6 py-8">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-300 text-sm font-medium">
-          <Sparkles size={14} />
-          Propulsé par Claude IA — le meilleur modèle pour le français
+    <div className="max-w-5xl mx-auto px-4 space-y-0">
+
+      {/* ── HERO ── */}
+      <section className="py-20 text-center space-y-6">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FFD700]/10 border border-[#FFD700]/30 text-[#FFD700] text-xs font-bold uppercase tracking-widest">
+          <Zap size={12} /> 1 essai gratuit · Premium à 9.99€/mois
         </div>
-        <h1 className="text-4xl md:text-6xl font-bold leading-tight">
-          Réussis ton{" "}
-          <span className="gradient-text">Bac de Français</span>
-          <br />avec l&apos;IA
+
+        <h1 className="text-5xl md:text-7xl font-black leading-tight tracking-tight">
+          Décroche ta mention<br />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1a9fff] to-[#a78bfa]">au Bac de Français</span>
         </h1>
-        <p className="text-lg md:text-xl text-[#9ca3af] max-w-2xl mx-auto leading-relaxed">
-          Analyses linéaires complètes, simulation d&apos;oral avec jury IA, accompagnement sur ton œuvre personnelle.
-          Tout ce qu&apos;il te faut pour décrocher une mention.
+
+        <p className="text-lg text-[#9ca3af] max-w-xl mx-auto">
+          L&apos;IA qui analyse tes textes, simule le jury et t&apos;entraîne à l&apos;oral — basée sur les vrais critères BOEN.
         </p>
-        <div className="flex flex-wrap justify-center gap-4">
-          <Link
-            href="/analyse"
-            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold transition-all shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40"
-          >
-            Commencer gratuitement <ArrowRight size={16} />
+
+        <div className="flex flex-wrap justify-center gap-4 pt-2">
+          <Link href="/register"
+            className="flex items-center gap-2 px-8 py-4 rounded-xl bg-[#FFD700] hover:bg-[#ffe44d] text-[#050a2e] font-black text-sm uppercase tracking-widest transition-all shadow-[0_0_30px_rgba(255,215,0,0.35)]">
+            Essayer gratuitement <ArrowRight size={16} />
           </Link>
-          <Link
-            href="/examen"
-            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#1a1a27] hover:bg-[#1e1e2e] text-[#e8e8f0] font-semibold border border-[#2a2a3e] transition-all"
-          >
-            <GraduationCap size={16} />
-            Simuler l&apos;examen
+          <Link href="/premium"
+            className="flex items-center gap-2 px-8 py-4 rounded-xl bg-[#0a1543] border border-[#19327f] text-[#a0b0d0] font-bold text-sm hover:border-[#1a9fff]/50 hover:text-white transition-all">
+            <Crown size={16} className="text-[#FFD700]" /> Voir Premium
           </Link>
         </div>
-        <div className="flex flex-wrap justify-center gap-8 pt-4">
-          {stats.map((s) => (
-            <div key={s.label} className="text-center">
-              <div className="text-2xl font-bold text-violet-400">{s.value}</div>
-              <div className="text-sm text-[#6b7280]">{s.label}</div>
-            </div>
-          ))}
-        </div>
+
+        <p className="text-xs text-[#4a5568]">
+          1 utilisation offerte sans carte bancaire · Ensuite 9.99€/mois
+        </p>
       </section>
 
-      {/* Features grid */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-bold text-center">4 outils pour tout préparer</h2>
-        <div className="grid md:grid-cols-2 gap-5">
-          {features.map(({ href, icon: Icon, color, bg, title, desc, badge }) => (
-            <Link
-              key={href}
-              href={href}
-              className={`group p-6 rounded-2xl border ${bg} hover:scale-[1.01] transition-all duration-200 block`}
-            >
+      {/* ── URGENCE / LIMITE ── */}
+      <section className="bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-2xl px-6 py-5 flex items-center gap-4">
+        <Lock size={24} className="text-red-400 flex-shrink-0" />
+        <div>
+          <p className="text-white font-black text-sm">Accès limité — 1 seule utilisation gratuite</p>
+          <p className="text-[#9ca3af] text-xs mt-0.5">
+            Le Bac approche. Chaque analyse compte. Ne gâche pas ton essai gratuit sur n&apos;importe quoi.
+          </p>
+        </div>
+        <Link href="/analyse"
+          className="ml-auto flex-shrink-0 px-4 py-2 rounded-lg bg-red-500/20 border border-red-500/30 text-red-300 font-bold text-xs hover:bg-red-500/30 transition-all whitespace-nowrap">
+          Utiliser maintenant
+        </Link>
+      </section>
+
+      {/* ── FEATURES ── */}
+      <section className="py-16 space-y-8">
+        <div className="text-center space-y-2">
+          <h2 className="text-3xl font-black text-white">4 outils. 1 seul objectif.</h2>
+          <p className="text-[#6b7280] text-sm">Tout ce qu&apos;il te faut pour l&apos;oral du Bac de Français</p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          {[
+            {
+              href: "/analyse",
+              icon: BookOpen,
+              color: "#a78bfa",
+              bg: "border-violet-500/20 hover:border-violet-500/40",
+              title: "Analyse linéaire",
+              desc: "Colle ton texte → analyse complète en mouvements, procédés stylistiques et citations. Prête pour l'oral en 30 secondes.",
+              tag: "Le plus utilisé",
+              tagColor: "bg-violet-500/20 text-violet-300",
+            },
+            {
+              href: "/examen",
+              icon: GraduationCap,
+              color: "#fbbf24",
+              bg: "border-amber-500/20 hover:border-amber-500/40",
+              title: "Mode examen",
+              desc: "Simule les conditions réelles du Bac. L'IA joue le jury et te note selon le barème BOEN officiel.",
+              tag: "Barème BOEN",
+              tagColor: "bg-amber-500/20 text-amber-300",
+            },
+            {
+              href: "/oral",
+              icon: Mic,
+              color: "#38bdf8",
+              bg: "border-cyan-500/20 hover:border-cyan-500/40",
+              title: "Accompagnement oral",
+              desc: "Entraîne-toi à voix haute. L'IA transcrit et te donne un feedback précis sur le fond et la forme.",
+              tag: "Feedback instantané",
+              tagColor: "bg-cyan-500/20 text-cyan-300",
+            },
+            {
+              href: "/oeuvre",
+              icon: Library,
+              color: "#34d399",
+              bg: "border-emerald-500/20 hover:border-emerald-500/40",
+              title: "Œuvre personnelle",
+              desc: "Résumés, thèmes, personnages, questions d'entretien — l'IA t'accompagne sur ton œuvre au programme.",
+              tag: "Entretien jury",
+              tagColor: "bg-emerald-500/20 text-emerald-300",
+            },
+          ].map(({ href, icon: Icon, color, bg, title, desc, tag, tagColor }) => (
+            <Link key={href} href={href}
+              className={`group p-6 rounded-2xl bg-[#0a1543]/60 border ${bg} transition-all duration-200 block hover:bg-[#0a1543]/80`}>
               <div className="flex items-start justify-between mb-4">
-                <div className={`p-3 rounded-xl bg-gradient-to-br ${color} shadow-lg`}>
-                  <Icon size={22} className="text-white" />
+                <div className="p-3 rounded-xl" style={{ background: `${color}18` }}>
+                  <Icon size={22} style={{ color }} />
                 </div>
-                <span className="text-xs font-medium text-[#6b7280] bg-[#1a1a27] px-3 py-1 rounded-full border border-[#2a2a3e]">
-                  {badge}
-                </span>
+                <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${tagColor}`}>{tag}</span>
               </div>
-              <h3 className="text-lg font-bold mb-2 group-hover:text-violet-300 transition-colors">
-                {title}
-              </h3>
-              <p className="text-[#9ca3af] text-sm leading-relaxed">{desc}</p>
-              <div className="mt-4 flex items-center gap-1 text-violet-400 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                Accéder <ArrowRight size={14} />
-              </div>
+              <h3 className="text-base font-black text-white mb-2 group-hover:text-[#00d9ff] transition-colors">{title}</h3>
+              <p className="text-[#6b7280] text-sm leading-relaxed">{desc}</p>
             </Link>
           ))}
         </div>
       </section>
 
-      {/* Benefits */}
-      <section className="rounded-2xl bg-[#12121a] border border-[#1e1e2e] p-8 space-y-6">
-        <h2 className="text-2xl font-bold">Pourquoi BacFrançais.ai ?</h2>
-        <div className="grid md:grid-cols-2 gap-3">
-          {benefits.map((b) => (
-            <div key={b} className="flex items-start gap-3">
-              <CheckCircle size={18} className="text-emerald-400 mt-0.5 flex-shrink-0" />
-              <span className="text-[#c9c9d4]">{b}</span>
-            </div>
-          ))}
+      {/* ── PRICING ── */}
+      <section className="py-8 pb-20 space-y-8">
+        <div className="text-center space-y-2">
+          <h2 className="text-3xl font-black text-white">Simple et transparent</h2>
+          <p className="text-[#6b7280] text-sm">Pas d&apos;abonnement caché. Annulable à tout moment.</p>
         </div>
-        <div className="pt-2">
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold transition-all text-sm"
-          >
-            Voir mon tableau de bord <ArrowRight size={14} />
-          </Link>
+
+        <div className="grid md:grid-cols-2 gap-5 max-w-3xl mx-auto">
+          {/* Free */}
+          <div className="bg-[#0a1543]/60 border border-[#19327f]/60 rounded-2xl p-7 space-y-5">
+            <div>
+              <p className="text-[#6b7280] text-xs font-bold uppercase tracking-widest mb-2">Gratuit</p>
+              <p className="text-4xl font-black text-white">0€</p>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-sm text-[#a0b0d0]">
+                <CheckCircle size={14} className="text-[#FFD700]" />
+                1 utilisation IA offerte
+              </div>
+              {["Analyses illimitées", "Oral illimité", "Mode examen", "Aide œuvre"].map(f => (
+                <div key={f} className="flex items-center gap-2 text-sm text-[#2a3a6e]">
+                  <Lock size={13} />
+                  <span className="line-through">{f}</span>
+                </div>
+              ))}
+            </div>
+            <Link href="/register"
+              className="block text-center py-3 rounded-xl border border-[#19327f] text-[#6b7280] font-bold text-sm hover:border-[#1a9fff]/40 hover:text-white transition-all">
+              Commencer
+            </Link>
+          </div>
+
+          {/* Premium */}
+          <div className="bg-gradient-to-b from-[#FFD700]/8 to-[#0a1543]/80 border-2 border-[#FFD700]/50 rounded-2xl p-7 space-y-5 relative shadow-[0_0_40px_rgba(255,215,0,0.12)]">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-[#FFD700] text-[#050a2e] text-xs font-black uppercase tracking-widest whitespace-nowrap">
+              👑 Recommandé
+            </div>
+            <div>
+              <p className="text-[#FFD700] text-xs font-bold uppercase tracking-widest mb-2">Premium</p>
+              <div className="flex items-baseline gap-1">
+                <p className="text-4xl font-black text-white">9.99€</p>
+                <p className="text-[#6b7280] text-sm">/mois</p>
+              </div>
+            </div>
+            <div className="space-y-3">
+              {[
+                "Analyses linéaires illimitées",
+                "Feedback oral illimité",
+                "Mode examen sans limite",
+                "Aide œuvre 24h/24",
+                "Nouvelles features en avant-première",
+              ].map(f => (
+                <div key={f} className="flex items-center gap-2 text-sm text-[#e8e8f0]">
+                  <CheckCircle size={14} className="text-[#FFD700] flex-shrink-0" />
+                  {f}
+                </div>
+              ))}
+            </div>
+            <Link href="/premium"
+              className="block text-center py-3 rounded-xl bg-[#FFD700] hover:bg-[#ffe44d] text-[#050a2e] font-black text-sm uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(255,215,0,0.3)]">
+              Passer Premium
+            </Link>
+          </div>
         </div>
       </section>
+
     </div>
   );
 }
