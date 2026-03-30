@@ -21,6 +21,7 @@ export default function Navbar() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -30,11 +31,12 @@ export default function Navbar() {
       const supabase = createClient();
       async function load() {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) { setProfile(null); setUserId(null); return; }
+        if (!user) { setProfile(null); setUserId(null); setAuthReady(true); return; }
         setUserId(user.id);
         const { data } = await supabase.from("profiles").select("username, avatar_url").eq("id", user.id).single();
         if (data) setProfile(data);
         else setProfile({ username: user.user_metadata?.username ?? "Élève", avatar_url: "" });
+        setAuthReady(true);
       }
       load();
       const { data: { subscription } } = supabase.auth.onAuthStateChange(() => load());
@@ -90,7 +92,9 @@ export default function Navbar() {
 
         {/* User avatar */}
         <div className="relative">
-          {userId ? (
+          {!authReady ? (
+            <div className="w-8 h-8 rounded-full bg-[#0a1543] border border-[#19327f]/40 animate-pulse" />
+          ) : userId ? (
             <>
               <button onClick={() => setMenuOpen(!menuOpen)}
                 className="flex items-center gap-2 px-2 py-1.5 rounded-xl border border-[#19327f]/60

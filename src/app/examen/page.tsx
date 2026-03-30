@@ -165,8 +165,13 @@ export default function ExamenPage() {
   const pressure = PRESSURE_COLORS(timer);
 
   if (loading) return (
-    <div className="min-h-screen bg-[#050510] flex items-center justify-center">
-      <Loader2 size={28} className="text-[#1a9fff] animate-spin" />
+    <div className="min-h-screen bg-[#050510] flex items-center justify-center px-4">
+      <div className="text-center space-y-4">
+        <div className="text-5xl animate-pulse">⚖️</div>
+        <p className="text-[#1a9fff] font-black tracking-widest uppercase text-sm animate-pulse">
+          Préparation de la salle d&apos;examen...
+        </p>
+      </div>
     </div>
   );
 

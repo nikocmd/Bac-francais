@@ -95,16 +95,25 @@ export default function MesTextesPage() {
           <Loader2 size={28} className="text-[#1a9fff] animate-spin" />
         </div>
       ) : count === 0 ? (
-        <div className="text-center py-20 space-y-4">
-          <div className="text-5xl">📄</div>
-          <p className="text-white font-bold">Aucun texte enregistré</p>
-          <p className="text-[#6b7280] text-sm">
-            Fais une analyse linéaire — le texte sera sauvegardé automatiquement ici.
-          </p>
+        <div className="text-center py-20 space-y-6">
+          <div className="text-6xl">📚</div>
+          <div className="space-y-2">
+            <p className="text-white font-black text-xl">Ta bibliothèque est vide</p>
+            <p className="text-[#6b7280] text-sm max-w-sm mx-auto leading-relaxed">
+              Chaque analyse linéaire que tu génères sauvegarde automatiquement le texte ici.<br />
+              Ces textes seront tirés au sort le jour de ton <span className="text-[#1a9fff] font-bold">mode examen</span>.
+            </p>
+          </div>
+          <div className="bg-[#0a1543]/80 border border-[#19327f]/60 rounded-2xl p-5 max-w-sm mx-auto text-left space-y-2">
+            <p className="text-[#FFD700] text-xs font-black uppercase tracking-widest">Comment ça marche</p>
+            <p className="text-sm text-[#a0b0d0]">① Fais une analyse linéaire de ton texte</p>
+            <p className="text-sm text-[#a0b0d0]">② Le texte est sauvegardé ici automatiquement</p>
+            <p className="text-sm text-[#a0b0d0]">③ Le mode examen le tire au sort pour te tester</p>
+          </div>
           <Link href="/analyse"
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#1a9fff] text-[#050a2e] font-black text-sm uppercase tracking-widest hover:bg-[#00d9ff] transition-all">
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#1a9fff] text-[#050a2e] font-black text-sm uppercase tracking-widest hover:bg-[#00d9ff] transition-all shadow-[0_0_20px_rgba(26,159,255,0.4)]">
             <Plus size={15} />
-            Faire une analyse
+            Analyser mon premier texte
           </Link>
         </div>
       ) : (
