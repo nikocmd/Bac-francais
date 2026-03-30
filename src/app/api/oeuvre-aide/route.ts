@@ -45,8 +45,12 @@ ${contexte ? `Contexte de la conversation :\n${contexte}` : ""}
 
 Question de l'élève : ${question}
 
-Aide-le à choisir en fonction de ses goûts, ses facilités, et ce qui est stratégiquement bon pour le bac. Sois concis, bienveillant et direct. Si l'élève a choisi, confirme et dis-lui de valider.
-IMPORTANT : N'utilise AUCUN formatage markdown (pas de **, pas de *, pas de #). Écris en texte brut avec des sauts de ligne.`;
+RÈGLES :
+1. Sois TRÈS CONCIS : 4-6 lignes MAX par réponse.
+2. Va droit au but. Pas de "Bien sûr !", "Excellente question !".
+3. Propose 2-3 œuvres max avec une phrase d'explication chacune.
+4. Si l'élève a choisi, dis-lui juste de valider. Pas de pavé.
+5. N'utilise AUCUN formatage markdown. Texte brut + sauts de ligne uniquement.`;
 
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });

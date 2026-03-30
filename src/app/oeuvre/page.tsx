@@ -106,11 +106,20 @@ export default function OeuvrePage() {
   }, [aideMessages]);
 
   useEffect(() => {
-    import("@/lib/supabase/client").then(({ createClient }) => {
-      createClient().auth.getUser().then(({ data: { user } }) => {
-        if (user) setUserId(user.id);
-      });
-    });
+    async function loadSavedOeuvre() {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      setUserId(user.id);
+      const { data } = await supabase.from("profiles").select("oeuvre_choisie, auteur_choisi").eq("id", user.id).single();
+      if (data?.oeuvre_choisie && data?.auteur_choisi) {
+        setOeuvre(data.oeuvre_choisie);
+        setAuteur(data.auteur_choisi);
+        setConfirmed(true);
+      }
+    }
+    loadSavedOeuvre();
   }, []);
 
   async function sendAideMessage(question: string) {
@@ -165,14 +174,26 @@ export default function OeuvrePage() {
     }
   }
 
-  function handleConfirm() {
-    if (canConfirm) {
-      setConfirmed(true);
-      setShowAide(false);
+  async function handleConfirm() {
+    if (!canConfirm) return;
+    setConfirmed(true);
+    setShowAide(false);
+    if (userId) {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      await supabase.from("profiles").update({
+        oeuvre_choisie: oeuvre.trim(),
+        auteur_choisi: auteur.trim(),
+      }).eq("id", userId);
     }
   }
 
-  function handleReset() {
+  async function handleReset() {
+    if (userId) {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      await supabase.from("profiles").update({ oeuvre_choisie: null, auteur_choisi: null }).eq("id", userId);
+    }
     setOeuvre("");
     setAuteur("");
     setConfirmed(false);
