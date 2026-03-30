@@ -7,6 +7,7 @@ export default function PremiumPage() {
   const [loading, setLoading] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     async function check() {
@@ -25,16 +26,30 @@ export default function PremiumPage() {
 
   async function handleCheckout() {
     setLoading(true);
+    setError("");
     try {
+      const priceId = process.env.NEXT_PUBLIC_STRIPE_PRICE_PREMIUM;
+      if (!priceId) {
+        setError("Configuration Stripe manquante. Vérifie les variables d'environnement Vercel.");
+        setLoading(false);
+        return;
+      }
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_PREMIUM }),
+        body: JSON.stringify({ priceId }),
       });
       const data = await res.json();
-      if (data.url) window.location.href = data.url;
-      else setLoading(false);
-    } catch { setLoading(false); }
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setError(data.error || "Erreur lors de la création du paiement.");
+        setLoading(false);
+      }
+    } catch {
+      setError("Erreur réseau. Réessaie.");
+      setLoading(false);
+    }
   }
 
   if (checking) return (
@@ -107,6 +122,9 @@ export default function PremiumPage() {
             )}
           </button>
 
+          {error && (
+            <p className="text-center text-red-400 text-xs font-bold">{error}</p>
+          )}
           <p className="text-center text-[#6b7280] text-xs">
             Paiement sécurisé par Stripe
           </p>
