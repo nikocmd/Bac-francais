@@ -34,6 +34,7 @@ export default function RegisterPage() {
   }
 
   async function handleGoogle() {
+    const { createClient } = await import("@/lib/supabase/client");
     const supabase = createClient();
     await supabase.auth.signInWithOAuth({
       provider: "google",
