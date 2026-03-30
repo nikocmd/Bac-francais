@@ -21,34 +21,19 @@ export default function Home() {
         </p>
 
         <div className="flex flex-wrap justify-center gap-4 pt-2">
-          <Link href="/register"
-            className="flex items-center gap-2 px-8 py-4 rounded-xl bg-[#FFD700] hover:bg-[#ffe44d] text-[#050a2e] font-black text-sm uppercase tracking-widest transition-all shadow-[0_0_30px_rgba(255,215,0,0.35)]">
-            Essayer gratuitement <ArrowRight size={16} />
-          </Link>
           <Link href="/premium"
+            className="flex items-center gap-2 px-8 py-4 rounded-xl bg-[#FFD700] hover:bg-[#ffe44d] text-[#050a2e] font-black text-sm uppercase tracking-widest transition-all shadow-[0_0_30px_rgba(255,215,0,0.35)]">
+            <Crown size={16} /> Passer Premium
+          </Link>
+          <Link href="/register"
             className="flex items-center gap-2 px-8 py-4 rounded-xl bg-[#0a1543] border border-[#19327f] text-[#a0b0d0] font-bold text-sm hover:border-[#1a9fff]/50 hover:text-white transition-all">
-            <Crown size={16} className="text-[#FFD700]" /> Voir Premium
+            Essayer gratuitement <ArrowRight size={16} />
           </Link>
         </div>
 
         <p className="text-xs text-[#4a5568]">
           1 utilisation offerte sans carte bancaire · Ensuite 9.99€/mois
         </p>
-      </section>
-
-      {/* ── URGENCE / LIMITE ── */}
-      <section className="bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/20 rounded-2xl px-6 py-5 flex items-center gap-4">
-        <Lock size={24} className="text-red-400 flex-shrink-0" />
-        <div>
-          <p className="text-white font-black text-sm">Accès limité — 1 seule utilisation gratuite</p>
-          <p className="text-[#9ca3af] text-xs mt-0.5">
-            Le Bac approche. Chaque analyse compte. Ne gâche pas ton essai gratuit sur n&apos;importe quoi.
-          </p>
-        </div>
-        <Link href="/analyse"
-          className="ml-auto flex-shrink-0 px-4 py-2 rounded-lg bg-red-500/20 border border-red-500/30 text-red-300 font-bold text-xs hover:bg-red-500/30 transition-all whitespace-nowrap">
-          Utiliser maintenant
-        </Link>
       </section>
 
       {/* ── FEATURES ── */}
