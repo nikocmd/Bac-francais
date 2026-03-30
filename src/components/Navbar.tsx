@@ -2,11 +2,12 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { BookOpen, Mic, Library, GraduationCap, LayoutDashboard, User, LogOut } from "lucide-react";
+import { BookOpen, Mic, Library, GraduationCap, LayoutDashboard, User, LogOut, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { href: "/analyse", label: "Analyse linéaire", icon: BookOpen },
+  { href: "/analyse", label: "Analyse", icon: BookOpen },
+  { href: "/mes-textes", label: "Mes textes", icon: FileText },
   { href: "/oral", label: "Oral", icon: Mic },
   { href: "/oeuvre", label: "Œuvre", icon: Library },
   { href: "/examen", label: "Examen", icon: GraduationCap },

@@ -56,6 +56,15 @@ export default function AnalysePage() {
       setOpenMvt(0);
       const { leveledUp } = await addXP("analyse", userId);
       if (leveledUp) window.dispatchEvent(new CustomEvent("levelup"));
+      // Sauvegarde auto du texte
+      if (userId) {
+        const { createClient } = await import("@/lib/supabase/client");
+        const supabase = createClient();
+        const { count } = await supabase.from("user_texts").select("*", { count: "exact", head: true }).eq("user_id", userId);
+        if ((count ?? 0) < 12) {
+          await supabase.from("user_texts").insert({ user_id: userId, titre: form.titre, auteur: form.auteur, oeuvre: form.oeuvre, texte: form.texte, axe: form.axe });
+        }
+      }
     } catch {
       setError("Erreur réseau. Réessaie.");
     } finally {

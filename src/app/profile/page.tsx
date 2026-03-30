@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { Loader2, Camera, Save, LogOut, User, Mail, PenLine } from "lucide-react";
+import { Loader2, Camera, Save, LogOut, User, Mail, PenLine, Plus, Trash2 } from "lucide-react";
 import { getRankInfo, loadHunter } from "@/lib/gamification";
 
 export default function ProfilePage() {
@@ -18,6 +18,8 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [grammarQuestions, setGrammarQuestions] = useState<string[]>([]);
+  const [newQuestion, setNewQuestion] = useState("");
   const hunter = typeof window !== "undefined" ? loadHunter() : null;
 
   useEffect(() => {
@@ -29,7 +31,7 @@ export default function ProfilePage() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("username, avatar_url")
+        .select("username, avatar_url, grammar_questions")
         .eq("id", user.id)
         .single();
 
@@ -37,6 +39,7 @@ export default function ProfilePage() {
         setUsername(profile.username ?? user.user_metadata?.username ?? "");
         setAvatarUrl(profile.avatar_url ?? "");
         setAvatarPreview(profile.avatar_url ?? "");
+        setGrammarQuestions(profile.grammar_questions ?? []);
       } else {
         setUsername(user.user_metadata?.username ?? "");
       }
@@ -75,6 +78,7 @@ export default function ProfilePage() {
       id: user.id,
       username,
       avatar_url: newAvatarUrl,
+      grammar_questions: grammarQuestions,
       updated_at: new Date().toISOString(),
     });
 
@@ -183,6 +187,64 @@ export default function ProfilePage() {
             ✓ Profil mis à jour !
           </div>
         )}
+
+        <button onClick={handleSave} disabled={saving}
+          className="flex items-center gap-2 px-6 py-3 rounded-xl font-black tracking-widest text-sm
+            uppercase bg-[#1a9fff] hover:bg-[#00d9ff] text-[#050a2e] transition-all disabled:opacity-50
+            shadow-[0_0_15px_rgba(26,159,255,0.3)]">
+          {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
+          {saving ? "Sauvegarde..." : "Sauvegarder"}
+        </button>
+      </div>
+
+      {/* Questions de grammaire */}
+      <div className="bg-[#0a1543]/80 border border-[#19327f] rounded-2xl p-6 space-y-5
+        shadow-[0_0_20px_rgba(25,50,127,0.3)] backdrop-blur">
+        <div>
+          <h2 className="text-xs font-black text-[#FFD700] uppercase tracking-widest">✦ Questions de grammaire</h2>
+          <p className="text-[#6b7280] text-xs mt-1">Ces questions seront posées aléatoirement pendant le mode examen</p>
+        </div>
+
+        <div className="space-y-2">
+          {grammarQuestions.map((q, i) => (
+            <div key={i} className="flex items-start gap-2 bg-[#050a2e] border border-[#19327f]/40 rounded-xl px-4 py-3">
+              <span className="text-xs font-mono text-[#1a9fff] mt-0.5 flex-shrink-0">{i + 1}.</span>
+              <p className="text-sm text-[#c9c9d4] flex-1">{q}</p>
+              <button onClick={() => setGrammarQuestions(prev => prev.filter((_, j) => j !== i))}
+                className="text-[#2a3a6e] hover:text-red-400 transition-colors flex-shrink-0">
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ))}
+          {grammarQuestions.length === 0 && (
+            <p className="text-[#2a3a6e] text-sm italic px-2">Aucune question ajoutée</p>
+          )}
+        </div>
+
+        <div className="flex gap-2">
+          <input
+            value={newQuestion}
+            onChange={e => setNewQuestion(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === "Enter" && newQuestion.trim()) {
+                setGrammarQuestions(prev => [...prev, newQuestion.trim()]);
+                setNewQuestion("");
+              }
+            }}
+            className="flex-1 bg-[#050a2e] border border-[#19327f]/60 rounded-xl px-4 py-2.5 text-sm text-white placeholder-[#2a3a6e] focus:outline-none focus:border-[#1a9fff]/60 transition-colors"
+            placeholder="ex: Identifiez le COD dans la phrase..."
+          />
+          <button
+            onClick={() => {
+              if (newQuestion.trim()) {
+                setGrammarQuestions(prev => [...prev, newQuestion.trim()]);
+                setNewQuestion("");
+              }
+            }}
+            className="px-4 py-2.5 rounded-xl bg-[#1a9fff]/20 border border-[#1a9fff]/30 text-[#00d9ff] hover:bg-[#1a9fff]/30 transition-all">
+            <Plus size={16} />
+          </button>
+        </div>
 
         <button onClick={handleSave} disabled={saving}
           className="flex items-center gap-2 px-6 py-3 rounded-xl font-black tracking-widest text-sm

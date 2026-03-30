@@ -3,7 +3,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(request: Request) {
-  const { transcription, texte, oeuvre, auteur, typeEpreuve } = await request.json();
+  const { transcription, texte, oeuvre, auteur, typeEpreuve, grammarQuestion, grammarAnswer } = await request.json();
 
   if (!transcription?.trim()) {
     return Response.json({ error: "La transcription est requise." }, { status: 400 });
@@ -18,7 +18,10 @@ ${texte || "non fourni"}
 
 **Prestation de l'élève (transcription) :**
 ${transcription}
-
+${grammarQuestion ? `
+**Question de grammaire posée :** ${grammarQuestion}
+**Réponse de l'élève :** ${grammarAnswer || "Pas de réponse fournie"}
+` : ""}
 Tu dois noter cette prestation avec la plus grande HONNÊTETÉ, comme le ferait un vrai jury de Bac. Ne sois ni trop clément ni trop sévère. Applique strictement les critères du BOEN.
 
 Réponds UNIQUEMENT avec un objet JSON valide (sans markdown) :
@@ -51,7 +54,13 @@ Réponds UNIQUEMENT avec un objet JSON valide (sans markdown) :
       "note": <0-3>,
       "sur": 3,
       "commentaire": "<commentaire précis>"
-    }
+    }${grammarQuestion ? `,
+    {
+      "nom": "Question de grammaire",
+      "note": <0-3>,
+      "sur": 3,
+      "commentaire": "<évaluation de la réponse à la question de grammaire>"
+    }` : ""}
   ],
   "points_essentiels_manquants": ["<point manquant 1>", "<point manquant 2>"],
   "reussites": ["<réussite 1>", "<réussite 2>"]
