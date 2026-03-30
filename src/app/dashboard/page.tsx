@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { BookOpen, Mic, Library, GraduationCap, PenLine, ChevronRight } from "lucide-react";
 import {
   loadHunter, loadHunterFromDB, getRankInfo, getTodayQuestStatus,
@@ -207,7 +206,7 @@ export default function Dashboard() {
                 flex items-center justify-center border-2 ${RANK_STYLES[hunter.rank]}
                 shadow-[0_0_30px_rgba(26,159,255,0.4)] overflow-hidden`}>
                 {avatarUrl ? (
-                  <Image src={avatarUrl} alt="Avatar" width={80} height={80} className="w-full h-full object-cover" />
+                  <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
                   <PenLine size={36} className="text-[#1a9fff]" />
                 )}

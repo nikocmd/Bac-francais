@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Camera, Save, LogOut, User, Mail, PenLine, Plus, Trash2 } from "lucide-react";
-import { getRankInfo, loadHunter } from "@/lib/gamification";
+import { getRankInfo, loadHunterFromDB, type HunterData } from "@/lib/gamification";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -19,7 +19,7 @@ export default function ProfilePage() {
   const [error, setError] = useState("");
   const [grammarQuestions, setGrammarQuestions] = useState<string[]>([]);
   const [newQuestion, setNewQuestion] = useState("");
-  const hunter = typeof window !== "undefined" ? loadHunter() : null;
+  const [hunter, setHunter] = useState<HunterData | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -43,6 +43,8 @@ export default function ProfilePage() {
       } else {
         setUsername(user.user_metadata?.username ?? "");
       }
+      const h = await loadHunterFromDB(user.id);
+      setHunter(h);
       setLoading(false);
     }
     load();
