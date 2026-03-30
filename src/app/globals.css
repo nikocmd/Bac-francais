@@ -33,9 +33,11 @@ body {
 }
 .wave-bar {
   width: 4px;
-  background: #7c3aed;
+  height: 8px;
+  background: #1a9fff;
   border-radius: 2px;
   animation: wave 0.8s ease-in-out infinite;
+  flex-shrink: 0;
 }
 .wave-bar:nth-child(2) { animation-delay: 0.1s; }
 .wave-bar:nth-child(3) { animation-delay: 0.2s; }

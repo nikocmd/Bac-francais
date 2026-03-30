@@ -32,6 +32,7 @@ export default function OralPage() {
   const [supported, setSupported] = useState(true);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null);
+  const recordingRef = useRef(false);
   const [liveText, setLiveText] = useState("");
   const [userId, setUserId] = useState<string | undefined>(undefined);
 
@@ -63,18 +64,30 @@ export default function OralPage() {
       setTranscription(final);
       setLiveText(interim);
     };
-    recognition.onerror = () => setRecording(false);
-    recognition.onend = () => setRecording(false);
+    recognition.onerror = () => {
+      recordingRef.current = false;
+      setRecording(false);
+    };
+    recognition.onend = () => {
+      if (recordingRef.current) {
+        // Chrome stops on silence — restart automatically
+        try { recognition.start(); } catch { /* already started */ }
+      } else {
+        setRecording(false);
+      }
+    };
     recognitionRef.current = recognition;
   }, []);
 
   function toggleRecording() {
     if (!recognitionRef.current) return;
-    if (recording) {
+    if (recordingRef.current) {
+      recordingRef.current = false;
       recognitionRef.current.stop();
       setRecording(false);
       setLiveText("");
     } else {
+      recordingRef.current = true;
       setTranscription("");
       setLiveText("");
       recognitionRef.current.start();
@@ -177,14 +190,16 @@ export default function OralPage() {
             )}
           </div>
 
-          {recording && (
-            <div className="flex items-center justify-center gap-1 py-3">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="wave-bar" style={{ height: "8px" }} />
-              ))}
-              <span className="ml-3 text-sm text-blue-400 animate-pulse">Enregistrement en cours...</span>
-            </div>
-          )}
+          <div className="h-10 flex items-center justify-center gap-1" style={{ minHeight: "2.5rem" }}>
+            {recording && (
+              <>
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="wave-bar" />
+                ))}
+                <span className="ml-3 text-sm text-blue-400">Enregistrement en cours...</span>
+              </>
+            )}
+          </div>
 
           <textarea
             className="w-full bg-[#0a0a0f] border border-[#2a2a3e] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none"
