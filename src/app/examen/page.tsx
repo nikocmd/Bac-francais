@@ -54,18 +54,21 @@ export default function ExamenPage() {
 
   useEffect(() => {
     async function loadData() {
-      const { createClient } = await import("@/lib/supabase/client");
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setLoading(false); return; }
-      setUserId(user.id);
-      const [{ data: textsData }, { data: profileData }] = await Promise.all([
-        supabase.from("user_texts").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
-        supabase.from("profiles").select("grammar_questions").eq("id", user.id).single(),
-      ]);
-      setTexts(textsData ?? []);
-      setGrammarQuestions(profileData?.grammar_questions ?? []);
-      setLoading(false);
+      try {
+        const { createClient } = await import("@/lib/supabase/client");
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        setUserId(user.id);
+        const [{ data: textsData }, { data: profileData }] = await Promise.all([
+          supabase.from("user_texts").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+          supabase.from("profiles").select("grammar_questions").eq("id", user.id).single(),
+        ]);
+        setTexts(textsData ?? []);
+        setGrammarQuestions(profileData?.grammar_questions ?? []);
+      } finally {
+        setLoading(false);
+      }
     }
     loadData();
   }, []);
