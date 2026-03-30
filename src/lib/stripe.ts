@@ -5,15 +5,9 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_placeholde
 });
 
 export const PLANS = {
-  monthly: {
-    priceId: process.env.STRIPE_PRICE_MONTHLY || "",
-    name: "Premium Mensuel",
-    price: "4.99€/mois",
-  },
-  yearly: {
-    priceId: process.env.STRIPE_PRICE_YEARLY || "",
-    name: "Premium Annuel",
-    price: "29.99€/an",
-    badge: "-50%",
+  premium: {
+    priceId: process.env.STRIPE_PRICE_PREMIUM || "",
+    name: "Premium",
+    price: "9.99€/mois",
   },
 };
