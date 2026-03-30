@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Mic, MicOff, Loader2, RotateCcw, ChevronRight, AlertTriangle, Clock, Lock, BookOpen } from "lucide-react";
 import Link from "next/link";
 import { addXP } from "@/lib/gamification";
+import Paywall from "@/components/Paywall";
 
 interface Critere { nom: string; note: number; sur: number; commentaire: string; }
 interface Resultat {
@@ -42,6 +43,7 @@ export default function ExamenPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [limitReached, setLimitReached] = useState(false);
   const [supported, setSupported] = useState(true);
   const [guiltIdx, setGuiltIdx] = useState(0);
   const [showQuit, setShowQuit] = useState(false);
@@ -155,6 +157,7 @@ export default function ExamenPage() {
         }),
       });
       const data = await res.json();
+      if (data.error === "LIMIT_REACHED") { setLimitReached(true); setStep("oeuvre"); return; }
       if (data.error) { setError(data.error); setStep("oeuvre"); return; }
       setResultat(data.resultat);
       setStep("resultat");
@@ -395,7 +398,8 @@ export default function ExamenPage() {
               onChange={e => target === "explication" ? setExplicationTranscription(e.target.value) : setOeuvreTranscription(e.target.value)} />
           )}
 
-          {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+          {limitReached && <Paywall />}
+          {error && !limitReached && <p className="text-red-400 text-sm text-center">{error}</p>}
 
           <div className="flex gap-3">
             {supported && (recording ? (

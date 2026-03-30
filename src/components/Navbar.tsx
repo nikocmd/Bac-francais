@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { BookOpen, Mic, Library, GraduationCap, LayoutDashboard, User, LogOut, FileText } from "lucide-react";
+import { BookOpen, Mic, Library, GraduationCap, LayoutDashboard, User, LogOut, FileText, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const links = [
@@ -126,6 +126,11 @@ export default function Navbar() {
                     className="flex items-center gap-2.5 px-4 py-3 text-sm text-[#a0b0d0]
                       hover:bg-[#19327f]/30 hover:text-white transition-colors">
                     <User size={14} /> Mon profil
+                  </Link>
+                  <Link href="/premium" onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-2.5 px-4 py-3 text-sm text-[#FFD700]
+                      hover:bg-[#FFD700]/10 transition-colors">
+                    <Crown size={14} /> Premium
                   </Link>
                   <button onClick={handleLogout}
                     className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-red-400

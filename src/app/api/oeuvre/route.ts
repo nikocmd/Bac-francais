@@ -1,8 +1,14 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { checkUsage, incrementUsage } from "@/lib/usage";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(request: Request) {
+  const usage = await checkUsage();
+  if (!usage.allowed) {
+    return Response.json({ error: "LIMIT_REACHED" }, { status: 403 });
+  }
+
   const { question, oeuvre, auteur, contexte } = await request.json();
 
   if (!question?.trim()) {
@@ -31,6 +37,7 @@ RÈGLES DE RÉPONSE :
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const result = await model.generateContent(prompt);
     const reponse = result.response.text();
+    if (usage.userId) await incrementUsage(usage.userId);
     return Response.json({ reponse });
   } catch (err) {
     console.error(err);

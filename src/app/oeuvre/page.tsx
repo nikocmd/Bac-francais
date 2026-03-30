@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Library, Loader2, Send, Bot, User, Sparkles, Search, X, CheckCircle, MessageCircle } from "lucide-react";
 import { addXP } from "@/lib/gamification";
+import Paywall from "@/components/Paywall";
 
 interface Message {
   role: "user" | "assistant";
@@ -77,6 +78,7 @@ export default function OeuvrePage() {
   const aideBottomRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [userId, setUserId] = useState<string | undefined>(undefined);
+  const [limitReached, setLimitReached] = useState(false);
 
   const canConfirm = oeuvre.trim().length >= 3 && auteur.trim().length >= 2;
 
@@ -164,6 +166,7 @@ export default function OeuvrePage() {
         }),
       });
       const data = await res.json();
+      if (data.error === "LIMIT_REACHED") { setLimitReached(true); return; }
       if (data.error) { setError(data.error); return; }
       setMessages(prev => [...prev, { role: "assistant", content: data.reponse }]);
       await addXP("oeuvre", userId);
@@ -440,7 +443,8 @@ export default function OeuvrePage() {
 
       {/* Input */}
       <div className="flex-shrink-0">
-        {error && <p className="text-red-400 text-sm mb-2">{error}</p>}
+        {limitReached && <div className="mb-3"><Paywall /></div>}
+        {error && !limitReached && <p className="text-red-400 text-sm mb-2">{error}</p>}
         <div className="flex gap-3">
           <input
             className="flex-1 bg-[#12121a] border border-[#1e1e2e] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"

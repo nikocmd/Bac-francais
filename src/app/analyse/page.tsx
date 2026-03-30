@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { BookOpen, Loader2, ChevronDown, ChevronUp, Sparkles, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { addXP } from "@/lib/gamification";
+import Paywall from "@/components/Paywall";
 
 interface Procede {
   procede: string;
@@ -28,6 +29,7 @@ export default function AnalysePage() {
   const [analyse, setAnalyse] = useState<Analyse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [limitReached, setLimitReached] = useState(false);
   const [openMvt, setOpenMvt] = useState<number | null>(0);
   const [userId, setUserId] = useState<string | undefined>(undefined);
 
@@ -51,6 +53,7 @@ export default function AnalysePage() {
         body: JSON.stringify(form),
       });
       const data = await res.json();
+      if (data.error === "LIMIT_REACHED") { setLimitReached(true); return; }
       if (data.error) { setError(data.error); return; }
       setAnalyse(data.analyse);
       setOpenMvt(0);
@@ -138,7 +141,8 @@ export default function AnalysePage() {
             required
           />
         </div>
-        {error && <p className="text-red-400 text-sm">{error}</p>}
+        {limitReached && <Paywall />}
+        {error && !limitReached && <p className="text-red-400 text-sm">{error}</p>}
         <button
           type="submit"
           disabled={loading || !form.texte.trim()}

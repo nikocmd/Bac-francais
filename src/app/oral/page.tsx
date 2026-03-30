@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Mic, MicOff, Loader2, Send, Star, CheckCircle, AlertCircle, Lightbulb, Zap } from "lucide-react";
 import { addXP } from "@/lib/gamification";
+import Paywall from "@/components/Paywall";
 
 interface Critere {
   nom: string;
@@ -26,6 +27,7 @@ export default function OralPage() {
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [limitReached, setLimitReached] = useState(false);
   const [recording, setRecording] = useState(false);
   const [supported, setSupported] = useState(true);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -93,6 +95,7 @@ export default function OralPage() {
         body: JSON.stringify({ transcription: text, contexte, type }),
       });
       const data = await res.json();
+      if (data.error === "LIMIT_REACHED") { setLimitReached(true); return; }
       if (data.error) { setError(data.error); return; }
       setFeedback(data.feedback);
       const { leveledUp } = await addXP("oral", userId);
@@ -196,7 +199,8 @@ export default function OralPage() {
           />
         </div>
 
-        {error && <p className="text-red-400 text-sm">{error}</p>}
+        {limitReached && <Paywall />}
+        {error && !limitReached && <p className="text-red-400 text-sm">{error}</p>}
         <button
           onClick={handleSubmit}
           disabled={loading || !transcription.trim()}
