@@ -17,6 +17,7 @@ self.onmessage = async (e: MessageEvent) => {
         "automatic-speech-recognition",
         "Xenova/whisper-tiny",
         {
+          quantized: false, // force fp32 — évite les erreurs QDQ/NBits INT4
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           progress_callback: (p: any) => {
             if (p.status === "downloading") {
