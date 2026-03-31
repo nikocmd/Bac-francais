@@ -14,6 +14,10 @@ export async function POST(request: Request) {
     : mime.includes("mp3") || mime.includes("mpeg") ? "mp3"
     : "webm";
 
+  if (!process.env.GROQ_API_KEY) {
+    return Response.json({ error: "GROQ_API_KEY manquante — ajoute-la dans Vercel > Settings > Environment Variables puis redéploie" }, { status: 500 });
+  }
+
   const groqForm = new FormData();
   groqForm.append(
     "file",
@@ -34,7 +38,7 @@ export async function POST(request: Request) {
   if (!res.ok) {
     const err = await res.text();
     console.error("Groq error:", err);
-    return Response.json({ error: "Erreur transcription." }, { status: 500 });
+    return Response.json({ error: `Groq ${res.status}: ${err}` }, { status: 500 });
   }
 
   const data = await res.json();
