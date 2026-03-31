@@ -1,8 +1,8 @@
-import { pipeline, env } from "@huggingface/transformers";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+import { pipeline, env } from "@xenova/transformers";
 
 // Single-threaded WASM for max browser compatibility (Safari included)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(env as any).backends.onnx.wasm.numThreads = 1;
+env.backends.onnx.wasm.numThreads = 1;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let asr: any = null;
