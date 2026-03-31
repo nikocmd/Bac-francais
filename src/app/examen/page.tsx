@@ -283,10 +283,28 @@ export default function ExamenPage() {
           {texts.length} texte(s) disponible(s) · {grammarQuestions.length} question(s) de grammaire
         </div>
 
-        <button onClick={tirageSortAndStart}
-          className="w-full py-4 rounded-xl font-black text-sm uppercase tracking-widest bg-[#1a9fff] hover:bg-[#00d9ff] text-[#050a2e] transition-all shadow-[0_0_20px_rgba(26,159,255,0.5)]">
-          Tirage au sort — Entrer dans la salle
-        </button>
+        {grammarQuestions.length === 0 ? (
+          <div className="space-y-3">
+            <div className="bg-[#2a0a0a]/80 border border-red-500/40 rounded-xl p-4 flex items-start gap-3">
+              <Lock size={18} className="text-red-400 flex-shrink-0 mt-0.5" />
+              <div className="text-left space-y-1">
+                <p className="text-red-400 font-black text-sm">Mode Examen bloqué</p>
+                <p className="text-[#a0b0d0] text-xs leading-relaxed">
+                  Tu n&apos;as pas encore renseigné tes questions de grammaire. Elles sont obligatoires pour simuler le vrai oral du Bac.
+                </p>
+              </div>
+            </div>
+            <Link href="/profile"
+              className="w-full flex items-center justify-center gap-2 py-4 rounded-xl font-black text-sm uppercase tracking-widest bg-[#FFD700] hover:bg-yellow-300 text-[#050a2e] transition-all shadow-[0_0_20px_rgba(255,215,0,0.4)]">
+              <BookOpen size={16} /> Configurer mes questions
+            </Link>
+          </div>
+        ) : (
+          <button onClick={tirageSortAndStart}
+            className="w-full py-4 rounded-xl font-black text-sm uppercase tracking-widest bg-[#1a9fff] hover:bg-[#00d9ff] text-[#050a2e] transition-all shadow-[0_0_20px_rgba(26,159,255,0.5)]">
+            Tirage au sort — Entrer dans la salle
+          </button>
+        )}
       </div>
     </div>
   );
