@@ -55,12 +55,8 @@ export default function OralPage() {
 
   // Init Web Worker — loaded from CDN as Blob to bypass bundler issues
   useEffect(() => {
+    const origin = window.location.origin;
     const workerCode = `
-importScripts('${window.location.origin}/transformers.min.js');
-
-const { pipeline, env } = self.Transformers;
-env.backends.onnx.wasm.numThreads = 1;
-
 let asr = null;
 
 self.onmessage = async function(e) {
@@ -69,6 +65,8 @@ self.onmessage = async function(e) {
   if (msg.type === 'load') {
     try {
       self.postMessage({ type: 'status', text: 'Chargement du modèle Whisper...' });
+      const { pipeline, env } = await import('${origin}/transformers.min.js');
+      env.backends.onnx.wasm.numThreads = 1;
       asr = await pipeline('automatic-speech-recognition', 'Xenova/whisper-base', {
         quantized: false,
         progress_callback: function(p) {
@@ -100,7 +98,7 @@ self.onmessage = async function(e) {
 
     const blob = new Blob([workerCode], { type: "text/javascript" });
     const workerUrl = URL.createObjectURL(blob);
-    const worker = new Worker(workerUrl);
+    const worker = new Worker(workerUrl, { type: "module" });
 
     worker.onmessage = (e) => {
       const { type: t, text, message } = e.data;
