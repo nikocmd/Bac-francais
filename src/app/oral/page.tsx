@@ -33,6 +33,7 @@ export default function OralPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null);
   const recordingRef = useRef(false);
+  const transcriptAccumRef = useRef("");
   const [liveText, setLiveText] = useState("");
   const [userId, setUserId] = useState<string | undefined>(undefined);
 
@@ -47,51 +48,70 @@ export default function OralPage() {
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const w = window as any;
-    const SpeechRecognition = w.SpeechRecognition || w.webkitSpeechRecognition;
-    if (!SpeechRecognition) { setSupported(false); return; }
-    const recognition = new SpeechRecognition();
-    recognition.lang = "fr-FR";
-    recognition.continuous = true;
-    recognition.interimResults = true;
+    if (!w.SpeechRecognition && !w.webkitSpeechRecognition) setSupported(false);
+  }, []);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function startRecognition() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    recognition.onresult = (e: any) => {
-      let final = "";
+    const w = window as any;
+    const SR = w.SpeechRecognition || w.webkitSpeechRecognition;
+    if (!SR || !recordingRef.current) return;
+
+    // Always create a fresh instance — reusing ended instances breaks on all browsers
+    const r = new SR();
+    r.lang = "fr-FR";
+    r.continuous = true;
+    r.interimResults = true;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    r.onresult = (e: any) => {
+      let sessionFinal = "";
       let interim = "";
       for (let i = 0; i < e.results.length; i++) {
-        if (e.results[i].isFinal) final += e.results[i][0].transcript + " ";
+        if (e.results[i].isFinal) sessionFinal += e.results[i][0].transcript + " ";
         else interim += e.results[i][0].transcript;
       }
-      setTranscription(final);
+      setTranscription(transcriptAccumRef.current + sessionFinal);
       setLiveText(interim);
     };
-    recognition.onerror = () => {
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    r.onerror = (e: any) => {
+      if (e.error === "no-speech") return; // silence — onend will restart
       recordingRef.current = false;
       setRecording(false);
+      setLiveText("");
     };
-    recognition.onend = () => {
+
+    r.onend = () => {
+      setLiveText("");
       if (recordingRef.current) {
-        // Chrome stops on silence — restart automatically
-        try { recognition.start(); } catch { /* already started */ }
+        // Save finals accumulated this session, then restart with fresh instance
+        setTranscription(prev => { transcriptAccumRef.current = prev; return prev; });
+        setTimeout(startRecognition, 150);
       } else {
         setRecording(false);
       }
     };
-    recognitionRef.current = recognition;
-  }, []);
+
+    recognitionRef.current = r;
+    try { r.start(); } catch { /* permission denied or not available */ }
+  }
 
   function toggleRecording() {
-    if (!recognitionRef.current) return;
     if (recordingRef.current) {
       recordingRef.current = false;
-      recognitionRef.current.stop();
+      try { recognitionRef.current?.stop(); } catch { /* ignore */ }
       setRecording(false);
       setLiveText("");
     } else {
       recordingRef.current = true;
+      transcriptAccumRef.current = "";
       setTranscription("");
       setLiveText("");
-      recognitionRef.current.start();
       setRecording(true);
+      startRecognition();
     }
   }
 
