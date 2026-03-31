@@ -48,6 +48,7 @@ export default function ExamenPage() {
   const [guiltIdx, setGuiltIdx] = useState(0);
   const [showQuit, setShowQuit] = useState(false);
   const [userId, setUserId] = useState<string | undefined>(undefined);
+  const [isPremium, setIsPremium] = useState<boolean | null>(null);
   // Which transcription are we filling
   const [recordingTarget, setRecordingTarget] = useState<"explication" | "oeuvre">("explication");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -66,10 +67,11 @@ export default function ExamenPage() {
         setUserId(user.id);
         const [{ data: textsData }, { data: profileData }] = await Promise.all([
           supabase.from("user_texts").select("*").eq("user_id", user.id),
-          supabase.from("profiles").select("grammar_questions").eq("id", user.id).single(),
+          supabase.from("profiles").select("grammar_questions, is_premium").eq("id", user.id).single(),
         ]);
         setTexts(textsData ?? []);
         setGrammarQuestions(profileData?.grammar_questions ?? []);
+        setIsPremium(profileData?.is_premium === true);
       } finally { setLoading(false); }
     }
     loadData();
@@ -179,6 +181,14 @@ export default function ExamenPage() {
   const noteColor = (n: number, sur: number) => { const r = (n / sur) * 20; return r >= 16 ? "text-emerald-400" : r >= 12 ? "text-amber-400" : r >= 10 ? "text-orange-400" : "text-red-400"; };
   const noteBg = (n: number) => n >= 16 ? "bg-emerald-500/10 border-emerald-500/30" : n >= 12 ? "bg-amber-500/10 border-amber-500/30" : "bg-red-500/10 border-red-500/30";
   const prepColor = prepTimer < 60 ? "text-red-400" : prepTimer < 300 ? "text-amber-400" : "text-[#00d9ff]";
+
+  if (isPremium === false) return (
+    <div className="max-w-xl mx-auto px-4 py-20 space-y-4 text-center">
+      <h1 className="text-2xl font-bold">Mode Examen</h1>
+      <p className="text-[#9ca3af] text-sm mb-6">Cette fonctionnalité est réservée aux membres Premium.</p>
+      <Paywall title="Fonctionnalité Premium" description="Le mode examen est réservé aux membres Premium. Passe Premium pour simuler les conditions réelles du Bac avec notation BOEN." />
+    </div>
+  );
 
   if (loading) return (
     <div className="min-h-screen bg-[#050510] flex items-center justify-center px-4">

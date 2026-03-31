@@ -33,6 +33,7 @@ export default function OralPage() {
   const [liveText, setLiveText] = useState("");
   const [timer, setTimer] = useState(0);
   const [userId, setUserId] = useState<string | undefined>(undefined);
+  const [isPremium, setIsPremium] = useState<boolean | null>(null);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null);
@@ -42,8 +43,15 @@ export default function OralPage() {
 
   useEffect(() => {
     import("@/lib/supabase/client").then(({ createClient }) => {
-      createClient().auth.getUser().then(({ data: { user } }) => {
-        if (user) setUserId(user.id);
+      const client = createClient();
+      client.auth.getUser().then(async ({ data: { user } }) => {
+        if (user) {
+          setUserId(user.id);
+          const { data } = await client.from("profiles").select("is_premium").eq("id", user.id).single();
+          setIsPremium(data?.is_premium === true);
+        } else {
+          setIsPremium(false);
+        }
       });
     });
   }, []);
@@ -120,21 +128,37 @@ export default function OralPage() {
     try { r.start(); } catch { /* ignore if already started */ }
   }
 
-  function toggleRecording() {
+  async function toggleRecording() {
     if (recordingRef.current) {
       recordingRef.current = false;
       try { recognitionRef.current?.stop(); } catch { /* ignore */ }
       setRecording(false);
       setLiveText("");
-    } else {
-      recordingRef.current = true;
-      finalRef.current = "";
-      setTranscription("");
-      setLiveText("");
-      setError("");
-      setRecording(true);
-      startSession();
+      return;
     }
+
+    setError("");
+
+    // getUserMedia triggers the browser permission dialog BEFORE SpeechRecognition
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(t => t.stop()); // release immediately, just needed for permission
+    } catch (err: unknown) {
+      const name = (err as Error)?.name;
+      if (name === "NotAllowedError" || name === "PermissionDeniedError") {
+        setError("Permission micro refusée. Autorise le micro dans les réglages du navigateur.");
+      } else {
+        setError("Micro non disponible sur cet appareil.");
+      }
+      return;
+    }
+
+    recordingRef.current = true;
+    finalRef.current = "";
+    setTranscription("");
+    setLiveText("");
+    setRecording(true);
+    startSession();
   }
 
   async function handleSubmit() {
@@ -164,6 +188,15 @@ export default function OralPage() {
 
   const noteColor = (n: number) =>
     n >= 16 ? "text-emerald-400" : n >= 12 ? "text-amber-400" : n >= 10 ? "text-orange-400" : "text-red-400";
+
+  if (isPremium === null) return <div className="flex justify-center py-20"><Loader2 size={24} className="animate-spin text-[#9ca3af]" /></div>;
+  if (!isPremium) return (
+    <div className="max-w-xl mx-auto px-4 py-20 space-y-4 text-center">
+      <h1 className="text-2xl font-bold">Accompagnement oral</h1>
+      <p className="text-[#9ca3af] text-sm mb-6">Cette fonctionnalité est réservée aux membres Premium.</p>
+      <Paywall title="Fonctionnalité Premium" description="L'accompagnement oral est réservé aux membres Premium. Passe Premium pour t'entraîner à voix haute avec feedback IA." />
+    </div>
+  );
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-10 space-y-8">

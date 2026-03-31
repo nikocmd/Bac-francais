@@ -79,6 +79,7 @@ export default function OeuvrePage() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [limitReached, setLimitReached] = useState(false);
+  const [isPremium, setIsPremium] = useState<boolean | null>(null);
 
   const canConfirm = oeuvre.trim().length >= 3 && auteur.trim().length >= 2;
 
@@ -112,9 +113,10 @@ export default function OeuvrePage() {
       const { createClient } = await import("@/lib/supabase/client");
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) { setIsPremium(false); return; }
       setUserId(user.id);
-      const { data } = await supabase.from("profiles").select("oeuvre_choisie, auteur_choisi").eq("id", user.id).single();
+      const { data } = await supabase.from("profiles").select("oeuvre_choisie, auteur_choisi, is_premium").eq("id", user.id).single();
+      setIsPremium(data?.is_premium === true);
       if (data?.oeuvre_choisie && data?.auteur_choisi) {
         setOeuvre(data.oeuvre_choisie);
         setAuteur(data.auteur_choisi);
@@ -204,6 +206,15 @@ export default function OeuvrePage() {
     setShowAide(false);
     setAideMessages([]);
   }
+
+  if (isPremium === null) return <div className="flex justify-center py-20"><Loader2 size={24} className="animate-spin text-[#9ca3af]" /></div>;
+  if (!isPremium) return (
+    <div className="max-w-xl mx-auto px-4 py-20 space-y-4 text-center">
+      <h1 className="text-2xl font-bold">Œuvre personnelle</h1>
+      <p className="text-[#9ca3af] text-sm mb-6">Cette fonctionnalité est réservée aux membres Premium.</p>
+      <Paywall title="Fonctionnalité Premium" description="L'accompagnement œuvre est réservé aux membres Premium. Passe Premium pour accéder aux analyses, questions d'entretien et aide IA." />
+    </div>
+  );
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-10 flex flex-col gap-6" style={{ height: "calc(100vh - 140px)" }}>
