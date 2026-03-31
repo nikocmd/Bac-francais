@@ -106,11 +106,15 @@ export default function OralPage() {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     r.onerror = (e: any) => {
-      if (e.error === "no-speech" || e.error === "aborted") return;
+      if (e.error === "no-speech" || e.error === "aborted") return; // silence ou arrêt volontaire
+      recordingRef.current = false;
+      setRecording(false);
       if (e.error === "not-allowed") {
         setError("Permission micro refusée. Autorise le micro dans les réglages du navigateur.");
-        recordingRef.current = false;
-        setRecording(false);
+      } else if (e.error === "network") {
+        setError("Erreur réseau. La reconnaissance vocale nécessite internet.");
+      } else {
+        setError("Erreur micro : " + e.error + ". Tape ton texte directement.");
       }
     };
 
@@ -128,7 +132,7 @@ export default function OralPage() {
     try { r.start(); } catch { /* ignore if already started */ }
   }
 
-  async function toggleRecording() {
+  function toggleRecording() {
     if (recordingRef.current) {
       recordingRef.current = false;
       try { recognitionRef.current?.stop(); } catch { /* ignore */ }
@@ -137,28 +141,20 @@ export default function OralPage() {
       return;
     }
 
-    setError("");
-
-    // getUserMedia triggers the browser permission dialog BEFORE SpeechRecognition
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach(t => t.stop()); // release immediately, just needed for permission
-    } catch (err: unknown) {
-      const name = (err as Error)?.name;
-      if (name === "NotAllowedError" || name === "PermissionDeniedError") {
-        setError("Permission micro refusée. Autorise le micro dans les réglages du navigateur.");
-      } else {
-        setError("Micro non disponible sur cet appareil.");
-      }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const w = window as any;
+    if (!w.SpeechRecognition && !w.webkitSpeechRecognition) {
+      setError("Reconnaissance vocale non supportée sur ce navigateur. Tape ton texte directement.");
       return;
     }
 
+    setError("");
     recordingRef.current = true;
     finalRef.current = "";
     setTranscription("");
     setLiveText("");
     setRecording(true);
-    startSession();
+    startSession(); // SpeechRecognition gère sa propre demande de permission
   }
 
   async function handleSubmit() {
