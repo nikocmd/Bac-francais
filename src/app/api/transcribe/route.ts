@@ -44,6 +44,8 @@ export async function POST(request: Request) {
   if (!res.ok) {
     const err = await res.text();
     console.error("Groq error:", err);
+    // Invalid/corrupt audio (too short, partial recording) → treat as inaudible
+    if (res.status === 400) return Response.json({ inaudible: true });
     return Response.json({ error: `Groq ${res.status}: ${err}` }, { status: 500 });
   }
 
