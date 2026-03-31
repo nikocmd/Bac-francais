@@ -2,8 +2,8 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export const maxDuration = 60;
 
-// MIME types Gemini accepts for audio
-const GEMINI_AUDIO_TYPES: Record<string, string> = {
+// Map browser MIME types to Gemini-supported audio types
+const MIME_MAP: Record<string, string> = {
   "audio/webm": "audio/webm",
   "audio/ogg": "audio/ogg",
   "audio/mp3": "audio/mp3",
@@ -11,7 +11,6 @@ const GEMINI_AUDIO_TYPES: Record<string, string> = {
   "audio/wav": "audio/wav",
   "audio/flac": "audio/flac",
   "audio/aac": "audio/aac",
-  // iOS Safari records audio/mp4 (AAC inside MP4 container)
   "audio/mp4": "audio/aac",
   "audio/x-m4a": "audio/aac",
 };
@@ -26,10 +25,11 @@ export async function POST(req: Request) {
 
     const buffer = Buffer.from(await audio.arrayBuffer());
     const rawMime = (audio.type || "audio/webm").split(";")[0].toLowerCase();
-    const mimeType = GEMINI_AUDIO_TYPES[rawMime] ?? "audio/webm";
+    const mimeType = MIME_MAP[rawMime] ?? "audio/webm";
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    // gemini-1.5-flash has full audio inlineData support
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const result = await model.generateContent([
       { inlineData: { mimeType, data: buffer.toString("base64") } },
@@ -39,7 +39,8 @@ export async function POST(req: Request) {
     const text = result.response.text().trim();
     return Response.json({ text });
   } catch (err) {
-    console.error("Transcribe error:", err);
-    return Response.json({ error: "Transcription échouée" }, { status: 500 });
+    const msg = (err as Error)?.message ?? "Erreur inconnue";
+    console.error("Transcribe error:", msg);
+    return Response.json({ error: msg }, { status: 500 });
   }
 }
