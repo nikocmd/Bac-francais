@@ -1,8 +1,14 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { requirePremium } from "@/lib/usage";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(request: Request) {
+  const usage = await requirePremium();
+  if (!usage.allowed) {
+    return Response.json({ error: "LIMIT_REACHED" }, { status: 403 });
+  }
+
   const { question, contexte } = await request.json();
 
   if (!question?.trim()) {

@@ -1,10 +1,10 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { checkUsage, incrementUsage } from "@/lib/usage";
+import { requirePremium } from "@/lib/usage";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(request: Request) {
-  const usage = await checkUsage();
+  const usage = await requirePremium();
   if (!usage.allowed) {
     return Response.json({ error: "LIMIT_REACHED" }, { status: 403 });
   }
@@ -86,7 +86,6 @@ Réponds UNIQUEMENT avec un objet JSON valide (sans markdown) :
       return Response.json({ error: "Réponse invalide de l'IA." }, { status: 500 });
     }
     const resultat = JSON.parse(jsonMatch[0]);
-    if (usage.userId) await incrementUsage(usage.userId);
     return Response.json({ resultat });
   } catch (err) {
     console.error(err);

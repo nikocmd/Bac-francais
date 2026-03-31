@@ -26,6 +26,12 @@ export async function checkUsage(): Promise<{ allowed: boolean; isPremium: boole
   return { allowed: used < FREE_LIMIT, isPremium: false, used, userId: user.id };
 }
 
+// Use this for features that require premium (0 free uses)
+export async function requirePremium(): Promise<{ allowed: boolean; userId: string | null }> {
+  const usage = await checkUsage();
+  return { allowed: usage.isPremium, userId: usage.userId };
+}
+
 export async function incrementUsage(userId: string) {
   const supabase = await createClient();
   const { data } = await supabase

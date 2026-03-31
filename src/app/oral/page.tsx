@@ -26,15 +26,18 @@ export default function OralPage() {
   const [type, setType] = useState("Explication de texte linéaire");
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [loading, setLoading] = useState(false);
-  const [transcribing, setTranscribing] = useState(false);
   const [error, setError] = useState("");
   const [limitReached, setLimitReached] = useState(false);
   const [recording, setRecording] = useState(false);
+  const [supported, setSupported] = useState(true);
+  const [liveText, setLiveText] = useState("");
   const [timer, setTimer] = useState(0);
   const [userId, setUserId] = useState<string | undefined>(undefined);
 
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recognitionRef = useRef<any>(null);
+  const recordingRef = useRef(false);
+  const finalRef = useRef(""); // accumulates finals across instances
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -45,7 +48,13 @@ export default function OralPage() {
     });
   }, []);
 
-  // Recording timer
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const w = window as any;
+    if (!w.SpeechRecognition && !w.webkitSpeechRecognition) setSupported(false);
+  }, []);
+
+  // Timer
   useEffect(() => {
     if (recording) {
       setTimer(0);
@@ -60,82 +69,71 @@ export default function OralPage() {
     return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
   }
 
-  async function toggleRecording() {
-    if (recording) {
-      mediaRecorderRef.current?.stop();
-      setRecording(false);
-      return;
-    }
+  function startSession() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const w = window as any;
+    const SR = w.SpeechRecognition || w.webkitSpeechRecognition;
+    if (!SR || !recordingRef.current) return;
 
-    setError("");
+    const r = new SR();
+    r.lang = "fr-FR";
+    r.continuous = true;
+    r.interimResults = true;
+    r.maxAlternatives = 1;
 
-    if (!navigator.mediaDevices?.getUserMedia) {
-      setError("Micro non supporté sur ce navigateur.");
-      return;
-    }
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-      // Pick best supported format
-      const preferredType = [
-        "audio/webm;codecs=opus",
-        "audio/webm",
-        "audio/ogg;codecs=opus",
-        "audio/mp4",
-      ].find(t => MediaRecorder.isTypeSupported(t)) ?? "";
-
-      const mediaRecorder = preferredType
-        ? new MediaRecorder(stream, { mimeType: preferredType })
-        : new MediaRecorder(stream);
-
-      chunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
-      };
-
-      mediaRecorder.onstop = async () => {
-        stream.getTracks().forEach(t => t.stop());
-        if (chunksRef.current.length === 0) {
-          setError("Aucun audio capturé. Vérifie le micro.");
-          return;
-        }
-        const blob = new Blob(chunksRef.current, { type: mediaRecorder.mimeType || "audio/webm" });
-        if (blob.size < 1000) {
-          setError("Enregistrement trop court ou vide.");
-          return;
-        }
-        setTranscribing(true);
-        try {
-          const fd = new FormData();
-          fd.append("audio", blob, "recording");
-          const res = await fetch("/api/transcribe", { method: "POST", body: fd });
-          const data = await res.json();
-          if (data.text) {
-            setTranscription(prev => prev ? prev.trimEnd() + " " + data.text.trim() : data.text.trim());
-          } else {
-            setError(data.error ?? "Transcription impossible. Réessaie.");
-          }
-        } catch {
-          setError("Erreur réseau lors de la transcription.");
-        } finally {
-          setTranscribing(false);
-        }
-      };
-
-      mediaRecorderRef.current = mediaRecorder;
-      mediaRecorder.start(1000); // collect chunk every second — critical for mobile
-      setRecording(true);
-    } catch (err: unknown) {
-      const name = (err as Error)?.name;
-      if (name === "NotAllowedError" || name === "PermissionDeniedError") {
-        setError("Permission micro refusée. Autorise le micro dans les réglages du navigateur.");
-      } else if (name === "NotFoundError") {
-        setError("Aucun micro détecté sur cet appareil.");
-      } else {
-        setError("Impossible d'accéder au micro : " + (err as Error)?.message);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    r.onresult = (e: any) => {
+      let sessionFinal = "";
+      let interim = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) sessionFinal += e.results[i][0].transcript;
+        else interim += e.results[i][0].transcript;
       }
+      if (sessionFinal) {
+        finalRef.current += (finalRef.current && !finalRef.current.endsWith(" ") ? " " : "") + sessionFinal;
+        setTranscription(finalRef.current);
+      }
+      setLiveText(interim);
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    r.onerror = (e: any) => {
+      if (e.error === "no-speech" || e.error === "aborted") return;
+      if (e.error === "not-allowed") {
+        setError("Permission micro refusée. Autorise le micro dans les réglages du navigateur.");
+        recordingRef.current = false;
+        setRecording(false);
+      }
+    };
+
+    r.onend = () => {
+      setLiveText("");
+      if (recordingRef.current) {
+        // Chrome stops on silence — create fresh instance and restart
+        setTimeout(startSession, 100);
+      } else {
+        setRecording(false);
+      }
+    };
+
+    recognitionRef.current = r;
+    try { r.start(); } catch { /* ignore if already started */ }
+  }
+
+  function toggleRecording() {
+    if (recordingRef.current) {
+      recordingRef.current = false;
+      try { recognitionRef.current?.stop(); } catch { /* ignore */ }
+      setRecording(false);
+      setLiveText("");
+    } else {
+      recordingRef.current = true;
+      finalRef.current = "";
+      setTranscription("");
+      setLiveText("");
+      setError("");
+      setRecording(true);
+      startSession();
     }
   }
 
@@ -169,7 +167,6 @@ export default function OralPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-10 space-y-8">
-      {/* Header */}
       <div className="flex items-center gap-3">
         <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-600 shadow-lg shadow-blue-500/25">
           <Mic size={22} className="text-white" />
@@ -206,46 +203,43 @@ export default function OralPage() {
           </div>
         </div>
 
-        {/* Recording zone */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium text-[#9ca3af]">Ta prestation orale</label>
-            <button
-              onClick={toggleRecording}
-              disabled={transcribing}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-50 ${
-                recording
-                  ? "bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30"
-                  : "bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30"
-              }`}
-            >
-              {recording ? <><MicOff size={14} /> Arrêter ({formatTimer(timer)})</> : <><Mic size={14} /> Parler (micro)</>}
-            </button>
+            {supported ? (
+              <button
+                onClick={toggleRecording}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                  recording
+                    ? "bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30"
+                    : "bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30"
+                }`}
+              >
+                {recording
+                  ? <><MicOff size={14} /> Arrêter ({formatTimer(timer)})</>
+                  : <><Mic size={14} /> Parler (micro)</>}
+              </button>
+            ) : (
+              <span className="text-xs text-[#6b7280]">Micro non supporté — tape ton texte</span>
+            )}
           </div>
 
-          {/* Fixed-height status bar */}
+          {/* Fixed-height status bar — never causes layout shift */}
           <div className="h-10 flex items-center justify-center gap-1">
             {recording && (
               <>
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="wave-bar" />
-                ))}
+                {[...Array(5)].map((_, i) => <div key={i} className="wave-bar" />)}
                 <span className="ml-3 text-sm text-blue-400">Enregistrement en cours...</span>
               </>
-            )}
-            {transcribing && (
-              <span className="flex items-center gap-2 text-sm text-amber-400">
-                <Loader2 size={14} className="animate-spin" /> Transcription en cours...
-              </span>
             )}
           </div>
 
           <textarea
             className="w-full bg-[#0a0a0f] border border-[#2a2a3e] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none"
             rows={8}
-            placeholder="Clique sur 'Parler' pour dicter, ou tape ton texte ici..."
-            value={transcription}
-            onChange={e => setTranscription(e.target.value)}
+            placeholder={supported ? "Clique sur 'Parler' pour dicter, ou tape ici..." : "Tape ou colle ici le texte de ta prestation..."}
+            value={transcription + (liveText ? " " + liveText : "")}
+            onChange={e => { setTranscription(e.target.value); finalRef.current = e.target.value; }}
           />
         </div>
 
@@ -261,14 +255,12 @@ export default function OralPage() {
         </button>
       </div>
 
-      {/* Feedback */}
       {feedback && (
         <div className="space-y-5 fade-in">
           <div className="flex items-center gap-2 text-sm font-bold text-[#00d9ff] bg-[#0a1543]/80 border border-[#1a9fff]/30 rounded-xl px-4 py-2 w-fit">
             <Zap size={14} className="text-[#FFD700]" />
             +100 XP · +10 CHA — Quête accomplie !
           </div>
-          {/* Score */}
           <div className="bg-[#12121a] border border-[#1e1e2e] rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6">
             <div className="text-center">
               <div className={`text-6xl font-bold ${noteColor(feedback.note)}`}>{feedback.note}</div>
@@ -280,7 +272,6 @@ export default function OralPage() {
             </div>
           </div>
 
-          {/* Critères */}
           <div className="bg-[#12121a] border border-[#1e1e2e] rounded-2xl p-5 space-y-4">
             <p className="text-xs font-semibold text-[#9ca3af] uppercase tracking-wider">Détail par critère</p>
             {feedback.criteres?.map((c, i) => (
@@ -290,10 +281,7 @@ export default function OralPage() {
                   <span className={`font-bold ${noteColor((c.note / c.sur) * 20)}`}>{c.note}/{c.sur}</span>
                 </div>
                 <div className="w-full bg-[#1e1e2e] rounded-full h-1.5">
-                  <div
-                    className="h-1.5 rounded-full bg-gradient-to-r from-violet-600 to-blue-600"
-                    style={{ width: `${(c.note / c.sur) * 100}%` }}
-                  />
+                  <div className="h-1.5 rounded-full bg-gradient-to-r from-violet-600 to-blue-600" style={{ width: `${(c.note / c.sur) * 100}%` }} />
                 </div>
                 <p className="text-xs text-[#6b7280]">{c.commentaire}</p>
               </div>
@@ -309,8 +297,7 @@ export default function OralPage() {
               <ul className="space-y-2">
                 {feedback.points_forts.map((p, i) => (
                   <li key={i} className="text-sm text-[#c9c9d4] flex items-start gap-2">
-                    <Star size={12} className="text-emerald-400 mt-1 flex-shrink-0" />
-                    {p}
+                    <Star size={12} className="text-emerald-400 mt-1 flex-shrink-0" />{p}
                   </li>
                 ))}
               </ul>
@@ -323,8 +310,7 @@ export default function OralPage() {
               <ul className="space-y-2">
                 {feedback.axes_amelioration.map((p, i) => (
                   <li key={i} className="text-sm text-[#c9c9d4] flex items-start gap-2">
-                    <span className="text-orange-400 mt-0.5 flex-shrink-0">→</span>
-                    {p}
+                    <span className="text-orange-400 mt-0.5 flex-shrink-0">→</span>{p}
                   </li>
                 ))}
               </ul>
@@ -337,8 +323,7 @@ export default function OralPage() {
               <ul className="space-y-2">
                 {feedback.conseils.map((p, i) => (
                   <li key={i} className="text-sm text-[#c9c9d4] flex items-start gap-2">
-                    <span className="text-violet-400 mt-0.5 flex-shrink-0">•</span>
-                    {p}
+                    <span className="text-violet-400 mt-0.5 flex-shrink-0">•</span>{p}
                   </li>
                 ))}
               </ul>

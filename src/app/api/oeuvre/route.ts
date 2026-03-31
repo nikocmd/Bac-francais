@@ -1,10 +1,10 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { checkUsage, incrementUsage } from "@/lib/usage";
+import { requirePremium } from "@/lib/usage";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(request: Request) {
-  const usage = await checkUsage();
+  const usage = await requirePremium();
   if (!usage.allowed) {
     return Response.json({ error: "LIMIT_REACHED" }, { status: 403 });
   }
@@ -37,7 +37,6 @@ RÈGLES DE RÉPONSE :
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const result = await model.generateContent(prompt);
     const reponse = result.response.text();
-    if (usage.userId) await incrementUsage(usage.userId);
     return Response.json({ reponse });
   } catch (err) {
     console.error(err);
