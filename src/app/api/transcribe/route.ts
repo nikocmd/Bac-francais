@@ -24,10 +24,11 @@ export async function POST(request: Request) {
     new Blob([await audio.arrayBuffer()], { type: mime }),
     `audio.${ext}`
   );
-  groqForm.append("model", "whisper-large-v3-turbo");
+  groqForm.append("model", "whisper-large-v3");
   groqForm.append("language", "fr");
   groqForm.append("response_format", "json");
   groqForm.append("temperature", "0");
+  groqForm.append("prompt", "Transcription d'un élève de terminale qui présente un oral de bac de français. Il parle de littérature, d'analyse linéaire, de figures de style, de mouvements littéraires, d'auteurs classiques. Vocabulaire : métaphore, hyperbole, oxymore, chiasme, anaphore, péripétie, dénouement, alexandrin, sonnet, tragédie, comédie, baroque, classicisme, romantisme, réalisme, Molière, Racine, Corneille, Hugo, Baudelaire, Flaubert, Zola.");
 
   const res = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
     method: "POST",
