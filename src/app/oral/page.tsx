@@ -26,16 +26,16 @@ export default function OralPage() {
   const [type, setType] = useState("Explication de texte linéaire");
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [loading, setLoading] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
   const [error, setError] = useState("");
   const [limitReached, setLimitReached] = useState(false);
   const [recording, setRecording] = useState(false);
-  const [supported, setSupported] = useState(true);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const recognitionRef = useRef<any>(null);
-  const recordingRef = useRef(false);
-  const transcriptAccumRef = useRef("");
-  const [liveText, setLiveText] = useState("");
+  const [timer, setTimer] = useState(0);
   const [userId, setUserId] = useState<string | undefined>(undefined);
+
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     import("@/lib/supabase/client").then(({ createClient }) => {
@@ -45,73 +45,64 @@ export default function OralPage() {
     });
   }, []);
 
+  // Recording timer
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const w = window as any;
-    if (!w.SpeechRecognition && !w.webkitSpeechRecognition) setSupported(false);
-  }, []);
+    if (recording) {
+      setTimer(0);
+      timerRef.current = setInterval(() => setTimer(t => t + 1), 1000);
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current);
+    }
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [recording]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function startRecognition() {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const w = window as any;
-    const SR = w.SpeechRecognition || w.webkitSpeechRecognition;
-    if (!SR || !recordingRef.current) return;
-
-    // Always create a fresh instance — reusing ended instances breaks on all browsers
-    const r = new SR();
-    r.lang = "fr-FR";
-    r.continuous = true;
-    r.interimResults = true;
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    r.onresult = (e: any) => {
-      let sessionFinal = "";
-      let interim = "";
-      for (let i = 0; i < e.results.length; i++) {
-        if (e.results[i].isFinal) sessionFinal += e.results[i][0].transcript + " ";
-        else interim += e.results[i][0].transcript;
-      }
-      setTranscription(transcriptAccumRef.current + sessionFinal);
-      setLiveText(interim);
-    };
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    r.onerror = (e: any) => {
-      if (e.error === "no-speech") return; // silence — onend will restart
-      recordingRef.current = false;
-      setRecording(false);
-      setLiveText("");
-    };
-
-    r.onend = () => {
-      setLiveText("");
-      if (recordingRef.current) {
-        // Save finals accumulated this session, then restart with fresh instance
-        setTranscription(prev => { transcriptAccumRef.current = prev; return prev; });
-        setTimeout(startRecognition, 150);
-      } else {
-        setRecording(false);
-      }
-    };
-
-    recognitionRef.current = r;
-    try { r.start(); } catch { /* permission denied or not available */ }
+  function formatTimer(s: number) {
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
   }
 
-  function toggleRecording() {
-    if (recordingRef.current) {
-      recordingRef.current = false;
-      try { recognitionRef.current?.stop(); } catch { /* ignore */ }
+  async function toggleRecording() {
+    if (recording) {
+      mediaRecorderRef.current?.stop();
       setRecording(false);
-      setLiveText("");
-    } else {
-      recordingRef.current = true;
-      transcriptAccumRef.current = "";
-      setTranscription("");
-      setLiveText("");
+      return;
+    }
+
+    setError("");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      chunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        const blob = new Blob(chunksRef.current, { type: mediaRecorder.mimeType || "audio/webm" });
+        setTranscribing(true);
+        try {
+          const fd = new FormData();
+          fd.append("audio", blob, "recording");
+          const res = await fetch("/api/transcribe", { method: "POST", body: fd });
+          const data = await res.json();
+          if (data.text) {
+            setTranscription(prev => prev ? prev.trimEnd() + " " + data.text.trim() : data.text.trim());
+          } else {
+            setError("Transcription impossible. Réessaie.");
+          }
+        } catch {
+          setError("Erreur réseau lors de la transcription.");
+        } finally {
+          setTranscribing(false);
+        }
+      };
+
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start();
       setRecording(true);
-      startRecognition();
+    } catch {
+      setError("Impossible d'accéder au microphone. Vérifie les permissions.");
     }
   }
 
@@ -186,31 +177,21 @@ export default function OralPage() {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium text-[#9ca3af]">Ta prestation orale</label>
-            {supported && (
-              <button
-                onClick={toggleRecording}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                  recording
-                    ? "bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30"
-                    : "bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30"
-                }`}
-              >
-                {recording ? (
-                  <>
-                    <MicOff size={14} />
-                    Arrêter l&apos;enregistrement
-                  </>
-                ) : (
-                  <>
-                    <Mic size={14} />
-                    Parler (micro)
-                  </>
-                )}
-              </button>
-            )}
+            <button
+              onClick={toggleRecording}
+              disabled={transcribing}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-50 ${
+                recording
+                  ? "bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30"
+                  : "bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30"
+              }`}
+            >
+              {recording ? <><MicOff size={14} /> Arrêter ({formatTimer(timer)})</> : <><Mic size={14} /> Parler (micro)</>}
+            </button>
           </div>
 
-          <div className="h-10 flex items-center justify-center gap-1" style={{ minHeight: "2.5rem" }}>
+          {/* Fixed-height status bar */}
+          <div className="h-10 flex items-center justify-center gap-1">
             {recording && (
               <>
                 {[...Array(5)].map((_, i) => (
@@ -219,17 +200,18 @@ export default function OralPage() {
                 <span className="ml-3 text-sm text-blue-400">Enregistrement en cours...</span>
               </>
             )}
+            {transcribing && (
+              <span className="flex items-center gap-2 text-sm text-amber-400">
+                <Loader2 size={14} className="animate-spin" /> Transcription en cours...
+              </span>
+            )}
           </div>
 
           <textarea
             className="w-full bg-[#0a0a0f] border border-[#2a2a3e] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none"
             rows={8}
-            placeholder={
-              supported
-                ? "Clique sur 'Parler' pour dicter, ou tape ton texte ici..."
-                : "Tape ou colle ici le texte de ta prestation..."
-            }
-            value={transcription + (liveText ? " " + liveText : "")}
+            placeholder="Clique sur 'Parler' pour dicter, ou tape ton texte ici..."
+            value={transcription}
             onChange={e => setTranscription(e.target.value)}
           />
         </div>
@@ -286,7 +268,6 @@ export default function OralPage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-4">
-            {/* Points forts */}
             <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-5">
               <div className="flex items-center gap-2 mb-3">
                 <CheckCircle size={16} className="text-emerald-400" />
@@ -301,7 +282,6 @@ export default function OralPage() {
                 ))}
               </ul>
             </div>
-            {/* Axes */}
             <div className="bg-orange-500/10 border border-orange-500/20 rounded-2xl p-5">
               <div className="flex items-center gap-2 mb-3">
                 <AlertCircle size={16} className="text-orange-400" />
@@ -316,7 +296,6 @@ export default function OralPage() {
                 ))}
               </ul>
             </div>
-            {/* Conseils */}
             <div className="bg-violet-500/10 border border-violet-500/20 rounded-2xl p-5">
               <div className="flex items-center gap-2 mb-3">
                 <Lightbulb size={16} className="text-violet-400" />
