@@ -57,6 +57,13 @@ export default function AnalysePage() {
       if (data.error) { setError(data.error); return; }
       setAnalyse(data.analyse);
       setOpenMvt(0);
+      // Sauvegarde de l'analyse complète en localStorage
+      try {
+        const entry = { id: Date.now().toString(), ...form, analyse: data.analyse, savedAt: new Date().toISOString() };
+        const prev = JSON.parse(localStorage.getItem("saved_analyses") || "[]");
+        prev.unshift(entry);
+        localStorage.setItem("saved_analyses", JSON.stringify(prev.slice(0, 30)));
+      } catch {}
       const { leveledUp } = await addXP("analyse", userId);
       if (leveledUp) window.dispatchEvent(new CustomEvent("levelup"));
       // Sauvegarde auto du texte

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { BookOpen, Trash2, Loader2, Plus, BarChart2, ArrowRight } from "lucide-react";
+import { BookOpen, Trash2, Loader2, Plus, BarChart2, ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
 
 interface UserText {
@@ -13,16 +13,34 @@ interface UserText {
   created_at: string;
 }
 
+interface Procede { procede: string; exemple: string; effet: string; }
+interface Mouvement { numero: number; titre: string; lignes: string; procedes: Procede[]; }
+interface SavedAnalyse {
+  id: string;
+  titre: string;
+  auteur: string;
+  oeuvre: string;
+  axe: string;
+  savedAt: string;
+  analyse: { problematique: string; introduction: string; mouvements: Mouvement[]; conclusion: string; ouverture: string; };
+}
+
 type Tab = "textes" | "analyses";
 
 export default function MesTextesPage() {
   const [texts, setTexts] = useState<UserText[]>([]);
+  const [savedAnalyses, setSavedAnalyses] = useState<SavedAnalyse[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("textes");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
     load();
+    try {
+      const stored = JSON.parse(localStorage.getItem("saved_analyses") || "[]");
+      setSavedAnalyses(stored);
+    } catch {}
   }, []);
 
   async function load() {
@@ -50,6 +68,12 @@ export default function MesTextesPage() {
     await supabase.from("user_texts").delete().eq("id", id);
     setTexts(prev => prev.filter(t => t.id !== id));
     setDeleting(null);
+  }
+
+  function deleteAnalyse(id: string) {
+    const updated = savedAnalyses.filter(a => a.id !== id);
+    setSavedAnalyses(updated);
+    try { localStorage.setItem("saved_analyses", JSON.stringify(updated)); } catch {}
   }
 
   const count = texts.length;
@@ -181,52 +205,86 @@ export default function MesTextesPage() {
         </div>
       ) : (
         /* ── Mes analyses tab ── */
-        <div className="space-y-3">
-          {texts.map((t, i) => (
-            <div key={t.id}
-              className="bg-[#0a1543]/80 border border-[#19327f]/60 rounded-2xl p-5 hover:border-[#a78bfa]/30 transition-all group">
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-[#050a2e] border border-[#19327f]/60 flex items-center justify-center">
-                  <span className="text-xs font-black text-[#a78bfa] font-mono">{i + 1}</span>
-                </div>
-                <div className="flex-1 min-w-0 space-y-2">
-                  {/* Title row */}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-white font-bold text-sm">{t.titre || "Extrait sans titre"}</span>
-                    {t.oeuvre && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-[#a78bfa]/10 border border-[#a78bfa]/20 text-[#a78bfa]">{t.oeuvre}</span>
-                    )}
-                  </div>
-                  {/* Auteur */}
-                  {t.auteur && (
-                    <p className="text-xs text-[#6b7280]">
-                      <span className="text-[#a0b0d0] font-bold">Auteur :</span> {t.auteur}
-                    </p>
-                  )}
-                  {/* Axe */}
-                  {t.axe && (
-                    <p className="text-xs text-[#a0b0d0]">
-                      <span className="font-bold">Axe :</span> <span className="italic">{t.axe}</span>
-                    </p>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <Link
-                    href="/analyse"
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#a78bfa]/10 border border-[#a78bfa]/30 text-[#a78bfa] text-xs font-bold hover:bg-[#a78bfa]/20 transition-all">
-                    Relancer l&apos;analyse <ArrowRight size={12} />
-                  </Link>
+        savedAnalyses.length === 0 ? (
+          <div className="text-center py-20 space-y-4">
+            <div className="text-6xl">🔬</div>
+            <p className="text-white font-black text-xl">Aucune analyse sauvegardée</p>
+            <p className="text-[#6b7280] text-sm max-w-sm mx-auto">Génère une analyse linéaire — elle apparaîtra ici automatiquement.</p>
+            <Link href="/analyse" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#a78bfa] text-[#050a2e] font-black text-sm uppercase tracking-widest hover:bg-[#c4b5fd] transition-all">
+              <Plus size={15} /> Faire une analyse
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {savedAnalyses.map((a, i) => {
+              const isOpen = expandedId === a.id;
+              return (
+                <div key={a.id} className="bg-[#0a1543]/80 border border-[#19327f]/60 rounded-2xl overflow-hidden hover:border-[#a78bfa]/30 transition-all group">
+                  {/* Header */}
                   <button
-                    onClick={() => handleDelete(t.id)}
-                    disabled={deleting === t.id}
-                    className="p-2 rounded-lg text-[#2a3a6e] hover:text-red-400 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100">
-                    {deleting === t.id ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
+                    onClick={() => setExpandedId(isOpen ? null : a.id)}
+                    className="w-full flex items-center gap-4 p-5 text-left">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-[#050a2e] border border-[#19327f]/60 flex items-center justify-center">
+                      <span className="text-xs font-black text-[#a78bfa] font-mono">{i + 1}</span>
+                    </div>
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-white font-bold text-sm">{a.titre || "Extrait sans titre"}</span>
+                        {a.oeuvre && <span className="text-xs px-2 py-0.5 rounded-full bg-[#a78bfa]/10 border border-[#a78bfa]/20 text-[#a78bfa]">{a.oeuvre}</span>}
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-[#6b7280]">
+                        {a.auteur && <span>{a.auteur}</span>}
+                        {a.axe && <span className="italic truncate max-w-xs">{a.axe}</span>}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className="text-xs text-[#2a3a6e]">{new Date(a.savedAt).toLocaleDateString("fr-FR")}</span>
+                      <button onClick={(e) => { e.stopPropagation(); deleteAnalyse(a.id); }}
+                        className="p-1.5 rounded-lg text-[#2a3a6e] hover:text-red-400 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100">
+                        <Trash2 size={14} />
+                      </button>
+                      {isOpen ? <ChevronUp size={16} className="text-[#a78bfa]" /> : <ChevronDown size={16} className="text-[#6b7280]" />}
+                    </div>
                   </button>
+                  {/* Expanded content */}
+                  {isOpen && (
+                    <div className="border-t border-[#19327f]/60 p-5 space-y-4">
+                      {a.analyse.problematique && (
+                        <div className="space-y-1">
+                          <p className="text-xs font-black text-[#FFD700] uppercase tracking-widest">Problématique</p>
+                          <p className="text-sm text-[#e2e8f0] italic">{a.analyse.problematique}</p>
+                        </div>
+                      )}
+                      {a.analyse.mouvements?.length > 0 && (
+                        <div className="space-y-2">
+                          <p className="text-xs font-black text-[#00d9ff] uppercase tracking-widest">Mouvements</p>
+                          {a.analyse.mouvements.map((m) => (
+                            <div key={m.numero} className="bg-[#050a2e] border border-[#19327f]/40 rounded-xl p-3 space-y-1">
+                              <p className="text-xs font-bold text-white">Mvt {m.numero} — {m.titre} <span className="text-[#6b7280] font-normal">(l. {m.lignes})</span></p>
+                              {m.procedes.map((p, j) => (
+                                <p key={j} className="text-xs text-[#a0b0d0]">
+                                  <span className="text-[#a78bfa] font-bold">{p.procede}</span>
+                                  {p.exemple && <span className="text-[#6b7280]"> — « {p.exemple} »</span>}
+                                  {p.effet && <span className="text-[#9ca3af]"> → {p.effet}</span>}
+                                </p>
+                              ))}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {a.analyse.conclusion && (
+                        <div className="space-y-1">
+                          <p className="text-xs font-black text-[#a78bfa] uppercase tracking-widest">Conclusion</p>
+                          <p className="text-sm text-[#a0b0d0]">{a.analyse.conclusion}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
+              );
+            })}
+          </div>
+        )
       )}
     </div>
   );
