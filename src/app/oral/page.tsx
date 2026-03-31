@@ -56,7 +56,7 @@ export default function OralPage() {
   // Init Web Worker — loaded from CDN as Blob to bypass bundler issues
   useEffect(() => {
     const workerCode = `
-importScripts('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js');
+importScripts('${window.location.origin}/transformers.min.js');
 
 const { pipeline, env } = self.Transformers;
 env.backends.onnx.wasm.numThreads = 1;
