@@ -1,39 +1,6 @@
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Mic, MicOff, Loader2, RotateCcw, ChevronRight, AlertTriangle, Clock, Lock, BookOpen } from "lucide-react";
-
-const WHISPER_WORKER_CODE = (origin: string) => `
-let asr = null;
-self.onmessage = async function(e) {
-  const msg = e.data;
-  if (msg.type === 'load') {
-    try {
-      const { pipeline, env } = await import('${origin}/transformers.min.js');
-      env.backends.onnx.wasm.numThreads = 1;
-      asr = await pipeline('automatic-speech-recognition', 'Xenova/whisper-base', {
-        quantized: false,
-        progress_callback: function() {}
-      });
-      self.postMessage({ type: 'ready' });
-    } catch(err) { self.postMessage({ type: 'error', message: String(err) }); }
-  }
-  if (msg.type === 'transcribe') {
-    try {
-      const result = await asr(msg.audio, {
-        language: 'french', task: 'transcribe', chunk_length_s: 30,
-        condition_on_previous_text: false, temperature: 0,
-      });
-      let text = result.text.trim();
-      text = text.replace(/\[(Musique|Music|BLANK_AUDIO|Silence|Bruit|applaudissements)[^\]]*\]/gi, '').trim();
-      const words = text.split(' ');
-      if (words.length > 10) {
-        const phrase = words.slice(0, 5).join(' ');
-        if ((text.split(phrase).length - 1) > 3) text = '';
-      }
-      self.postMessage({ type: 'result', text, target: msg.target });
-    } catch(err) { self.postMessage({ type: 'error', message: String(err) }); }
-  }
-};`;
 import Link from "next/link";
 import { addXP } from "@/lib/gamification";
 import Paywall from "@/components/Paywall";
@@ -79,7 +46,6 @@ export default function ExamenPage() {
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [isPremium, setIsPremium] = useState<boolean | null>(null);
   const [recordingTarget, setRecordingTarget] = useState<"explication" | "oeuvre">("explication");
-  const workerRef = useRef<Worker | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -106,25 +72,20 @@ export default function ExamenPage() {
     loadData();
   }, []);
 
-  // Preload Whisper worker silently
-  useEffect(() => {
-    const origin = window.location.origin;
-    const blob = new Blob([WHISPER_WORKER_CODE(origin)], { type: "text/javascript" });
-    const url = URL.createObjectURL(blob);
-    const worker = new Worker(url, { type: "module" });
-    worker.onmessage = (e) => {
-      const { type: t, text, target } = e.data;
-      if (t === "result") {
-        if (target === "explication") setExplicationTranscription(prev => prev ? prev + " " + text : text);
-        else setOeuvreTranscription(prev => prev ? prev + " " + text : text);
-        setTranscribing(false);
+  async function sendToGroq(blob: Blob, target: "explication" | "oeuvre") {
+    setTranscribing(true);
+    try {
+      const form = new FormData();
+      form.append("audio", blob, "audio." + (blob.type.includes("mp4") ? "m4a" : "webm"));
+      const res = await fetch("/api/transcribe", { method: "POST", body: form });
+      const data = await res.json();
+      if (data.text) {
+        if (target === "explication") setExplicationTranscription(prev => prev ? prev + " " + data.text : data.text);
+        else setOeuvreTranscription(prev => prev ? prev + " " + data.text : data.text);
       }
-      if (t === "error") { setTranscribing(false); }
-    };
-    workerRef.current = worker;
-    worker.postMessage({ type: "load" });
-    return () => { worker.terminate(); URL.revokeObjectURL(url); };
-  }, []);
+    } catch { /* silently ignore */ }
+    finally { setTranscribing(false); }
+  }
 
   function tirageSortAndStart() {
     const text = texts[Math.floor(Math.random() * texts.length)];
@@ -153,22 +114,10 @@ export default function ExamenPage() {
         : MediaRecorder.isTypeSupported("audio/mp4") ? "audio/mp4" : "";
       const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
       recorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-      recorder.onstop = async () => {
+      recorder.onstop = () => {
         stream.getTracks().forEach(t => t.stop());
         const blob = new Blob(chunksRef.current, { type: recorder.mimeType });
-        setTranscribing(true);
-        try {
-          const arrayBuffer = await blob.arrayBuffer();
-          const audioCtx = new AudioContext();
-          const decoded = await audioCtx.decodeAudioData(arrayBuffer);
-          audioCtx.close();
-          const offCtx = new OfflineAudioContext(1, Math.ceil(decoded.duration * 16000), 16000);
-          const src = offCtx.createBufferSource();
-          src.buffer = decoded; src.connect(offCtx.destination); src.start();
-          const rendered = await offCtx.startRendering();
-          const float32 = rendered.getChannelData(0);
-          workerRef.current?.postMessage({ type: "transcribe", audio: float32, target }, [float32.buffer]);
-        } catch { setTranscribing(false); }
+        sendToGroq(blob, target);
       };
       recorder.start(250);
       mediaRecorderRef.current = recorder;

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Mic, MicOff, Loader2, Send, Star, CheckCircle,
   AlertCircle, Lightbulb, Zap, RotateCcw
@@ -13,8 +13,6 @@ interface Feedback {
   points_forts: string[]; axes_amelioration: string[]; conseils: string[]; criteres: Critere[];
 }
 
-type WorkerStatus = "idle" | "loading" | "ready" | "transcribing";
-
 export default function OralPage() {
   const [transcription, setTranscription] = useState("");
   const [contexte, setContexte] = useState("");
@@ -24,19 +22,15 @@ export default function OralPage() {
   const [error, setError] = useState("");
   const [limitReached, setLimitReached] = useState(false);
   const [recording, setRecording] = useState(false);
-  const [workerStatus, setWorkerStatus] = useState<WorkerStatus>("idle");
+  const [transcribing, setTranscribing] = useState(false);
   const [timer, setTimer] = useState(0);
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [isPremium, setIsPremium] = useState<boolean | null>(null);
-  const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
 
-  const workerRef = useRef<Worker | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Load premium status
   useEffect(() => {
     import("@/lib/supabase/client").then(({ createClient }) => {
       const client = createClient();
@@ -52,82 +46,6 @@ export default function OralPage() {
     });
   }, []);
 
-  // Init Web Worker — loaded from CDN as Blob to bypass bundler issues
-  useEffect(() => {
-    const origin = window.location.origin;
-    const workerCode = `
-let asr = null;
-
-self.onmessage = async function(e) {
-  const msg = e.data;
-
-  if (msg.type === 'load') {
-    try {
-      self.postMessage({ type: 'status', text: 'Chargement du modèle Whisper...' });
-      const { pipeline, env } = await import('${origin}/transformers.min.js');
-      env.backends.onnx.wasm.numThreads = 1;
-      asr = await pipeline('automatic-speech-recognition', 'Xenova/whisper-base', {
-        quantized: false,
-        progress_callback: function(p) {
-          if (p.status === 'downloading') {
-            const pct = p.total ? Math.round((p.loaded / p.total) * 100) : 0;
-            self.postMessage({ type: 'status', text: 'Téléchargement… ' + pct + '%' });
-          }
-        }
-      });
-      self.postMessage({ type: 'ready' });
-    } catch(err) {
-      self.postMessage({ type: 'error', message: String(err) });
-    }
-  }
-
-  if (msg.type === 'transcribe') {
-    try {
-      const result = await asr(msg.audio, {
-        language: 'french',
-        task: 'transcribe',
-        chunk_length_s: 30,
-        condition_on_previous_text: false,
-        temperature: 0,
-      });
-      // Filter hallucination tags and repeated phrases
-      let text = result.text.trim();
-      text = text.replace(/\[(Musique|Music|BLANK_AUDIO|Silence|Bruit|applaudissements)[^\]]*\]/gi, '').trim();
-      // Detect repetition hallucination (same phrase 3+ times)
-      const words = text.split(' ');
-      if (words.length > 10) {
-        const phrase = words.slice(0, 5).join(' ');
-        const occurrences = text.split(phrase).length - 1;
-        if (occurrences > 3) { self.postMessage({ type: 'result', text: '' }); return; }
-      }
-      self.postMessage({ type: 'result', text });
-    } catch(err) {
-      self.postMessage({ type: 'error', message: String(err) });
-    }
-  }
-};`;
-
-    const blob = new Blob([workerCode], { type: "text/javascript" });
-    const workerUrl = URL.createObjectURL(blob);
-    const worker = new Worker(workerUrl, { type: "module" });
-
-    worker.onmessage = (e) => {
-      const { type: t, text, message } = e.data;
-      if (t === "status") { setWorkerStatus("loading"); }
-      if (t === "ready") { setWorkerStatus("ready"); }
-      if (t === "result") { setTranscription(prev => prev ? prev + " " + text : text); setWorkerStatus("ready"); }
-      if (t === "error") { setError("Erreur Whisper : " + message); setWorkerStatus("ready"); }
-    };
-    worker.onerror = (e) => {
-      setError("Erreur worker : " + e.message);
-      setWorkerStatus("idle");
-    };
-    workerRef.current = worker;
-    worker.postMessage({ type: "load" });
-    return () => { worker.terminate(); URL.revokeObjectURL(workerUrl); };
-  }, []);
-
-  // Timer
   useEffect(() => {
     if (recording) {
       setTimer(0);
@@ -138,83 +56,43 @@ self.onmessage = async function(e) {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [recording]);
 
-  // Transcribe blob when recording stops
-  const transcribeBlob = useCallback(async (blob: Blob) => {
-    if (!workerRef.current) return;
-    setWorkerStatus("transcribing");
-    setWorkerStatus("transcribing");
-    setError("");
-
-    try {
-      const arrayBuffer = await blob.arrayBuffer();
-      // Decode + resample to 16 kHz using OfflineAudioContext
-      const audioCtx = new AudioContext();
-      const decoded = await audioCtx.decodeAudioData(arrayBuffer);
-      audioCtx.close();
-
-      // Resample to 16 kHz
-      const targetRate = 16000;
-      const offlineCtx = new OfflineAudioContext(
-        1,
-        Math.ceil(decoded.duration * targetRate),
-        targetRate
-      );
-      const source = offlineCtx.createBufferSource();
-      source.buffer = decoded;
-      source.connect(offlineCtx.destination);
-      source.start();
-      const rendered = await offlineCtx.startRendering();
-      const float32 = rendered.getChannelData(0);
-
-      workerRef.current.postMessage({ type: "transcribe", audio: float32 }, [float32.buffer]);
-    } catch (err) {
-      setError("Impossible de décoder l'audio : " + String(err));
-      setWorkerStatus("ready");
-    }
-  }, []);
-
-  useEffect(() => {
-    if (recordingBlob) transcribeBlob(recordingBlob);
-  }, [recordingBlob, transcribeBlob]);
-
   function fmt(s: number) { return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; }
+
+  async function sendToGroq(blob: Blob) {
+    setTranscribing(true);
+    setError("");
+    try {
+      const form = new FormData();
+      form.append("audio", blob, "audio." + (blob.type.includes("mp4") ? "m4a" : "webm"));
+      const res = await fetch("/api/transcribe", { method: "POST", body: form });
+      const data = await res.json();
+      if (data.error) { setError(data.error); return; }
+      if (data.text) setTranscription(prev => prev ? prev + " " + data.text : data.text);
+    } catch { setError("Erreur de transcription."); }
+    finally { setTranscribing(false); }
+  }
 
   async function startRecording() {
     setError("");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
       chunksRef.current = [];
-
-      // Prefer webm/opus, fallback to mp4 (Safari)
       const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
         ? "audio/webm;codecs=opus"
-        : MediaRecorder.isTypeSupported("audio/mp4")
-          ? "audio/mp4"
-          : "";
-
-      const recorder = mimeType
-        ? new MediaRecorder(stream, { mimeType })
-        : new MediaRecorder(stream);
-
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
-      };
+        : MediaRecorder.isTypeSupported("audio/mp4") ? "audio/mp4" : "";
+      const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
       recorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: recorder.mimeType });
-        setRecordingBlob(blob);
         stream.getTracks().forEach(t => t.stop());
-        streamRef.current = null;
+        const blob = new Blob(chunksRef.current, { type: recorder.mimeType });
+        sendToGroq(blob);
       };
-      recorder.start(250); // collect chunks every 250ms
+      recorder.start(250);
       mediaRecorderRef.current = recorder;
       setRecording(true);
     } catch (err: unknown) {
-      if (err instanceof DOMException && err.name === "NotAllowedError") {
-        setError("PERMISSION_DENIED");
-      } else {
-        setError("Impossible d'accéder au micro : " + String(err));
-      }
+      if (err instanceof DOMException && err.name === "NotAllowedError") setError("PERMISSION_DENIED");
+      else setError("Impossible d'accéder au micro : " + String(err));
     }
   }
 
@@ -223,18 +101,9 @@ self.onmessage = async function(e) {
     setRecording(false);
   }
 
-  function toggle() {
-    if (recording) stopRecording();
-    else startRecording();
-  }
-
   function reset() {
     if (recording) stopRecording();
-    setTranscription("");
-    setRecordingBlob(null);
-    setFeedback(null);
-    setError("");
-    setTimer(0);
+    setTranscription(""); setFeedback(null); setError(""); setTimer(0);
   }
 
   async function handleSubmit() {
@@ -260,10 +129,6 @@ self.onmessage = async function(e) {
   const noteColor = (n: number) =>
     n >= 16 ? "text-emerald-400" : n >= 12 ? "text-amber-400" : n >= 10 ? "text-orange-400" : "text-red-400";
 
-  const isTranscribing = workerStatus === "transcribing";
-  const modelReady = workerStatus === "ready";
-  const modelLoading = workerStatus === "loading" || workerStatus === "idle";
-
   if (isPremium === null) return (
     <div className="flex justify-center items-center min-h-[60vh]">
       <Loader2 size={28} className="animate-spin text-[#1a9fff]" />
@@ -286,11 +151,9 @@ self.onmessage = async function(e) {
         </div>
         <div>
           <h1 className="text-2xl font-bold">Accompagnement oral</h1>
-          <p className="text-[#9ca3af] text-sm">Entraîne-toi à voix haute — Whisper transcrit, l&apos;IA analyse</p>
+          <p className="text-[#9ca3af] text-sm">Entraîne-toi à voix haute — l&apos;IA analyse ta prestation</p>
         </div>
       </div>
-
-      {/* Invisible model preload — no status shown to user */}
 
       <div className="space-y-4 bg-[#12121a] rounded-2xl border border-[#1e1e2e] p-6">
         <div className="grid md:grid-cols-2 gap-4">
@@ -318,7 +181,6 @@ self.onmessage = async function(e) {
           </div>
         </div>
 
-        {/* Mic button + status */}
         <div className="flex items-center justify-between">
           <label className="text-sm font-medium text-[#9ca3af]">Ta prestation orale</label>
           <div className="flex items-center gap-2">
@@ -328,8 +190,8 @@ self.onmessage = async function(e) {
               </button>
             )}
             <button
-              onClick={toggle}
-              disabled={modelLoading || isTranscribing}
+              onClick={recording ? stopRecording : startRecording}
+              disabled={transcribing}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
                 recording
                   ? "bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30"
@@ -338,26 +200,22 @@ self.onmessage = async function(e) {
             >
               {recording
                 ? <><MicOff size={14} />Arrêter ({fmt(timer)})</>
-                : isTranscribing
+                : transcribing
                   ? <><Loader2 size={14} className="animate-spin" />Transcription…</>
-                  : <><Mic size={14} />Parler (micro)</>
+                  : <><Mic size={14} />Parler</>
               }
             </button>
           </div>
         </div>
 
-        {/* Wave animation — fixed height */}
-        <div className="h-10 flex items-center justify-center gap-1">
+        {/* Fixed height wave zone */}
+        <div className="h-8 flex items-center justify-center gap-1">
           {recording && (
-            <>
-              {[...Array(5)].map((_, i) => <div key={i} className="wave-bar" />)}
-              <span className="ml-3 text-sm text-blue-400">Enregistrement…</span>
-            </>
+            <>{[...Array(5)].map((_, i) => <div key={i} className="wave-bar" />)}<span className="ml-3 text-sm text-blue-400">Enregistrement…</span></>
           )}
-          {isTranscribing && (
+          {transcribing && !recording && (
             <span className="text-sm text-violet-400 flex items-center gap-2">
-              <Loader2 size={14} className="animate-spin" />
-              Whisper analyse l&apos;audio en local…
+              <Loader2 size={13} className="animate-spin" />Groq Whisper traite l&apos;audio…
             </span>
           )}
         </div>
@@ -370,7 +228,6 @@ self.onmessage = async function(e) {
           onChange={e => setTranscription(e.target.value)}
         />
 
-        {/* Permission denied */}
         {error === "PERMISSION_DENIED" && (
           <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 space-y-2">
             <p className="text-amber-400 text-sm font-semibold">🔒 Accès micro refusé</p>
@@ -378,7 +235,6 @@ self.onmessage = async function(e) {
               <li><strong>Chrome/Edge :</strong> cadenas 🔒 dans la barre → Microphone → Autoriser</li>
               <li><strong>Safari iOS :</strong> Réglages → Safari → Microphone → Autoriser</li>
             </ul>
-            <p className="text-amber-300/70 text-xs">Recharge la page après avoir autorisé.</p>
           </div>
         )}
 
