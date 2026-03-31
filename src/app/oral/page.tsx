@@ -1,6 +1,9 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
-import { Mic, MicOff, Loader2, Send, Star, CheckCircle, AlertCircle, Lightbulb, Zap } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import {
+  Mic, MicOff, Loader2, Send, Star, CheckCircle,
+  AlertCircle, Lightbulb, Zap, RotateCcw, Cpu
+} from "lucide-react";
 import { addXP } from "@/lib/gamification";
 import Paywall from "@/components/Paywall";
 
@@ -10,9 +13,10 @@ interface Feedback {
   points_forts: string[]; axes_amelioration: string[]; conseils: string[]; criteres: Critere[];
 }
 
+type WorkerStatus = "idle" | "loading" | "ready" | "transcribing";
+
 export default function OralPage() {
   const [transcription, setTranscription] = useState("");
-  const [liveText, setLiveText] = useState("");
   const [contexte, setContexte] = useState("");
   const [type, setType] = useState("Explication de texte linéaire");
   const [feedback, setFeedback] = useState<Feedback | null>(null);
@@ -20,17 +24,20 @@ export default function OralPage() {
   const [error, setError] = useState("");
   const [limitReached, setLimitReached] = useState(false);
   const [recording, setRecording] = useState(false);
-  const [supported, setSupported] = useState(true);
+  const [workerStatus, setWorkerStatus] = useState<WorkerStatus>("idle");
+  const [workerMsg, setWorkerMsg] = useState("");
   const [timer, setTimer] = useState(0);
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [isPremium, setIsPremium] = useState<boolean | null>(null);
+  const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const recogRef = useRef<any>(null);
-  const activeRef = useRef(false);
-  const finalRef = useRef("");
+  const workerRef = useRef<Worker | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Load premium status
   useEffect(() => {
     import("@/lib/supabase/client").then(({ createClient }) => {
       const client = createClient();
@@ -46,12 +53,30 @@ export default function OralPage() {
     });
   }, []);
 
+  // Init Web Worker
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const w = window as any;
-    if (!w.SpeechRecognition && !w.webkitSpeechRecognition) setSupported(false);
+    const worker = new Worker(
+      new URL("./whisper.worker.ts", import.meta.url),
+      { type: "module" }
+    );
+    worker.onmessage = (e) => {
+      const { type: t, text, message } = e.data;
+      if (t === "status") { setWorkerStatus("loading"); setWorkerMsg(text); }
+      if (t === "ready") { setWorkerStatus("ready"); setWorkerMsg(""); }
+      if (t === "result") { setTranscription(prev => prev ? prev + " " + text : text); setWorkerStatus("ready"); setWorkerMsg(""); }
+      if (t === "error") { setError("Erreur Whisper : " + message); setWorkerStatus("ready"); setWorkerMsg(""); }
+    };
+    worker.onerror = (e) => {
+      setError("Erreur worker : " + e.message);
+      setWorkerStatus("idle");
+    };
+    workerRef.current = worker;
+    // Pre-load model immediately
+    worker.postMessage({ type: "load" });
+    return () => worker.terminate();
   }, []);
 
+  // Timer
   useEffect(() => {
     if (recording) {
       setTimer(0);
@@ -62,73 +87,103 @@ export default function OralPage() {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [recording]);
 
+  // Transcribe blob when recording stops
+  const transcribeBlob = useCallback(async (blob: Blob) => {
+    if (!workerRef.current) return;
+    setWorkerStatus("transcribing");
+    setWorkerMsg("Transcription en cours…");
+    setError("");
+
+    try {
+      const arrayBuffer = await blob.arrayBuffer();
+      // Decode + resample to 16 kHz using OfflineAudioContext
+      const audioCtx = new AudioContext();
+      const decoded = await audioCtx.decodeAudioData(arrayBuffer);
+      audioCtx.close();
+
+      // Resample to 16 kHz
+      const targetRate = 16000;
+      const offlineCtx = new OfflineAudioContext(
+        1,
+        Math.ceil(decoded.duration * targetRate),
+        targetRate
+      );
+      const source = offlineCtx.createBufferSource();
+      source.buffer = decoded;
+      source.connect(offlineCtx.destination);
+      source.start();
+      const rendered = await offlineCtx.startRendering();
+      const float32 = rendered.getChannelData(0);
+
+      workerRef.current.postMessage({ type: "transcribe", audio: float32 }, [float32.buffer]);
+    } catch (err) {
+      setError("Impossible de décoder l'audio : " + String(err));
+      setWorkerStatus("ready");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (recordingBlob) transcribeBlob(recordingBlob);
+  }, [recordingBlob, transcribeBlob]);
+
   function fmt(s: number) { return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; }
 
-  function newSession() {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const w = window as any;
-    const SR = w.SpeechRecognition || w.webkitSpeechRecognition;
-    if (!SR || !activeRef.current) return;
+  async function startRecording() {
+    setError("");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      chunksRef.current = [];
 
-    const r = new SR();
-    r.lang = "fr-FR";
-    r.continuous = true;
-    r.interimResults = true;
+      // Prefer webm/opus, fallback to mp4 (Safari)
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : MediaRecorder.isTypeSupported("audio/mp4")
+          ? "audio/mp4"
+          : "";
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    r.onresult = (e: any) => {
-      let fin = ""; let tmp = "";
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        if (e.results[i].isFinal) fin += e.results[i][0].transcript;
-        else tmp += e.results[i][0].transcript;
-      }
-      if (fin) { finalRef.current += fin + " "; setTranscription(finalRef.current); }
-      setLiveText(tmp);
-    };
+      const recorder = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    r.onerror = (e: any) => {
-      setLiveText("");
-      if (e.error === "no-speech") return; // silence — onend relance
-      activeRef.current = false;
-      setRecording(false);
-      if (e.error === "not-allowed") {
-        setError("🔒 Permission micro refusée. Clique sur le cadenas dans la barre d'adresse de ton navigateur et autorise le microphone, puis réessaie.");
-      } else if (e.error === "network") {
-        setError("Pas de connexion internet — la reconnaissance vocale en nécessite une.");
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+      recorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: recorder.mimeType });
+        setRecordingBlob(blob);
+        stream.getTracks().forEach(t => t.stop());
+        streamRef.current = null;
+      };
+      recorder.start(250); // collect chunks every 250ms
+      mediaRecorderRef.current = recorder;
+      setRecording(true);
+    } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === "NotAllowedError") {
+        setError("PERMISSION_DENIED");
       } else {
-        setError("Erreur micro : " + e.error);
+        setError("Impossible d'accéder au micro : " + String(err));
       }
-    };
+    }
+  }
 
-    r.onend = () => {
-      setLiveText("");
-      if (activeRef.current) {
-        setTimeout(newSession, 150); // Chrome s'arrête sur les silences — on relance
-      } else {
-        setRecording(false);
-      }
-    };
-
-    recogRef.current = r;
-    try { r.start(); } catch { /* instance déjà démarrée */ }
+  function stopRecording() {
+    try { mediaRecorderRef.current?.stop(); } catch { /* ignore */ }
+    setRecording(false);
   }
 
   function toggle() {
-    if (activeRef.current) {
-      activeRef.current = false;
-      try { recogRef.current?.stop(); } catch { /* ignore */ }
-      setRecording(false);
-      setLiveText("");
-    } else {
-      activeRef.current = true;
-      finalRef.current = "";
-      setTranscription("");
-      setLiveText("");
-      setError("");
-      setRecording(true);
-      newSession();
-    }
+    if (recording) stopRecording();
+    else startRecording();
+  }
+
+  function reset() {
+    if (recording) stopRecording();
+    setTranscription("");
+    setRecordingBlob(null);
+    setFeedback(null);
+    setError("");
+    setTimer(0);
   }
 
   async function handleSubmit() {
@@ -154,7 +209,16 @@ export default function OralPage() {
   const noteColor = (n: number) =>
     n >= 16 ? "text-emerald-400" : n >= 12 ? "text-amber-400" : n >= 10 ? "text-orange-400" : "text-red-400";
 
-  if (isPremium === null) return <div className="flex justify-center py-20"><Loader2 size={24} className="animate-spin text-[#9ca3af]" /></div>;
+  const isTranscribing = workerStatus === "transcribing";
+  const modelReady = workerStatus === "ready";
+  const modelLoading = workerStatus === "loading" || workerStatus === "idle";
+
+  if (isPremium === null) return (
+    <div className="flex justify-center items-center min-h-[60vh]">
+      <Loader2 size={28} className="animate-spin text-[#1a9fff]" />
+    </div>
+  );
+
   if (!isPremium) return (
     <div className="max-w-xl mx-auto px-4 py-20 space-y-4 text-center">
       <h1 className="text-2xl font-bold">Accompagnement oral</h1>
@@ -171,21 +235,40 @@ export default function OralPage() {
         </div>
         <div>
           <h1 className="text-2xl font-bold">Accompagnement oral</h1>
-          <p className="text-[#9ca3af] text-sm">Entraîne-toi à voix haute — l&apos;IA analyse ta prestation</p>
+          <p className="text-[#9ca3af] text-sm">Entraîne-toi à voix haute — Whisper transcrit, l&apos;IA analyse</p>
         </div>
+      </div>
+
+      {/* Model status badge */}
+      <div className={`flex items-center gap-2 px-4 py-2 rounded-xl w-fit text-xs font-mono border transition-colors ${
+        modelReady
+          ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+          : "bg-blue-500/10 border-blue-500/20 text-blue-400"
+      }`}>
+        {modelLoading || workerMsg
+          ? <Loader2 size={12} className="animate-spin" />
+          : <Cpu size={12} />}
+        {workerMsg || (modelReady ? "Whisper prêt — 100% local, gratuit" : "Chargement Whisper…")}
       </div>
 
       <div className="space-y-4 bg-[#12121a] rounded-2xl border border-[#1e1e2e] p-6">
         <div className="grid md:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-[#9ca3af]">Contexte</label>
-            <input className="w-full bg-[#0a0a0f] border border-[#2a2a3e] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors"
-              placeholder="ex: Dom Juan, Acte II scène 2" value={contexte} onChange={e => setContexte(e.target.value)} />
+            <input
+              className="w-full bg-[#0a0a0f] border border-[#2a2a3e] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors"
+              placeholder="ex: Dom Juan, Acte II scène 2"
+              value={contexte}
+              onChange={e => setContexte(e.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-[#9ca3af]">Type d&apos;exercice</label>
-            <select className="w-full bg-[#0a0a0f] border border-[#2a2a3e] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors"
-              value={type} onChange={e => setType(e.target.value)}>
+            <select
+              className="w-full bg-[#0a0a0f] border border-[#2a2a3e] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors"
+              value={type}
+              onChange={e => setType(e.target.value)}
+            >
               <option>Explication de texte linéaire</option>
               <option>Entretien sur l&apos;œuvre</option>
               <option>Présentation de l&apos;œuvre personnelle</option>
@@ -194,40 +277,80 @@ export default function OralPage() {
           </div>
         </div>
 
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-[#9ca3af]">Ta prestation orale</label>
-            {supported ? (
-              <button onClick={toggle}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                  recording ? "bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30"
-                            : "bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30"}`}>
-                {recording ? <><MicOff size={14} />Arrêter ({fmt(timer)})</> : <><Mic size={14} />Parler (micro)</>}
+        {/* Mic button + status */}
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium text-[#9ca3af]">Ta prestation orale</label>
+          <div className="flex items-center gap-2">
+            {transcription && (
+              <button onClick={reset} className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs text-[#6b7280] border border-[#2a2a3e] hover:text-[#9ca3af] transition-colors">
+                <RotateCcw size={11} /> Effacer
               </button>
-            ) : (
-              <span className="text-xs text-[#6b7280]">Micro non supporté — tape ton texte</span>
             )}
+            <button
+              onClick={toggle}
+              disabled={modelLoading || isTranscribing}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+                recording
+                  ? "bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30"
+                  : "bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30"
+              }`}
+            >
+              {recording
+                ? <><MicOff size={14} />Arrêter ({fmt(timer)})</>
+                : isTranscribing
+                  ? <><Loader2 size={14} className="animate-spin" />Transcription…</>
+                  : <><Mic size={14} />Parler (micro)</>
+              }
+            </button>
           </div>
-
-          <div className="h-10 flex items-center justify-center gap-1">
-            {recording && <>{[...Array(5)].map((_, i) => <div key={i} className="wave-bar" />)}
-              <span className="ml-3 text-sm text-blue-400">Enregistrement...</span></>}
-          </div>
-
-          <textarea
-            className="w-full bg-[#0a0a0f] border border-[#2a2a3e] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none"
-            rows={8}
-            placeholder={supported ? "Clique sur 'Parler' pour dicter, ou tape ici..." : "Tape ou colle ici le texte de ta prestation..."}
-            value={transcription + (liveText ? " " + liveText : "")}
-            onChange={e => { setTranscription(e.target.value); finalRef.current = e.target.value; }}
-          />
         </div>
 
-        {limitReached && <Paywall />}
-        {error && !limitReached && <p className="text-amber-400 text-sm">{error}</p>}
+        {/* Wave animation — fixed height */}
+        <div className="h-10 flex items-center justify-center gap-1">
+          {recording && (
+            <>
+              {[...Array(5)].map((_, i) => <div key={i} className="wave-bar" />)}
+              <span className="ml-3 text-sm text-blue-400">Enregistrement…</span>
+            </>
+          )}
+          {isTranscribing && (
+            <span className="text-sm text-violet-400 flex items-center gap-2">
+              <Loader2 size={14} className="animate-spin" />
+              Whisper analyse l&apos;audio en local…
+            </span>
+          )}
+        </div>
 
-        <button onClick={handleSubmit} disabled={loading || !transcription.trim()}
-          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold transition-all">
+        <textarea
+          className="w-full bg-[#0a0a0f] border border-[#2a2a3e] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none"
+          rows={8}
+          placeholder="Clique sur 'Parler' pour dicter, ou tape ici directement..."
+          value={transcription}
+          onChange={e => setTranscription(e.target.value)}
+        />
+
+        {/* Permission denied */}
+        {error === "PERMISSION_DENIED" && (
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 space-y-2">
+            <p className="text-amber-400 text-sm font-semibold">🔒 Accès micro refusé</p>
+            <ul className="text-amber-300/80 text-xs space-y-1 list-disc list-inside">
+              <li><strong>Chrome/Edge :</strong> cadenas 🔒 dans la barre → Microphone → Autoriser</li>
+              <li><strong>Safari iOS :</strong> Réglages → Safari → Microphone → Autoriser</li>
+            </ul>
+            <p className="text-amber-300/70 text-xs">Recharge la page après avoir autorisé.</p>
+          </div>
+        )}
+
+        {limitReached && <Paywall />}
+        {error && error !== "PERMISSION_DENIED" && !limitReached && (
+          <p className="text-amber-400 text-sm">{error}</p>
+        )}
+
+        <button
+          onClick={handleSubmit}
+          disabled={loading || !transcription.trim()}
+          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold transition-all"
+        >
           {loading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
           {loading ? "Analyse en cours..." : "Obtenir mon feedback"}
         </button>
