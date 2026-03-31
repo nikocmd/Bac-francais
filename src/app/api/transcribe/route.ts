@@ -58,10 +58,14 @@ function isInaudible(text: string): boolean {
   // Known Whisper hallucination patterns on silence/noise
   const patterns = [
     /\[(musique|music|applaudissements|rires|bruit|silence|blank_audio)[^\]]*\]/i,
+    /sous-titrag/i,
     /sous-titres?\s+(réalisés?|par|de)/i,
+    /société\s+radio-canada/i,
+    /radio-canada/i,
     /merci\s+d['']avoir\s+regardé/i,
     /abonnez-vous/i,
     /www\./i,
+    /sous-titr/i,
   ];
   if (patterns.some(r => r.test(text))) return true;
 
