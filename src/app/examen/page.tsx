@@ -22,6 +22,126 @@ const GUILT_MESSAGES = [
   "Abandonne maintenant et tu regretteras le jour du vrai bac.",
 ];
 
+interface RecordingUIProps {
+  target: "explication" | "oeuvre";
+  title: string; subtitle: string; duration: string;
+  trans: string; timer: number; recording: boolean; transcribing: boolean;
+  guiltIdx: number; limitReached: boolean; error: string; showQuit: boolean;
+  selectedText: { titre: string; auteur: string; texte: string } | null;
+  onNext: () => void; nextLabel: string;
+  startRecording: (t: "explication" | "oeuvre") => void;
+  stopRecording: () => void;
+  setTranscription: (v: string) => void;
+  setShowQuit: (v: boolean) => void;
+  reset: () => void;
+  fmt: (s: number) => string;
+}
+
+function RecordingUI({
+  target, title, subtitle, duration, trans, timer, recording, transcribing,
+  guiltIdx, limitReached, error, showQuit, selectedText,
+  onNext, nextLabel, startRecording, stopRecording, setTranscription, setShowQuit, reset, fmt,
+}: RecordingUIProps) {
+  const timerColor = timer > 720 ? "text-red-400" : timer > 480 ? "text-amber-400" : "text-emerald-400";
+  return (
+    <div className="min-h-screen bg-[#050510] px-4 py-6 relative">
+      <div className="fixed inset-0 pointer-events-none"
+        style={{ background: recording ? "radial-gradient(ellipse at 50% 0%, rgba(239,68,68,0.06) 0%, transparent 70%)" : "none" }} />
+      <div className="max-w-2xl mx-auto space-y-5 relative z-10">
+        <div className="flex items-center justify-between bg-[#0a1543]/90 border border-[#19327f]/60 rounded-xl px-5 py-3">
+          <div>
+            <p className="text-xs font-black text-[#FFD700] uppercase tracking-widest">{title}</p>
+            <p className="text-xs text-[#6b7280]">{subtitle} · Durée conseillée : {duration}</p>
+          </div>
+          <div className={`font-mono font-black text-2xl ${timerColor}`}>
+            <Clock size={14} className="inline mr-1" />{fmt(timer)}
+          </div>
+        </div>
+        {recording && (
+          <p className="text-center text-[#6b7280] text-xs italic animate-pulse">&ldquo;{GUILT_MESSAGES[guiltIdx]}&rdquo;</p>
+        )}
+        {selectedText && (
+          <details className="bg-[#0a1543]/60 border border-[#19327f]/40 rounded-xl">
+            <summary className="px-4 py-2.5 text-xs font-bold text-[#a0b0d0] cursor-pointer uppercase tracking-widest">
+              📄 {selectedText.titre || "Texte"} — {selectedText.auteur}
+            </summary>
+            <div className="px-4 pb-4 pt-2 border-t border-[#19327f]/30">
+              <p className="text-xs text-[#a0b0d0] leading-relaxed whitespace-pre-wrap font-mono">{selectedText.texte}</p>
+            </div>
+          </details>
+        )}
+        <div className="bg-[#0a1543]/80 border border-[#19327f]/60 rounded-2xl p-5 min-h-[160px] max-h-[250px] overflow-y-auto">
+          <div className="flex items-center gap-2 mb-3">
+            {recording && <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />}
+            <p className="text-xs font-bold text-[#a0b0d0] uppercase tracking-widest">Transcription</p>
+          </div>
+          {trans || transcribing ? (
+            <p className="text-sm text-[#c9c9d4] leading-relaxed">
+              {trans}{transcribing && !trans && <span className="text-[#6b7280] italic">Transcription en cours…</span>}
+            </p>
+          ) : (
+            <p className="text-[#2a3a6e] text-sm italic">Ta voix apparaîtra ici...</p>
+          )}
+        </div>
+        <textarea
+          className="w-full bg-[#0a1543]/40 border border-[#19327f]/40 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#1a9fff]/60 resize-none"
+          rows={3} placeholder="Tu peux aussi taper ici..." value={trans}
+          onChange={e => setTranscription(e.target.value)} />
+        {limitReached && <Paywall />}
+        {error && !limitReached && <p className="text-red-400 text-sm text-center">{error}</p>}
+        <div className="flex gap-3">
+          {recording ? (
+            <button onClick={stopRecording}
+              className="flex-1 flex items-center justify-center gap-2 py-4 rounded-xl bg-[#0a1543] border border-[#19327f] text-[#a0b0d0] font-bold transition-all hover:border-[#1a9fff]/40">
+              <MicOff size={18} /> Arrêter
+            </button>
+          ) : transcribing ? (
+            <button disabled className="flex-1 flex items-center justify-center gap-2 py-4 rounded-xl bg-[#0a1543] border border-[#19327f] text-[#6b7280] font-bold opacity-60 cursor-wait">
+              <Loader2 size={18} className="animate-spin" /> Transcription…
+            </button>
+          ) : (
+            <button onClick={() => startRecording(target)}
+              className="flex-1 flex items-center justify-center gap-2 py-4 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold transition-all shadow-[0_0_20px_rgba(239,68,68,0.3)]">
+              <Mic size={18} /> {timer === 0 && !trans ? "Commencer" : "Reprendre"}
+            </button>
+          )}
+          <button
+            onClick={onNext}
+            disabled={!trans.trim() || recording || transcribing}
+            className="flex-1 flex items-center justify-center gap-2 py-4 rounded-xl font-black uppercase tracking-widest transition-all
+              disabled:bg-[#0a1543] disabled:border disabled:border-[#19327f]/40 disabled:text-[#2a3a6e] disabled:cursor-not-allowed
+              enabled:bg-[#1a9fff] enabled:hover:bg-[#00d9ff] enabled:text-[#050a2e] enabled:shadow-[0_0_20px_rgba(26,159,255,0.4)]">
+            <ChevronRight size={18} /> {nextLabel}
+          </button>
+        </div>
+        <div className="text-center">
+          <button onClick={() => setShowQuit(true)} className="text-xs text-[#2a3a6e] hover:text-red-400 transition-colors">
+            Abandonner l&apos;examen
+          </button>
+        </div>
+        {showQuit && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur px-4">
+            <div className="bg-[#0a1543] border border-red-500/40 rounded-2xl p-8 max-w-sm w-full space-y-5 text-center shadow-[0_0_40px_rgba(239,68,68,0.3)]">
+              <AlertTriangle size={36} className="text-red-400 mx-auto" />
+              <h3 className="text-xl font-black text-white">Tu veux vraiment abandonner ?</h3>
+              <p className="text-[#a0b0d0] text-sm leading-relaxed">
+                Les élèves qui abandonnent échouent 3x plus souvent le jour J.<br />
+                <span className="text-red-400 font-bold">Tu es si proche de terminer.</span>
+              </p>
+              <button onClick={() => setShowQuit(false)} className="w-full py-3 rounded-xl bg-[#1a9fff] text-[#050a2e] font-black uppercase tracking-widest text-sm">
+                Continuer l&apos;examen
+              </button>
+              <button onClick={reset} className="w-full py-2 text-xs text-[#2a3a6e] hover:text-red-400 transition-colors">
+                Abandonner quand même
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function ExamenPage() {
   const [step, setStep] = useState<Step>("briefing");
   const [mode, setMode] = useState<"complet" | "rapide">("complet");
@@ -387,129 +507,21 @@ export default function ExamenPage() {
     </div>
   );
 
-  /* ── RECORDING COMPONENT ── */
-  const RecordingUI = ({ target, title, subtitle, duration, onNext, nextLabel }: {
-    target: "explication" | "oeuvre"; title: string; subtitle: string; duration: string; onNext: () => void; nextLabel: string;
-  }) => {
-    const trans = target === "explication" ? explicationTranscription : oeuvreTranscription;
-    const timerColor = timer > 720 ? "text-red-400" : timer > 480 ? "text-amber-400" : "text-emerald-400";
-
-    return (
-      <div className="min-h-screen bg-[#050510] px-4 py-6 relative">
-        <div className="fixed inset-0 pointer-events-none"
-          style={{ background: recording ? "radial-gradient(ellipse at 50% 0%, rgba(239,68,68,0.06) 0%, transparent 70%)" : "none" }} />
-        <div className="max-w-2xl mx-auto space-y-5 relative z-10">
-          {/* Header */}
-          <div className="flex items-center justify-between bg-[#0a1543]/90 border border-[#19327f]/60 rounded-xl px-5 py-3">
-            <div>
-              <p className="text-xs font-black text-[#FFD700] uppercase tracking-widest">{title}</p>
-              <p className="text-xs text-[#6b7280]">{subtitle} · Durée conseillée : {duration}</p>
-            </div>
-            <div className={`font-mono font-black text-2xl ${timerColor}`}>
-              <Clock size={14} className="inline mr-1" />{fmt(timer)}
-            </div>
-          </div>
-
-          {recording && (
-            <p className="text-center text-[#6b7280] text-xs italic animate-pulse">&ldquo;{GUILT_MESSAGES[guiltIdx]}&rdquo;</p>
-          )}
-
-          {/* Texte rétractable */}
-          {selectedText && (
-            <details className="bg-[#0a1543]/60 border border-[#19327f]/40 rounded-xl">
-              <summary className="px-4 py-2.5 text-xs font-bold text-[#a0b0d0] cursor-pointer uppercase tracking-widest">
-                📄 {selectedText.titre || "Texte"} — {selectedText.auteur}
-              </summary>
-              <div className="px-4 pb-4 pt-2 border-t border-[#19327f]/30">
-                <p className="text-xs text-[#a0b0d0] leading-relaxed whitespace-pre-wrap font-mono">{selectedText.texte}</p>
-              </div>
-            </details>
-          )}
-
-          {/* Transcription */}
-          <div className="bg-[#0a1543]/80 border border-[#19327f]/60 rounded-2xl p-5 min-h-[160px] max-h-[250px] overflow-y-auto">
-            <div className="flex items-center gap-2 mb-3">
-              {recording && <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />}
-              <p className="text-xs font-bold text-[#a0b0d0] uppercase tracking-widest">Transcription</p>
-            </div>
-            {trans || transcribing ? (
-              <p className="text-sm text-[#c9c9d4] leading-relaxed">
-                {trans}{transcribing && !trans && <span className="text-[#6b7280] italic">Transcription en cours…</span>}
-              </p>
-            ) : (
-              <p className="text-[#2a3a6e] text-sm italic">Ta voix apparaîtra ici...</p>
-            )}
-          </div>
-
-          <textarea className="w-full bg-[#0a1543]/40 border border-[#19327f]/40 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#1a9fff]/60 resize-none"
-            rows={3} placeholder="Tu peux aussi taper ici..." value={trans}
-            onChange={e => target === "explication" ? setExplicationTranscription(e.target.value) : setOeuvreTranscription(e.target.value)} />
-
-          {limitReached && <Paywall />}
-          {error && !limitReached && <p className="text-red-400 text-sm text-center">{error}</p>}
-
-          <div className="flex gap-3">
-            {recording ? (
-              <button onClick={stopRecording}
-                className="flex-1 flex items-center justify-center gap-2 py-4 rounded-xl bg-[#0a1543] border border-[#19327f] text-[#a0b0d0] font-bold transition-all hover:border-[#1a9fff]/40">
-                <MicOff size={18} /> Arrêter
-              </button>
-            ) : transcribing ? (
-              <button disabled className="flex-1 flex items-center justify-center gap-2 py-4 rounded-xl bg-[#0a1543] border border-[#19327f] text-[#6b7280] font-bold opacity-60 cursor-wait">
-                <Loader2 size={18} className="animate-spin" /> Transcription…
-              </button>
-            ) : (
-              <button onClick={() => startRecording(target)}
-                className="flex-1 flex items-center justify-center gap-2 py-4 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold transition-all shadow-[0_0_20px_rgba(239,68,68,0.3)]">
-                <Mic size={18} /> {timer === 0 && !trans ? "Commencer" : "Reprendre"}
-              </button>
-            )}
-            <button
-              onClick={onNext}
-              disabled={!trans.trim() || recording || transcribing}
-              className="flex-1 flex items-center justify-center gap-2 py-4 rounded-xl font-black uppercase tracking-widest transition-all
-                disabled:bg-[#0a1543] disabled:border disabled:border-[#19327f]/40 disabled:text-[#2a3a6e] disabled:cursor-not-allowed
-                enabled:bg-[#1a9fff] enabled:hover:bg-[#00d9ff] enabled:text-[#050a2e] enabled:shadow-[0_0_20px_rgba(26,159,255,0.4)]">
-              <ChevronRight size={18} /> {nextLabel}
-            </button>
-          </div>
-
-          <div className="text-center">
-            <button onClick={() => setShowQuit(true)} className="text-xs text-[#2a3a6e] hover:text-red-400 transition-colors">
-              Abandonner l&apos;examen
-            </button>
-          </div>
-
-          {showQuit && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur px-4">
-              <div className="bg-[#0a1543] border border-red-500/40 rounded-2xl p-8 max-w-sm w-full space-y-5 text-center shadow-[0_0_40px_rgba(239,68,68,0.3)]">
-                <AlertTriangle size={36} className="text-red-400 mx-auto" />
-                <h3 className="text-xl font-black text-white">Tu veux vraiment abandonner ?</h3>
-                <p className="text-[#a0b0d0] text-sm leading-relaxed">
-                  Les élèves qui abandonnent échouent 3x plus souvent le jour J.<br />
-                  <span className="text-red-400 font-bold">Tu es si proche de terminer.</span>
-                </p>
-                <button onClick={() => setShowQuit(false)} className="w-full py-3 rounded-xl bg-[#1a9fff] text-[#050a2e] font-black uppercase tracking-widest text-sm">
-                  Continuer l&apos;examen
-                </button>
-                <button onClick={reset} className="w-full py-2 text-xs text-[#2a3a6e] hover:text-red-400 transition-colors">
-                  Abandonner quand même
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
+  const sharedRecordingProps = {
+    timer, recording, transcribing, guiltIdx, limitReached, error, showQuit,
+    selectedText, startRecording, stopRecording, setShowQuit, reset, fmt,
   };
 
   /* ── EXPLICATION (Partie 1) ── */
   if (step === "explication") return (
     <RecordingUI
+      {...sharedRecordingProps}
       target="explication"
       title="✦ Partie 1 — Explication linéaire"
       subtitle="Lecture + explication du texte · 10 points"
       duration="12 min"
+      trans={explicationTranscription}
+      setTranscription={setExplicationTranscription}
       onNext={() => { setTimer(0); setStep("grammaire"); }}
       nextLabel="Question de grammaire"
     />
@@ -553,10 +565,13 @@ export default function ExamenPage() {
   /* ── OEUVRE (Partie 2) ── */
   if (step === "oeuvre") return (
     <RecordingUI
+      {...sharedRecordingProps}
       target="oeuvre"
       title="✦ Partie 2 — Présentation de l'œuvre"
       subtitle={`${selectedText?.oeuvre || "Œuvre"} · 8 points`}
       duration="4 min"
+      trans={oeuvreTranscription}
+      setTranscription={setOeuvreTranscription}
       onNext={submitExamen}
       nextLabel="Soumettre au jury"
     />
