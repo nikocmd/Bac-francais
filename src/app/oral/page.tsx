@@ -68,9 +68,27 @@ export default function OralPage() {
     }
 
     setError("");
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setError("Micro non supporté sur ce navigateur.");
+      return;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+
+      // Pick best supported format
+      const preferredType = [
+        "audio/webm;codecs=opus",
+        "audio/webm",
+        "audio/ogg;codecs=opus",
+        "audio/mp4",
+      ].find(t => MediaRecorder.isTypeSupported(t)) ?? "";
+
+      const mediaRecorder = preferredType
+        ? new MediaRecorder(stream, { mimeType: preferredType })
+        : new MediaRecorder(stream);
+
       chunksRef.current = [];
 
       mediaRecorder.ondataavailable = (e) => {
@@ -79,7 +97,15 @@ export default function OralPage() {
 
       mediaRecorder.onstop = async () => {
         stream.getTracks().forEach(t => t.stop());
+        if (chunksRef.current.length === 0) {
+          setError("Aucun audio capturé. Vérifie le micro.");
+          return;
+        }
         const blob = new Blob(chunksRef.current, { type: mediaRecorder.mimeType || "audio/webm" });
+        if (blob.size < 1000) {
+          setError("Enregistrement trop court ou vide.");
+          return;
+        }
         setTranscribing(true);
         try {
           const fd = new FormData();
@@ -89,7 +115,7 @@ export default function OralPage() {
           if (data.text) {
             setTranscription(prev => prev ? prev.trimEnd() + " " + data.text.trim() : data.text.trim());
           } else {
-            setError("Transcription impossible. Réessaie.");
+            setError(data.error ?? "Transcription impossible. Réessaie.");
           }
         } catch {
           setError("Erreur réseau lors de la transcription.");
@@ -99,10 +125,17 @@ export default function OralPage() {
       };
 
       mediaRecorderRef.current = mediaRecorder;
-      mediaRecorder.start();
+      mediaRecorder.start(1000); // collect chunk every second — critical for mobile
       setRecording(true);
-    } catch {
-      setError("Impossible d'accéder au microphone. Vérifie les permissions.");
+    } catch (err: unknown) {
+      const name = (err as Error)?.name;
+      if (name === "NotAllowedError" || name === "PermissionDeniedError") {
+        setError("Permission micro refusée. Autorise le micro dans les réglages du navigateur.");
+      } else if (name === "NotFoundError") {
+        setError("Aucun micro détecté sur cet appareil.");
+      } else {
+        setError("Impossible d'accéder au micro : " + (err as Error)?.message);
+      }
     }
   }
 
