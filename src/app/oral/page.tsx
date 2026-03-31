@@ -10,47 +10,40 @@ interface Feedback {
   points_forts: string[]; axes_amelioration: string[]; conseils: string[]; criteres: Critere[];
 }
 
-// Whisper model loaded once and cached
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let whisperPipeline: any = null;
-
-async function loadWhisper() {
-  if (whisperPipeline) return whisperPipeline;
-  const { pipeline, env } = await import("@xenova/transformers");
-  env.allowLocalModels = false;
-  whisperPipeline = await pipeline("automatic-speech-recognition", "Xenova/whisper-small", {
-    quantized: true,
-  });
-  return whisperPipeline;
-}
-
-async function transcribeBlob(blob: Blob): Promise<string> {
-  const asr = await loadWhisper();
-
-  // Decode audio → resample to 16kHz mono Float32Array
+// Convert audio blob → WAV (universally supported by Gemini)
+async function blobToWav(blob: Blob): Promise<Blob> {
   const arrayBuffer = await blob.arrayBuffer();
   const audioCtx = new AudioContext();
   const decoded = await audioCtx.decodeAudioData(arrayBuffer);
   audioCtx.close();
 
-  let float32: Float32Array;
-  if (decoded.sampleRate === 16000 && decoded.numberOfChannels === 1) {
-    float32 = decoded.getChannelData(0);
-  } else {
-    const offline = new OfflineAudioContext(1, Math.ceil(decoded.duration * 16000), 16000);
-    const src = offline.createBufferSource();
-    src.buffer = decoded;
-    src.connect(offline.destination);
-    src.start(0);
-    const resampled = await offline.startRendering();
-    float32 = resampled.getChannelData(0);
-  }
+  // Resample to 16kHz mono
+  const sampleRate = 16000;
+  const offline = new OfflineAudioContext(1, Math.ceil(decoded.duration * sampleRate), sampleRate);
+  const src = offline.createBufferSource();
+  src.buffer = decoded;
+  src.connect(offline.destination);
+  src.start(0);
+  const resampled = await offline.startRendering();
+  const pcm = resampled.getChannelData(0);
 
-  // Pass as typed audio object — no language param to avoid tokenizer null errors
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const result: any = await asr({ sampling_rate: 16000, data: float32 });
-  const text = Array.isArray(result) ? result[0]?.text : result?.text;
-  return (text ?? "").trim();
+  // Encode as WAV
+  const buf = new ArrayBuffer(44 + pcm.length * 2);
+  const view = new DataView(buf);
+  const str = (o: number, s: string) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
+  str(0, "RIFF"); view.setUint32(4, 36 + pcm.length * 2, true);
+  str(8, "WAVE"); str(12, "fmt "); view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true); view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+  str(36, "data"); view.setUint32(40, pcm.length * 2, true);
+  let offset = 44;
+  for (let i = 0; i < pcm.length; i++) {
+    const s = Math.max(-1, Math.min(1, pcm[i]));
+    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+    offset += 2;
+  }
+  return new Blob([buf], { type: "audio/wav" });
 }
 
 export default function OralPage() {
@@ -60,7 +53,6 @@ export default function OralPage() {
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [loading, setLoading] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
-  const [modelLoading, setModelLoading] = useState(false);
   const [error, setError] = useState("");
   const [limitReached, setLimitReached] = useState(false);
   const [recording, setRecording] = useState(false);
@@ -137,23 +129,24 @@ export default function OralPage() {
       stream.getTracks().forEach(t => t.stop());
       if (chunksRef.current.length === 0) { setError("Enregistrement vide."); return; }
 
-      const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
-      if (blob.size < 500) { setError("Enregistrement trop court."); return; }
+      const rawBlob = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
+      if (rawBlob.size < 500) { setError("Enregistrement trop court."); return; }
 
       setTranscribing(true);
       try {
-        // First use: download model (~75MB), cached after that
-        if (!whisperPipeline) setModelLoading(true);
-        const text = await transcribeBlob(blob);
-        setModelLoading(false);
-        if (text) {
-          setTranscription(prev => prev ? prev.trimEnd() + " " + text : text);
+        // Convert to WAV (universally supported) then send to server
+        const wavBlob = await blobToWav(rawBlob);
+        const fd = new FormData();
+        fd.append("audio", wavBlob, "recording.wav");
+        const res = await fetch("/api/transcribe", { method: "POST", body: fd });
+        const data = await res.json();
+        if (data.text) {
+          setTranscription(prev => prev ? prev.trimEnd() + " " + data.text : data.text);
         } else {
-          setError("Aucun texte détecté. Réessaie en parlant plus fort.");
+          setError(data.error ?? "Aucun texte détecté. Réessaie en parlant plus fort.");
         }
       } catch (err) {
-        setModelLoading(false);
-        setError("Erreur de transcription : " + (err as Error)?.message);
+        setError("Erreur : " + (err as Error)?.message);
       } finally {
         setTranscribing(false);
       }
@@ -254,8 +247,7 @@ export default function OralPage() {
               <>{[...Array(5)].map((_, i) => <div key={i} className="wave-bar" />)}
               <span className="ml-3 text-sm text-blue-400">Enregistrement en cours...</span></>
             )}
-            {modelLoading && <span className="text-sm text-amber-400 flex items-center gap-2"><Loader2 size={14} className="animate-spin" /> Chargement du modèle (1ère fois ~75MB)...</span>}
-            {transcribing && !modelLoading && <span className="text-sm text-amber-400 flex items-center gap-2"><Loader2 size={14} className="animate-spin" /> Transcription...</span>}
+            {transcribing && <span className="text-sm text-amber-400 flex items-center gap-2"><Loader2 size={14} className="animate-spin" /> Transcription...</span>}
           </div>
 
           <textarea
