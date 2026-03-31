@@ -1,6 +1,29 @@
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Mic, MicOff, Loader2, RotateCcw, ChevronRight, AlertTriangle, Clock, Lock, BookOpen } from "lucide-react";
+
+const WHISPER_WORKER_CODE = (origin: string) => `
+let asr = null;
+self.onmessage = async function(e) {
+  const msg = e.data;
+  if (msg.type === 'load') {
+    try {
+      const { pipeline, env } = await import('${origin}/transformers.min.js');
+      env.backends.onnx.wasm.numThreads = 1;
+      asr = await pipeline('automatic-speech-recognition', 'Xenova/whisper-base', {
+        quantized: false,
+        progress_callback: function() {}
+      });
+      self.postMessage({ type: 'ready' });
+    } catch(err) { self.postMessage({ type: 'error', message: String(err) }); }
+  }
+  if (msg.type === 'transcribe') {
+    try {
+      const result = await asr(msg.audio, { language: 'french', task: 'transcribe', chunk_length_s: 30 });
+      self.postMessage({ type: 'result', text: result.text.trim(), target: msg.target });
+    } catch(err) { self.postMessage({ type: 'error', message: String(err) }); }
+  }
+};`;
 import Link from "next/link";
 import { addXP } from "@/lib/gamification";
 import Paywall from "@/components/Paywall";
@@ -29,14 +52,11 @@ export default function ExamenPage() {
   const [grammarQuestions, setGrammarQuestions] = useState<string[]>([]);
   const [selectedText, setSelectedText] = useState<UserText | null>(null);
   const [selectedGrammar, setSelectedGrammar] = useState<string>("");
-  // Partie 1
   const [explicationTranscription, setExplicationTranscription] = useState("");
   const [grammarAnswer, setGrammarAnswer] = useState("");
-  // Partie 2
   const [oeuvreTranscription, setOeuvreTranscription] = useState("");
-  // Recording
-  const [liveText, setLiveText] = useState("");
   const [recording, setRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
   const [timer, setTimer] = useState(0);
   const [prepTimer, setPrepTimer] = useState(0);
   const [resultat, setResultat] = useState<Resultat | null>(null);
@@ -44,15 +64,14 @@ export default function ExamenPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [limitReached, setLimitReached] = useState(false);
-  const [supported, setSupported] = useState(true);
   const [guiltIdx, setGuiltIdx] = useState(0);
   const [showQuit, setShowQuit] = useState(false);
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [isPremium, setIsPremium] = useState<boolean | null>(null);
-  // Which transcription are we filling
   const [recordingTarget, setRecordingTarget] = useState<"explication" | "oeuvre">("explication");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const recognitionRef = useRef<any>(null);
+  const workerRef = useRef<Worker | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const guiltRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const prepRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -77,32 +96,25 @@ export default function ExamenPage() {
     loadData();
   }, []);
 
+  // Preload Whisper worker silently
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const w = window as any;
-    const SR = w.SpeechRecognition || w.webkitSpeechRecognition;
-    if (!SR) { setSupported(false); return; }
-    const r = new SR();
-    r.lang = "fr-FR"; r.continuous = true; r.interimResults = true;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    r.onresult = (e: any) => {
-      let final = ""; let interim = "";
-      for (let i = 0; i < e.results.length; i++) {
-        if (e.results[i].isFinal) final += e.results[i][0].transcript + " ";
-        else interim += e.results[i][0].transcript;
+    const origin = window.location.origin;
+    const blob = new Blob([WHISPER_WORKER_CODE(origin)], { type: "text/javascript" });
+    const url = URL.createObjectURL(blob);
+    const worker = new Worker(url, { type: "module" });
+    worker.onmessage = (e) => {
+      const { type: t, text, target } = e.data;
+      if (t === "result") {
+        if (target === "explication") setExplicationTranscription(prev => prev ? prev + " " + text : text);
+        else setOeuvreTranscription(prev => prev ? prev + " " + text : text);
+        setTranscribing(false);
       }
-      setLiveText(interim);
-      if (recordingTarget === "explication") setExplicationTranscription(final);
-      else setOeuvreTranscription(final);
+      if (t === "error") { setTranscribing(false); }
     };
-    r.onend = () => setRecording(false);
-    recognitionRef.current = r;
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-      if (guiltRef.current) clearInterval(guiltRef.current);
-      if (prepRef.current) clearInterval(prepRef.current);
-    };
-  }, [recordingTarget]);
+    workerRef.current = worker;
+    worker.postMessage({ type: "load" });
+    return () => { worker.terminate(); URL.revokeObjectURL(url); };
+  }, []);
 
   function tirageSortAndStart() {
     const text = texts[Math.floor(Math.random() * texts.length)];
@@ -120,25 +132,47 @@ export default function ExamenPage() {
     }, 1000);
   }
 
-  function startRecording(target: "explication" | "oeuvre") {
-    if (!recognitionRef.current) return;
+  async function startRecording(target: "explication" | "oeuvre") {
     setRecordingTarget(target);
-    if (target === "explication") { setExplicationTranscription(""); }
-    else { setOeuvreTranscription(""); }
-    setLiveText(""); setTimer(0);
-    recognitionRef.current.start();
-    setRecording(true);
-    timerRef.current = setInterval(() => setTimer(t => t + 1), 1000);
-    guiltRef.current = setInterval(() => setGuiltIdx(i => (i + 1) % GUILT_MESSAGES.length), 8000);
+    setTimer(0);
+    chunksRef.current = [];
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : MediaRecorder.isTypeSupported("audio/mp4") ? "audio/mp4" : "";
+      const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      recorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        const blob = new Blob(chunksRef.current, { type: recorder.mimeType });
+        setTranscribing(true);
+        try {
+          const arrayBuffer = await blob.arrayBuffer();
+          const audioCtx = new AudioContext();
+          const decoded = await audioCtx.decodeAudioData(arrayBuffer);
+          audioCtx.close();
+          const offCtx = new OfflineAudioContext(1, Math.ceil(decoded.duration * 16000), 16000);
+          const src = offCtx.createBufferSource();
+          src.buffer = decoded; src.connect(offCtx.destination); src.start();
+          const rendered = await offCtx.startRendering();
+          const float32 = rendered.getChannelData(0);
+          workerRef.current?.postMessage({ type: "transcribe", audio: float32, target }, [float32.buffer]);
+        } catch { setTranscribing(false); }
+      };
+      recorder.start(250);
+      mediaRecorderRef.current = recorder;
+      setRecording(true);
+      timerRef.current = setInterval(() => setTimer(t => t + 1), 1000);
+      guiltRef.current = setInterval(() => setGuiltIdx(i => (i + 1) % GUILT_MESSAGES.length), 8000);
+    } catch { /* mic denied — user can type manually */ }
   }
 
   function stopRecording() {
-    if (!recognitionRef.current) return;
-    recognitionRef.current.stop();
+    try { mediaRecorderRef.current?.stop(); } catch { /* ignore */ }
     setRecording(false);
     if (timerRef.current) clearInterval(timerRef.current);
     if (guiltRef.current) clearInterval(guiltRef.current);
-    setLiveText("");
   }
 
   async function submitExamen() {
@@ -172,8 +206,8 @@ export default function ExamenPage() {
   const reset = useCallback(() => {
     setStep("briefing"); setSelectedText(null); setSelectedGrammar("");
     setExplicationTranscription(""); setOeuvreTranscription("");
-    setGrammarAnswer(""); setLiveText(""); setTimer(0); setPrepTimer(0);
-    setResultat(null); setError(""); setRecording(false); setShowQuit(false);
+    setGrammarAnswer(""); setTimer(0); setPrepTimer(0);
+    setResultat(null); setError(""); setRecording(false); setTranscribing(false); setShowQuit(false);
     if (prepRef.current) clearInterval(prepRef.current);
   }, []);
 
@@ -393,37 +427,39 @@ export default function ExamenPage() {
               {recording && <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />}
               <p className="text-xs font-bold text-[#a0b0d0] uppercase tracking-widest">Transcription</p>
             </div>
-            {trans || liveText ? (
+            {trans || transcribing ? (
               <p className="text-sm text-[#c9c9d4] leading-relaxed">
-                {trans}{liveText && <span className="text-[#6b7280] italic"> {liveText}</span>}
+                {trans}{transcribing && !trans && <span className="text-[#6b7280] italic">Transcription en cours…</span>}
               </p>
             ) : (
               <p className="text-[#2a3a6e] text-sm italic">Ta voix apparaîtra ici...</p>
             )}
           </div>
 
-          {!supported && (
-            <textarea className="w-full bg-[#0a1543]/80 border border-[#19327f]/60 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#1a9fff]/60 resize-none"
-              rows={6} placeholder="Tape ta prestation ici..." value={trans}
-              onChange={e => target === "explication" ? setExplicationTranscription(e.target.value) : setOeuvreTranscription(e.target.value)} />
-          )}
+          <textarea className="w-full bg-[#0a1543]/40 border border-[#19327f]/40 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#1a9fff]/60 resize-none"
+            rows={3} placeholder="Tu peux aussi taper ici..." value={trans}
+            onChange={e => target === "explication" ? setExplicationTranscription(e.target.value) : setOeuvreTranscription(e.target.value)} />
 
           {limitReached && <Paywall />}
           {error && !limitReached && <p className="text-red-400 text-sm text-center">{error}</p>}
 
           <div className="flex gap-3">
-            {supported && (recording ? (
+            {recording ? (
               <button onClick={stopRecording}
                 className="flex-1 flex items-center justify-center gap-2 py-4 rounded-xl bg-[#0a1543] border border-[#19327f] text-[#a0b0d0] font-bold transition-all hover:border-[#1a9fff]/40">
                 <MicOff size={18} /> Arrêter
+              </button>
+            ) : transcribing ? (
+              <button disabled className="flex-1 flex items-center justify-center gap-2 py-4 rounded-xl bg-[#0a1543] border border-[#19327f] text-[#6b7280] font-bold opacity-60 cursor-wait">
+                <Loader2 size={18} className="animate-spin" /> Transcription…
               </button>
             ) : (
               <button onClick={() => startRecording(target)}
                 className="flex-1 flex items-center justify-center gap-2 py-4 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold transition-all shadow-[0_0_20px_rgba(239,68,68,0.3)]">
                 <Mic size={18} /> {timer === 0 && !trans ? "Commencer" : "Reprendre"}
               </button>
-            ))}
-            {trans.trim() && !recording && (
+            )}
+            {trans.trim() && !recording && !transcribing && (
               <button onClick={onNext}
                 className="flex-1 flex items-center justify-center gap-2 py-4 rounded-xl bg-[#1a9fff] hover:bg-[#00d9ff] text-[#050a2e] font-black uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(26,159,255,0.4)]">
                 <ChevronRight size={18} /> {nextLabel}

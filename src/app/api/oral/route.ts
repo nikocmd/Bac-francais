@@ -23,6 +23,8 @@ export async function POST(request: Request) {
 **Transcription de la prestation de l'élève :**
 ${transcription}
 
+⚠️ IMPORTANT — TRANSCRIPTION AUTOMATIQUE : Ce texte a été généré par un modèle de reconnaissance vocale (STT). Il peut contenir des mots mal reconnus ou des confusions sonores qui ne viennent PAS de l'élève. Ne pénalise JAMAIS un mot isolé mal retranscrit, ne signale pas les "mauvais mots" ou les fautes de diction. Évalue uniquement : les idées développées, la structure de l'analyse, la connaissance du texte, la pertinence des arguments. Adapte ton évaluation au contenu réel visible, pas à la forme phonétique.
+
 **Ta mission :**
 Évalue cette prestation selon les critères officiels du Bac de français et fournis un feedback détaillé, honnête et constructif.
 

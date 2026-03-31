@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import {
   Mic, MicOff, Loader2, Send, Star, CheckCircle,
-  AlertCircle, Lightbulb, Zap, RotateCcw, Cpu
+  AlertCircle, Lightbulb, Zap, RotateCcw
 } from "lucide-react";
 import { addXP } from "@/lib/gamification";
 import Paywall from "@/components/Paywall";
@@ -25,7 +25,6 @@ export default function OralPage() {
   const [limitReached, setLimitReached] = useState(false);
   const [recording, setRecording] = useState(false);
   const [workerStatus, setWorkerStatus] = useState<WorkerStatus>("idle");
-  const [workerMsg, setWorkerMsg] = useState("");
   const [timer, setTimer] = useState(0);
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [isPremium, setIsPremium] = useState<boolean | null>(null);
@@ -102,10 +101,10 @@ self.onmessage = async function(e) {
 
     worker.onmessage = (e) => {
       const { type: t, text, message } = e.data;
-      if (t === "status") { setWorkerStatus("loading"); setWorkerMsg(text); }
-      if (t === "ready") { setWorkerStatus("ready"); setWorkerMsg(""); }
-      if (t === "result") { setTranscription(prev => prev ? prev + " " + text : text); setWorkerStatus("ready"); setWorkerMsg(""); }
-      if (t === "error") { setError("Erreur Whisper : " + message); setWorkerStatus("ready"); setWorkerMsg(""); }
+      if (t === "status") { setWorkerStatus("loading"); }
+      if (t === "ready") { setWorkerStatus("ready"); }
+      if (t === "result") { setTranscription(prev => prev ? prev + " " + text : text); setWorkerStatus("ready"); }
+      if (t === "error") { setError("Erreur Whisper : " + message); setWorkerStatus("ready"); }
     };
     worker.onerror = (e) => {
       setError("Erreur worker : " + e.message);
@@ -131,7 +130,7 @@ self.onmessage = async function(e) {
   const transcribeBlob = useCallback(async (blob: Blob) => {
     if (!workerRef.current) return;
     setWorkerStatus("transcribing");
-    setWorkerMsg("Transcription en cours…");
+    setWorkerStatus("transcribing");
     setError("");
 
     try {
@@ -279,17 +278,7 @@ self.onmessage = async function(e) {
         </div>
       </div>
 
-      {/* Model status badge */}
-      <div className={`flex items-center gap-2 px-4 py-2 rounded-xl w-fit text-xs font-mono border transition-colors ${
-        modelReady
-          ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-          : "bg-blue-500/10 border-blue-500/20 text-blue-400"
-      }`}>
-        {modelLoading || workerMsg
-          ? <Loader2 size={12} className="animate-spin" />
-          : <Cpu size={12} />}
-        {workerMsg || (modelReady ? "Whisper prêt — 100% local, gratuit" : "Chargement Whisper…")}
-      </div>
+      {/* Invisible model preload — no status shown to user */}
 
       <div className="space-y-4 bg-[#12121a] rounded-2xl border border-[#1e1e2e] p-6">
         <div className="grid md:grid-cols-2 gap-4">

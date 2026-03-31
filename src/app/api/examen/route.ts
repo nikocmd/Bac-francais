@@ -39,6 +39,8 @@ ${explicationTranscription}
 **PARTIE 2 — Présentation de l'œuvre (transcription de l'élève) :**
 ${oeuvreTranscription || "L'élève n'a pas fait la partie 2"}
 
+⚠️ IMPORTANT — TRANSCRIPTION AUTOMATIQUE : Les transcriptions ont été générées par un modèle de reconnaissance vocale (STT). Elles peuvent contenir des mots mal reconnus qui ne viennent PAS de l'élève. Ne pénalise JAMAIS un mot isolé mal retranscrit, ne relève pas les "mauvais mots" ou erreurs de diction. Évalue uniquement les idées, la structure, la connaissance du texte/œuvre et la pertinence des arguments.
+
 Note avec la plus grande HONNÊTETÉ. Applique strictement le barème officiel.
 
 Réponds UNIQUEMENT avec un objet JSON valide (sans markdown) :
