@@ -26,16 +26,31 @@ async function loadWhisper() {
 
 async function transcribeBlob(blob: Blob): Promise<string> {
   const asr = await loadWhisper();
-  // Pass blob URL directly — Whisper handles audio decoding internally
-  const url = URL.createObjectURL(blob);
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const result: any = await asr(url, { language: "french", task: "transcribe" });
-    const text = Array.isArray(result) ? result[0]?.text : result?.text;
-    return (text ?? "").trim();
-  } finally {
-    URL.revokeObjectURL(url);
+
+  // Decode audio → resample to 16kHz mono Float32Array
+  const arrayBuffer = await blob.arrayBuffer();
+  const audioCtx = new AudioContext();
+  const decoded = await audioCtx.decodeAudioData(arrayBuffer);
+  audioCtx.close();
+
+  let float32: Float32Array;
+  if (decoded.sampleRate === 16000 && decoded.numberOfChannels === 1) {
+    float32 = decoded.getChannelData(0);
+  } else {
+    const offline = new OfflineAudioContext(1, Math.ceil(decoded.duration * 16000), 16000);
+    const src = offline.createBufferSource();
+    src.buffer = decoded;
+    src.connect(offline.destination);
+    src.start(0);
+    const resampled = await offline.startRendering();
+    float32 = resampled.getChannelData(0);
   }
+
+  // Pass as typed audio object — no language param to avoid tokenizer null errors
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const result: any = await asr({ sampling_rate: 16000, data: float32 });
+  const text = Array.isArray(result) ? result[0]?.text : result?.text;
+  return (text ?? "").trim();
 }
 
 export default function OralPage() {
