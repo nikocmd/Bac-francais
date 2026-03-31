@@ -86,9 +86,21 @@ self.onmessage = async function(e) {
       const result = await asr(msg.audio, {
         language: 'french',
         task: 'transcribe',
-        chunk_length_s: 30
+        chunk_length_s: 30,
+        condition_on_previous_text: false,
+        temperature: 0,
       });
-      self.postMessage({ type: 'result', text: result.text.trim() });
+      // Filter hallucination tags and repeated phrases
+      let text = result.text.trim();
+      text = text.replace(/\[(Musique|Music|BLANK_AUDIO|Silence|Bruit|applaudissements)[^\]]*\]/gi, '').trim();
+      // Detect repetition hallucination (same phrase 3+ times)
+      const words = text.split(' ');
+      if (words.length > 10) {
+        const phrase = words.slice(0, 5).join(' ');
+        const occurrences = text.split(phrase).length - 1;
+        if (occurrences > 3) { self.postMessage({ type: 'result', text: '' }); return; }
+      }
+      self.postMessage({ type: 'result', text });
     } catch(err) {
       self.postMessage({ type: 'error', message: String(err) });
     }

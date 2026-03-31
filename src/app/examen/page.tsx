@@ -19,8 +19,18 @@ self.onmessage = async function(e) {
   }
   if (msg.type === 'transcribe') {
     try {
-      const result = await asr(msg.audio, { language: 'french', task: 'transcribe', chunk_length_s: 30 });
-      self.postMessage({ type: 'result', text: result.text.trim(), target: msg.target });
+      const result = await asr(msg.audio, {
+        language: 'french', task: 'transcribe', chunk_length_s: 30,
+        condition_on_previous_text: false, temperature: 0,
+      });
+      let text = result.text.trim();
+      text = text.replace(/\[(Musique|Music|BLANK_AUDIO|Silence|Bruit|applaudissements)[^\]]*\]/gi, '').trim();
+      const words = text.split(' ');
+      if (words.length > 10) {
+        const phrase = words.slice(0, 5).join(' ');
+        if ((text.split(phrase).length - 1) > 3) text = '';
+      }
+      self.postMessage({ type: 'result', text, target: msg.target });
     } catch(err) { self.postMessage({ type: 'error', message: String(err) }); }
   }
 };`;
