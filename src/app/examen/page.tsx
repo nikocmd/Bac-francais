@@ -46,6 +46,7 @@ export default function ExamenPage() {
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [isPremium, setIsPremium] = useState<boolean | null>(null);
   const [recordingTarget, setRecordingTarget] = useState<"explication" | "oeuvre">("explication");
+  const [generatingGrammar, setGeneratingGrammar] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -90,11 +91,11 @@ export default function ExamenPage() {
     finally { setTranscribing(false); }
   }
 
-  function tirageSortAndStart() {
+  async function tirageSortAndStart() {
     const text = texts[Math.floor(Math.random() * texts.length)];
-    const gq = grammarQuestions.length > 0 ? grammarQuestions[Math.floor(Math.random() * grammarQuestions.length)] : "";
+    const topic = grammarQuestions.length > 0 ? grammarQuestions[Math.floor(Math.random() * grammarQuestions.length)] : "";
     setSelectedText(text);
-    setSelectedGrammar(gq);
+    setSelectedGrammar("");
     const prepDuration = mode === "rapide" ? 5 * 60 : 30 * 60;
     setPrepTimer(prepDuration);
     setStep("preparation");
@@ -104,6 +105,24 @@ export default function ExamenPage() {
         return t - 1;
       });
     }, 1000);
+    // Génération IA de la question de grammaire en arrière-plan
+    if (topic) {
+      setGeneratingGrammar(true);
+      try {
+        const res = await fetch("/api/grammaire-gen", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sujet: topic }),
+        });
+        const data = await res.json();
+        if (data.question) setSelectedGrammar(data.question);
+        else setSelectedGrammar(topic);
+      } catch {
+        setSelectedGrammar(topic);
+      } finally {
+        setGeneratingGrammar(false);
+      }
+    }
   }
 
   async function startRecording(target: "explication" | "oeuvre") {
@@ -338,12 +357,18 @@ export default function ExamenPage() {
         </div>
 
         {/* Question de grammaire */}
-        {selectedGrammar && (
-          <div className="bg-[#0a1543]/80 border border-[#19327f]/60 rounded-2xl p-5">
-            <p className="text-xs font-black text-[#a0b0d0] uppercase tracking-widest mb-2">Question de grammaire (à préparer)</p>
+        <div className="bg-[#0a1543]/80 border border-[#19327f]/60 rounded-2xl p-5">
+          <p className="text-xs font-black text-[#a0b0d0] uppercase tracking-widest mb-2">Question de grammaire (à préparer)</p>
+          {generatingGrammar ? (
+            <div className="flex items-center gap-2 text-[#6b7280] text-sm">
+              <Loader2 size={14} className="animate-spin" /> Génération de la question…
+            </div>
+          ) : selectedGrammar ? (
             <p className="text-[#e8e8f0] text-sm font-medium">{selectedGrammar}</p>
-          </div>
-        )}
+          ) : (
+            <p className="text-[#2a3a6e] text-sm italic">Aucune question de grammaire</p>
+          )}
+        </div>
 
         {/* Rappels */}
         <div className="bg-[#0a1543]/60 border border-[#19327f]/40 rounded-2xl p-5 space-y-2 text-sm text-[#a0b0d0]">
@@ -439,12 +464,14 @@ export default function ExamenPage() {
                 <Mic size={18} /> {timer === 0 && !trans ? "Commencer" : "Reprendre"}
               </button>
             )}
-            {trans.trim() && !recording && !transcribing && (
-              <button onClick={onNext}
-                className="flex-1 flex items-center justify-center gap-2 py-4 rounded-xl bg-[#1a9fff] hover:bg-[#00d9ff] text-[#050a2e] font-black uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(26,159,255,0.4)]">
-                <ChevronRight size={18} /> {nextLabel}
-              </button>
-            )}
+            <button
+              onClick={onNext}
+              disabled={!trans.trim() || recording || transcribing}
+              className="flex-1 flex items-center justify-center gap-2 py-4 rounded-xl font-black uppercase tracking-widest transition-all
+                disabled:bg-[#0a1543] disabled:border disabled:border-[#19327f]/40 disabled:text-[#2a3a6e] disabled:cursor-not-allowed
+                enabled:bg-[#1a9fff] enabled:hover:bg-[#00d9ff] enabled:text-[#050a2e] enabled:shadow-[0_0_20px_rgba(26,159,255,0.4)]">
+              <ChevronRight size={18} /> {nextLabel}
+            </button>
           </div>
 
           <div className="text-center">
