@@ -55,27 +55,25 @@ const mime = (audio.type || "audio/webm").split(";")[0].toLowerCase();
 }
 
 function isInaudible(text: string): boolean {
-  if (text.length < 8) return true;
+  // Empty or single char
+  if (text.length < 3) return true;
 
-  // Known Whisper hallucination patterns on silence/noise
+  // Exact known Whisper silence hallucinations (specific enough to never match real speech)
   const patterns = [
-    /\[(musique|music|applaudissements|rires|bruit|silence|blank_audio)[^\]]*\]/i,
-    /sous-titrag/i,
-    /sous-titres?\s+(réalisés?|par|de)/i,
+    /\[(musique|music|applaudissements|rires|silence|blank_audio)[^\]]*\]/i,
     /société\s+radio-canada/i,
-    /radio-canada/i,
+    /sous-titrage\s+société/i,
     /merci\s+d['']avoir\s+regardé/i,
-    /abonnez-vous/i,
-    /www\./i,
-    /sous-titr/i,
+    /abonnez-vous\s+à/i,
+    /www\.[a-z]/i,
   ];
   if (patterns.some(r => r.test(text))) return true;
 
-  // Repeated phrase hallucination (e.g. "Je vous ai dit que" × 10)
+  // Repeated phrase hallucination (e.g. "Je vous ai dit que" × 5+)
   const words = text.split(/\s+/);
-  if (words.length >= 8) {
+  if (words.length >= 12) {
     const phrase = words.slice(0, 5).join(" ").toLowerCase();
-    if ((text.toLowerCase().split(phrase).length - 1) >= 3) return true;
+    if ((text.toLowerCase().split(phrase).length - 1) >= 4) return true;
   }
 
   return false;
