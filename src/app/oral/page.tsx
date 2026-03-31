@@ -211,11 +211,11 @@ export default function OralPage() {
         {/* Fixed height wave zone */}
         <div className="h-8 flex items-center justify-center gap-1">
           {recording && (
-            <>{[...Array(5)].map((_, i) => <div key={i} className="wave-bar" />)}<span className="ml-3 text-sm text-blue-400">Enregistrement…</span></>
+            <>{[...Array(5)].map((_, i) => <div key={i} className="wave-bar" />)}<span className="ml-3 text-sm text-blue-400">Enregistrement… parle fort et articule bien</span></>
           )}
           {transcribing && !recording && (
-            <span className="text-sm text-violet-400 flex items-center gap-2">
-              <Loader2 size={13} className="animate-spin" />Groq Whisper traite l&apos;audio…
+            <span className="text-sm text-[#6b7280] flex items-center gap-2">
+              <Loader2 size={13} className="animate-spin" />Traitement…
             </span>
           )}
         </div>

@@ -7,10 +7,10 @@ import { cn } from "@/lib/utils";
 
 const links = [
   { href: "/analyse", label: "Analyse", icon: BookOpen },
-  { href: "/mes-textes", label: "Mes textes", icon: FileText },
   { href: "/oral", label: "Oral", icon: Mic },
   { href: "/oeuvre", label: "Œuvre", icon: Library },
   { href: "/examen", label: "Examen", icon: GraduationCap },
+  { href: "/mes-textes", label: "Mes textes", icon: FileText },
 ];
 
 interface Profile { username: string; avatar_url: string }
