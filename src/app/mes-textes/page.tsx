@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { BookOpen, Trash2, Loader2, Plus, BarChart2, ChevronDown, ChevronUp } from "lucide-react";
+import { BookOpen, Trash2, Loader2, Plus, BarChart2, ChevronDown, ChevronUp, Library } from "lucide-react";
 import Link from "next/link";
 
 interface UserText {
@@ -15,6 +15,15 @@ interface UserText {
 
 interface Procede { procede: string; exemple: string; effet: string; }
 interface Mouvement { numero: number; titre: string; lignes: string; procedes: Procede[]; }
+interface OeuvreQuestion {
+  id: string;
+  oeuvre: string;
+  auteur: string;
+  question: string;
+  reponse: string;
+  savedAt: string;
+}
+
 interface SavedAnalyse {
   id: string;
   titre: string;
@@ -25,11 +34,12 @@ interface SavedAnalyse {
   analyse: { problematique: string; introduction: string; mouvements: Mouvement[]; conclusion: string; ouverture: string; };
 }
 
-type Tab = "textes" | "analyses";
+type Tab = "textes" | "analyses" | "questions";
 
 export default function MesTextesPage() {
   const [texts, setTexts] = useState<UserText[]>([]);
   const [savedAnalyses, setSavedAnalyses] = useState<SavedAnalyse[]>([]);
+  const [oeuvreQuestions, setOeuvreQuestions] = useState<OeuvreQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("textes");
@@ -40,6 +50,10 @@ export default function MesTextesPage() {
     try {
       const stored = JSON.parse(localStorage.getItem("saved_analyses") || "[]");
       setSavedAnalyses(stored);
+    } catch {}
+    try {
+      const stored = JSON.parse(localStorage.getItem("oeuvre_questions") || "[]");
+      setOeuvreQuestions(stored);
     } catch {}
   }, []);
 
@@ -74,6 +88,12 @@ export default function MesTextesPage() {
     const updated = savedAnalyses.filter(a => a.id !== id);
     setSavedAnalyses(updated);
     try { localStorage.setItem("saved_analyses", JSON.stringify(updated)); } catch {}
+  }
+
+  function deleteQuestion(id: string) {
+    const updated = oeuvreQuestions.filter(q => q.id !== id);
+    setOeuvreQuestions(updated);
+    try { localStorage.setItem("oeuvre_questions", JSON.stringify(updated)); } catch {}
   }
 
   const count = texts.length;
@@ -121,6 +141,16 @@ export default function MesTextesPage() {
           }`}>
           <BarChart2 size={14} />
           Mes analyses
+        </button>
+        <button
+          onClick={() => setActiveTab("questions")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+            activeTab === "questions"
+              ? "bg-[#0a1543] border border-[#19327f] text-[#00d9ff] shadow-[0_0_10px_rgba(26,159,255,0.2)]"
+              : "text-[#6b7280] hover:text-[#a0b0d0]"
+          }`}>
+          <Library size={14} />
+          Œuvre
         </button>
       </div>
 
@@ -203,7 +233,7 @@ export default function MesTextesPage() {
             </div>
           ))}
         </div>
-      ) : (
+      ) : activeTab === "analyses" ? (
         /* ── Mes analyses tab ── */
         savedAnalyses.length === 0 ? (
           <div className="text-center py-20 space-y-4">
@@ -285,7 +315,48 @@ export default function MesTextesPage() {
             })}
           </div>
         )
-      )}
+      ) : activeTab === "questions" ? (
+        /* ── Mes questions oeuvre tab ── */
+        oeuvreQuestions.length === 0 ? (
+          <div className="text-center py-20 space-y-4">
+            <div className="text-6xl">📖</div>
+            <p className="text-white font-black text-xl">Aucune question sauvegardée</p>
+            <p className="text-[#6b7280] text-sm max-w-sm mx-auto">Dans l&apos;onglet Œuvre, clique sur &quot;Sauvegarder&quot; sous une réponse de l&apos;IA pour la retrouver ici.</p>
+            <Link href="/oeuvre" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 text-white font-black text-sm uppercase tracking-widest hover:bg-emerald-500 transition-all">
+              <Library size={15} /> Aller à l&apos;œuvre
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {oeuvreQuestions.map((q, i) => (
+              <div key={q.id} className="bg-[#0a1543]/80 border border-[#19327f]/60 rounded-2xl overflow-hidden hover:border-emerald-500/30 transition-all group">
+                <div className="p-5 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1 flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-black text-emerald-400 uppercase tracking-widest">#{i + 1}</span>
+                        <span className="text-white font-bold text-sm">{q.oeuvre}</span>
+                        {q.auteur && <span className="text-xs text-[#6b7280]">— {q.auteur}</span>}
+                      </div>
+                      {q.question && (
+                        <p className="text-xs text-[#a0b0d0] italic">&quot;{q.question}&quot;</p>
+                      )}
+                      <p className="text-xs text-[#2a3a6e] font-mono">{new Date(q.savedAt).toLocaleDateString("fr-FR")}</p>
+                    </div>
+                    <button onClick={() => deleteQuestion(q.id)}
+                      className="flex-shrink-0 p-2 rounded-lg text-[#2a3a6e] hover:text-red-400 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                  <div className="bg-[#050a2e] border border-[#19327f]/40 rounded-xl p-3">
+                    <p className="text-sm text-[#c9c9d4] leading-relaxed whitespace-pre-wrap">{q.reponse}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      ) : null}
     </div>
   );
 }

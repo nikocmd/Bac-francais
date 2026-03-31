@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { Library, Loader2, Send, Bot, User, Sparkles, Search, X, CheckCircle, MessageCircle } from "lucide-react";
+import { Library, Loader2, Send, Bot, User, Sparkles, Search, X, CheckCircle, MessageCircle, BookmarkPlus, BookmarkCheck } from "lucide-react";
 import { addXP } from "@/lib/gamification";
 import Paywall from "@/components/Paywall";
 
@@ -80,6 +80,7 @@ export default function OeuvrePage() {
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [limitReached, setLimitReached] = useState(false);
   const [isPremium, setIsPremium] = useState<boolean | null>(null);
+  const [savedIds, setSavedIds] = useState<Set<number>>(new Set());
 
   const canConfirm = oeuvre.trim().length >= 3 && auteur.trim().length >= 2;
 
@@ -205,6 +206,20 @@ async function handleConfirm() {
     setMessages([]);
     setShowAide(false);
     setAideMessages([]);
+  }
+
+  function saveQuestion(msgIndex: number) {
+    // msgIndex is the assistant message index; the user question is at msgIndex-1
+    const reponse = messages[msgIndex]?.content;
+    const question = messages[msgIndex - 1]?.content;
+    if (!reponse) return;
+    const entry = { id: Date.now().toString(), oeuvre, auteur, question: question ?? "", reponse, savedAt: new Date().toISOString() };
+    try {
+      const prev = JSON.parse(localStorage.getItem("oeuvre_questions") || "[]");
+      prev.unshift(entry);
+      localStorage.setItem("oeuvre_questions", JSON.stringify(prev.slice(0, 50)));
+    } catch {}
+    setSavedIds(prev => new Set(prev).add(msgIndex));
   }
 
   if (isPremium === null) return <div className="flex justify-center py-20"><Loader2 size={24} className="animate-spin text-[#9ca3af]" /></div>;
@@ -422,12 +437,27 @@ async function handleConfirm() {
             }`}>
               {msg.role === "user" ? <User size={14} className="text-white" /> : <Bot size={14} className="text-emerald-400" />}
             </div>
-            <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
-              msg.role === "user"
-                ? "bg-emerald-600 text-white rounded-tr-sm"
-                : "bg-[#12121a] border border-[#1e1e2e] text-[#c9c9d4] rounded-tl-sm"
-            }`}>
-              {msg.content}
+            <div className="flex flex-col gap-1 max-w-[80%]">
+              <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
+                msg.role === "user"
+                  ? "bg-emerald-600 text-white rounded-tr-sm"
+                  : "bg-[#12121a] border border-[#1e1e2e] text-[#c9c9d4] rounded-tl-sm"
+              }`}>
+                {msg.content}
+              </div>
+              {msg.role === "assistant" && (
+                <button
+                  onClick={() => saveQuestion(i)}
+                  className={`self-start flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
+                    savedIds.has(i)
+                      ? "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20"
+                      : "text-[#6b7280] hover:text-emerald-400 hover:bg-emerald-500/10 border border-transparent"
+                  }`}>
+                  {savedIds.has(i)
+                    ? <><BookmarkCheck size={12} /> Sauvegardé</>
+                    : <><BookmarkPlus size={12} /> Sauvegarder</>}
+                </button>
+              )}
             </div>
           </div>
         ))}
