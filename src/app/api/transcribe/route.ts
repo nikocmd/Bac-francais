@@ -8,12 +8,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Fichier audio manquant." }, { status: 400 });
   }
 
-  // Too short to contain real speech (~5KB minimum ≈ 0.3s of audio)
-  if (audio.size < 5000) {
-    return Response.json({ inaudible: true });
-  }
-
-  const mime = (audio.type || "audio/webm").split(";")[0].toLowerCase();
+const mime = (audio.type || "audio/webm").split(";")[0].toLowerCase();
   const ext = mime.includes("mp4") || mime.includes("m4a") ? "m4a"
     : mime.includes("wav") ? "wav"
     : mime.includes("mp3") || mime.includes("mpeg") ? "mp3"
