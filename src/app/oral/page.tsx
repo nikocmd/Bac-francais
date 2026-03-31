@@ -26,13 +26,16 @@ async function loadWhisper() {
 
 async function transcribeBlob(blob: Blob): Promise<string> {
   const asr = await loadWhisper();
-  const arrayBuffer = await blob.arrayBuffer();
-  // Decode audio and resample to 16kHz mono (required by Whisper)
-  const audioCtx = new AudioContext({ sampleRate: 16000 });
-  const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-  const float32 = audioBuffer.getChannelData(0);
-  const result = await asr(float32, { language: "french", task: "transcribe" });
-  return (result as { text: string }).text.trim();
+  // Pass blob URL directly — Whisper handles audio decoding internally
+  const url = URL.createObjectURL(blob);
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result: any = await asr(url, { language: "french", task: "transcribe" });
+    const text = Array.isArray(result) ? result[0]?.text : result?.text;
+    return (text ?? "").trim();
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }
 
 export default function OralPage() {
