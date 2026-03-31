@@ -15,7 +15,7 @@ self.onmessage = async (e: MessageEvent) => {
       self.postMessage({ type: "status", text: "Chargement du modèle Whisper..." });
       asr = await pipeline(
         "automatic-speech-recognition",
-        "Xenova/whisper-tiny",
+        "Xenova/whisper-base",
         {
           quantized: false, // force fp32 — évite les erreurs QDQ/NBits INT4
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
