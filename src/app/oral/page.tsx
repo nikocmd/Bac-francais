@@ -53,12 +53,55 @@ export default function OralPage() {
     });
   }, []);
 
-  // Init Web Worker
+  // Init Web Worker — loaded from CDN as Blob to bypass bundler issues
   useEffect(() => {
-    const worker = new Worker(
-      new URL("./whisper.worker.ts", import.meta.url),
-      { type: "module" }
-    );
+    const workerCode = `
+importScripts('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js');
+
+const { pipeline, env } = self.Transformers;
+env.backends.onnx.wasm.numThreads = 1;
+
+let asr = null;
+
+self.onmessage = async function(e) {
+  const msg = e.data;
+
+  if (msg.type === 'load') {
+    try {
+      self.postMessage({ type: 'status', text: 'Chargement du modèle Whisper...' });
+      asr = await pipeline('automatic-speech-recognition', 'Xenova/whisper-base', {
+        quantized: false,
+        progress_callback: function(p) {
+          if (p.status === 'downloading') {
+            const pct = p.total ? Math.round((p.loaded / p.total) * 100) : 0;
+            self.postMessage({ type: 'status', text: 'Téléchargement… ' + pct + '%' });
+          }
+        }
+      });
+      self.postMessage({ type: 'ready' });
+    } catch(err) {
+      self.postMessage({ type: 'error', message: String(err) });
+    }
+  }
+
+  if (msg.type === 'transcribe') {
+    try {
+      const result = await asr(msg.audio, {
+        language: 'french',
+        task: 'transcribe',
+        chunk_length_s: 30
+      });
+      self.postMessage({ type: 'result', text: result.text.trim() });
+    } catch(err) {
+      self.postMessage({ type: 'error', message: String(err) });
+    }
+  }
+};`;
+
+    const blob = new Blob([workerCode], { type: "text/javascript" });
+    const workerUrl = URL.createObjectURL(blob);
+    const worker = new Worker(workerUrl);
+
     worker.onmessage = (e) => {
       const { type: t, text, message } = e.data;
       if (t === "status") { setWorkerStatus("loading"); setWorkerMsg(text); }
@@ -71,9 +114,8 @@ export default function OralPage() {
       setWorkerStatus("idle");
     };
     workerRef.current = worker;
-    // Pre-load model immediately
     worker.postMessage({ type: "load" });
-    return () => worker.terminate();
+    return () => { worker.terminate(); URL.revokeObjectURL(workerUrl); };
   }, []);
 
   // Timer
