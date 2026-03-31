@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { BookOpen, Trash2, Loader2, Plus } from "lucide-react";
+import { BookOpen, Trash2, Loader2, Plus, BarChart2, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 interface UserText {
@@ -13,10 +13,13 @@ interface UserText {
   created_at: string;
 }
 
+type Tab = "textes" | "analyses";
+
 export default function MesTextesPage() {
   const [texts, setTexts] = useState<UserText[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<Tab>("textes");
 
   useEffect(() => {
     load();
@@ -73,6 +76,30 @@ export default function MesTextesPage() {
         </Link>
       </div>
 
+      {/* Tab switcher */}
+      <div className="flex gap-1 bg-[#050a2e] border border-[#19327f]/60 rounded-xl p-1 w-fit">
+        <button
+          onClick={() => setActiveTab("textes")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+            activeTab === "textes"
+              ? "bg-[#0a1543] border border-[#19327f] text-[#00d9ff] shadow-[0_0_10px_rgba(26,159,255,0.2)]"
+              : "text-[#6b7280] hover:text-[#a0b0d0]"
+          }`}>
+          <BookOpen size={14} />
+          Mes textes
+        </button>
+        <button
+          onClick={() => setActiveTab("analyses")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+            activeTab === "analyses"
+              ? "bg-[#0a1543] border border-[#19327f] text-[#00d9ff] shadow-[0_0_10px_rgba(26,159,255,0.2)]"
+              : "text-[#6b7280] hover:text-[#a0b0d0]"
+          }`}>
+          <BarChart2 size={14} />
+          Mes analyses
+        </button>
+      </div>
+
       {/* Jauge */}
       <div className="bg-[#0a1543]/80 border border-[#19327f]/60 rounded-xl p-4 space-y-2">
         <div className="flex justify-between text-xs text-[#a0b0d0] font-mono">
@@ -119,7 +146,8 @@ export default function MesTextesPage() {
             Analyser mon premier texte
           </Link>
         </div>
-      ) : (
+      ) : activeTab === "textes" ? (
+        /* ── Mes textes tab ── */
         <div className="space-y-3">
           {texts.map((t, i) => (
             <div key={t.id}
@@ -148,6 +176,54 @@ export default function MesTextesPage() {
                 className="flex-shrink-0 p-2 rounded-lg text-[#2a3a6e] hover:text-red-400 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100">
                 {deleting === t.id ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
               </button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        /* ── Mes analyses tab ── */
+        <div className="space-y-3">
+          {texts.map((t, i) => (
+            <div key={t.id}
+              className="bg-[#0a1543]/80 border border-[#19327f]/60 rounded-2xl p-5 hover:border-[#a78bfa]/30 transition-all group">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-[#050a2e] border border-[#19327f]/60 flex items-center justify-center">
+                  <span className="text-xs font-black text-[#a78bfa] font-mono">{i + 1}</span>
+                </div>
+                <div className="flex-1 min-w-0 space-y-2">
+                  {/* Title row */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-white font-bold text-sm">{t.titre || "Extrait sans titre"}</span>
+                    {t.oeuvre && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-[#a78bfa]/10 border border-[#a78bfa]/20 text-[#a78bfa]">{t.oeuvre}</span>
+                    )}
+                  </div>
+                  {/* Auteur */}
+                  {t.auteur && (
+                    <p className="text-xs text-[#6b7280]">
+                      <span className="text-[#a0b0d0] font-bold">Auteur :</span> {t.auteur}
+                    </p>
+                  )}
+                  {/* Axe */}
+                  {t.axe && (
+                    <p className="text-xs text-[#a0b0d0]">
+                      <span className="font-bold">Axe :</span> <span className="italic">{t.axe}</span>
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <Link
+                    href="/analyse"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#a78bfa]/10 border border-[#a78bfa]/30 text-[#a78bfa] text-xs font-bold hover:bg-[#a78bfa]/20 transition-all">
+                    Relancer l&apos;analyse <ArrowRight size={12} />
+                  </Link>
+                  <button
+                    onClick={() => handleDelete(t.id)}
+                    disabled={deleting === t.id}
+                    className="p-2 rounded-lg text-[#2a3a6e] hover:text-red-400 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100">
+                    {deleting === t.id ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
+                  </button>
+                </div>
+              </div>
             </div>
           ))}
         </div>

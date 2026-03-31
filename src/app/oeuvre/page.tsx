@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { Library, Loader2, Send, Bot, User, Sparkles, Search, X, CheckCircle, MessageCircle } from "lucide-react";
+import { Library, Loader2, Send, Bot, User, Sparkles, Search, X, CheckCircle, MessageCircle, BookmarkPlus, BookmarkCheck } from "lucide-react";
 import { addXP } from "@/lib/gamification";
 import Paywall from "@/components/Paywall";
 
@@ -80,6 +80,7 @@ export default function OeuvrePage() {
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [limitReached, setLimitReached] = useState(false);
   const [isPremium, setIsPremium] = useState<boolean | null>(null);
+  const [savedMessages, setSavedMessages] = useState<string[]>([]);
 
   const canConfirm = oeuvre.trim().length >= 3 && auteur.trim().length >= 2;
 
@@ -115,8 +116,9 @@ export default function OeuvrePage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setIsPremium(false); return; }
       setUserId(user.id);
-      const { data } = await supabase.from("profiles").select("oeuvre_choisie, auteur_choisi, is_premium").eq("id", user.id).single();
+      const { data } = await supabase.from("profiles").select("oeuvre_choisie, auteur_choisi, is_premium, oeuvre_questions").eq("id", user.id).single();
       setIsPremium(data?.is_premium === true);
+      setSavedMessages(data?.oeuvre_questions ?? []);
       if (data?.oeuvre_choisie && data?.auteur_choisi) {
         setOeuvre(data.oeuvre_choisie);
         setAuteur(data.auteur_choisi);
@@ -177,6 +179,17 @@ export default function OeuvrePage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function saveMessage(content: string) {
+    const newSaved = [...savedMessages, content];
+    setSavedMessages(newSaved);
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) await supabase.from("profiles").update({ oeuvre_questions: newSaved }).eq("id", user.id);
+    } catch { /* silent */ }
   }
 
   async function handleConfirm() {
@@ -428,6 +441,13 @@ export default function OeuvrePage() {
                 : "bg-[#12121a] border border-[#1e1e2e] text-[#c9c9d4] rounded-tl-sm"
             }`}>
               {msg.content}
+              {msg.role === "assistant" && (
+                <button onClick={() => saveMessage(msg.content)} className="mt-2 flex items-center gap-1 text-xs text-[#4a5568] hover:text-emerald-400 transition-colors">
+                  {savedMessages.includes(msg.content)
+                    ? <><BookmarkCheck size={12} className="text-emerald-400" /> Sauvegardé</>
+                    : <><BookmarkPlus size={12} /> Sauvegarder</>}
+                </button>
+              )}
             </div>
           </div>
         ))}

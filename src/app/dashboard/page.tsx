@@ -52,10 +52,10 @@ function StatBar({ label, value, color }: { label: string; value: number; color:
   return (
     <div className="space-y-1">
       <div className="flex justify-between text-xs">
-        <span className="text-[#a0b0d0] tracking-widest font-bold uppercase">{label}</span>
-        <span className="font-mono font-bold" style={{ color }}>{value}</span>
+        <span className="text-[#a0b0d0] tracking-widest font-bold uppercase text-xs">{label}</span>
+        <span className="font-mono text-base font-black" style={{ color }}>{value}</span>
       </div>
-      <div className="h-3 bg-[#050a2e] border border-[#19327f]/60 rounded-sm overflow-hidden
+      <div className="h-4 bg-[#050a2e] border border-[#19327f]/60 rounded-sm overflow-hidden
         shadow-[inset_0_0_6px_rgba(0,0,0,0.6)]">
         <div
           className="h-full rounded-sm relative overflow-hidden transition-all duration-700"
@@ -104,7 +104,7 @@ function QuestCard({ quest, done, onClick }: {
             {quest.label}
           </span>
         </div>
-        <span className="text-xs font-mono text-[#00d9ff] font-bold">+{quest.xp} XP</span>
+        <span className="text-xs font-bold font-mono text-[#00d9ff]">+{quest.xp} XP</span>
       </div>
       <div className="flex items-center justify-between">
         <span className="text-xs text-[#a0b0d0]">Récompense : +10 {{ INT: "Acuité", CHA: "Éloquence", WIS: "Érudition", STR: "Rigueur", LCK: "Destin" }[quest.stat]}</span>
@@ -226,7 +226,7 @@ export default function Dashboard() {
                 </h1>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[#FFD700] font-mono font-bold text-lg">LV.{hunter.level}</span>
+                <span className="text-[#FFD700] font-mono font-bold text-2xl">LV.{hunter.level}</span>
                 <span className="text-[#6b7280] text-sm">·</span>
                 <span className={`font-black text-sm ${RANK_STYLES[hunter.rank].split(" ")[1]}`}>
                   Rang {hunter.rank}
@@ -270,8 +270,8 @@ export default function Dashboard() {
                 { l: "Examens", v: hunter.totalExamens, c: "#fbbf24" },
               ].map(({ l, v, c }) => (
                 <div key={l} className="bg-[#050a2e]/80 border border-[#19327f]/50 rounded-lg px-3 py-2">
-                  <div className="font-mono font-black text-lg" style={{ color: c }}>{v}</div>
-                  <div className="text-[9px] text-[#6b7280] uppercase tracking-widest">{l}</div>
+                  <div className="font-mono font-black text-xl" style={{ color: c }}>{v}</div>
+                  <div className="text-[10px] text-[#6b7280] uppercase tracking-widest">{l}</div>
                 </div>
               ))}
             </div>
@@ -286,7 +286,7 @@ export default function Dashboard() {
             shadow-[0_0_20px_rgba(25,50,127,0.3)] backdrop-blur space-y-4">
             <div className="flex items-center gap-2 border-b border-[#19327f]/40 pb-3">
               <span className="text-[#FFD700] text-xs font-black uppercase tracking-widest">
-                ✦ Fenêtre de Statuts
+                ✦ Mes statistiques
               </span>
             </div>
             <StatBar label="ACUITÉ" value={hunter.stats.INT} color="#a78bfa" />
@@ -301,7 +301,7 @@ export default function Dashboard() {
             shadow-[0_0_20px_rgba(25,50,127,0.3)] backdrop-blur space-y-4">
             <div className="flex items-center justify-between border-b border-[#19327f]/40 pb-3">
               <span className="text-[#FFD700] text-xs font-black uppercase tracking-widest">
-                ✦ Quêtes Journalières
+                ✦ Quêtes du jour
               </span>
               <span className="text-xs font-mono text-[#00d9ff]">{doneTodayCount}/4 accomplies</span>
             </div>
@@ -334,8 +334,8 @@ export default function Dashboard() {
               const isCurrent = r === hunter.rank;
               return (
                 <div key={r} className="flex flex-col items-center gap-1.5 flex-shrink-0 min-w-[70px]">
-                  <div className={`w-12 h-12 rounded-xl border-2 flex items-center justify-center
-                    font-black text-lg transition-all
+                  <div className={`w-14 h-14 rounded-xl border-2 flex items-center justify-center
+                    font-black text-xl transition-all
                     ${isCurrent
                       ? `${RANK_BG[r]} ${RANK_STYLES[r]}`
                       : isCurrentOrPast

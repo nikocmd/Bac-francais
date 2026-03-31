@@ -1,7 +1,16 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { BookOpen, Mic, Library, GraduationCap, ArrowRight, CheckCircle, Crown, Zap, Lock } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    const { data: profile } = await supabase.from("profiles").select("is_premium").eq("id", user.id).single();
+    if (profile?.is_premium) redirect("/dashboard");
+  }
+
   return (
     <div className="max-w-5xl mx-auto px-4 space-y-0">
 
