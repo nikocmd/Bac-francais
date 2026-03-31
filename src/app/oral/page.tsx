@@ -66,8 +66,9 @@ export default function OralPage() {
       form.append("audio", blob, "audio." + (blob.type.includes("mp4") ? "m4a" : "webm"));
       const res = await fetch("/api/transcribe", { method: "POST", body: form });
       const data = await res.json();
+      if (data.inaudible) { setError("INAUDIBLE"); return; }
       if (data.error) { setError(data.error); return; }
-      if (data.text) setTranscription(prev => prev ? prev + " " + data.text : data.text);
+      if (data.text) { setError(""); setTranscription(prev => prev ? prev + " " + data.text : data.text); }
     } catch { setError("Erreur de transcription."); }
     finally { setTranscribing(false); }
   }
@@ -238,8 +239,18 @@ export default function OralPage() {
           </div>
         )}
 
+        {error === "INAUDIBLE" && (
+          <div className="bg-[#1a0a0a] border border-red-500/30 rounded-xl px-4 py-3 flex items-center gap-3">
+            <span className="text-xl">🎙️</span>
+            <div>
+              <p className="text-red-400 text-sm font-semibold">Contenu inaudible — réenregistre</p>
+              <p className="text-red-300/60 text-xs">Parle plus fort et articule bien, micro proche de ta bouche</p>
+            </div>
+          </div>
+        )}
+
         {limitReached && <Paywall />}
-        {error && error !== "PERMISSION_DENIED" && !limitReached && (
+        {error && error !== "PERMISSION_DENIED" && error !== "INAUDIBLE" && !limitReached && (
           <p className="text-amber-400 text-sm">{error}</p>
         )}
 

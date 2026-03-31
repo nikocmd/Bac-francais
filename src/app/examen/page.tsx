@@ -74,12 +74,15 @@ export default function ExamenPage() {
 
   async function sendToGroq(blob: Blob, target: "explication" | "oeuvre") {
     setTranscribing(true);
+    setError("");
     try {
       const form = new FormData();
       form.append("audio", blob, "audio." + (blob.type.includes("mp4") ? "m4a" : "webm"));
       const res = await fetch("/api/transcribe", { method: "POST", body: form });
       const data = await res.json();
+      if (data.inaudible) { setError("INAUDIBLE"); return; }
       if (data.text) {
+        setError("");
         if (target === "explication") setExplicationTranscription(prev => prev ? prev + " " + data.text : data.text);
         else setOeuvreTranscription(prev => prev ? prev + " " + data.text : data.text);
       }

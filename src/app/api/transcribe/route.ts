@@ -43,5 +43,34 @@ export async function POST(request: Request) {
   }
 
   const data = await res.json();
-  return Response.json({ text: data.text ?? "" });
+  const text = (data.text ?? "").trim();
+
+  if (isInaudible(text)) {
+    return Response.json({ inaudible: true });
+  }
+
+  return Response.json({ text });
+}
+
+function isInaudible(text: string): boolean {
+  if (text.length < 8) return true;
+
+  // Known Whisper hallucination patterns on silence/noise
+  const patterns = [
+    /\[(musique|music|applaudissements|rires|bruit|silence|blank_audio)[^\]]*\]/i,
+    /sous-titres?\s+(réalisés?|par|de)/i,
+    /merci\s+d['']avoir\s+regardé/i,
+    /abonnez-vous/i,
+    /www\./i,
+  ];
+  if (patterns.some(r => r.test(text))) return true;
+
+  // Repeated phrase hallucination (e.g. "Je vous ai dit que" × 10)
+  const words = text.split(/\s+/);
+  if (words.length >= 8) {
+    const phrase = words.slice(0, 5).join(" ").toLowerCase();
+    if ((text.toLowerCase().split(phrase).length - 1) >= 3) return true;
+  }
+
+  return false;
 }
