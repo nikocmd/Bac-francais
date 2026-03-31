@@ -10,7 +10,7 @@ const links = [
   { href: "/oral", label: "Oral", icon: Mic },
   { href: "/oeuvre", label: "Œuvre", icon: Library },
   { href: "/examen", label: "Examen", icon: GraduationCap },
-  { href: "/mes-textes", label: "Mes textes", icon: FileText },
+  { href: "/mes-textes", label: "Données", icon: FileText },
 ];
 
 interface Profile { username: string; avatar_url: string }

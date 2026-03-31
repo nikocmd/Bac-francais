@@ -107,7 +107,7 @@ export default function MesTextesPage() {
             <BookOpen size={22} className="text-[#1a9fff]" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-white tracking-wide">Mes textes</h1>
+            <h1 className="text-2xl font-black text-white tracking-wide">Données sauvegardées</h1>
             <p className="text-[#6b7280] text-sm">
               {count}/12 textes enregistrés — utilisés dans le mode examen
             </p>
