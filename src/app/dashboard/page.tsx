@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { BookOpen, Mic, Library, GraduationCap, PenLine, ChevronRight, AlertTriangle, X } from "lucide-react";
+import { BookOpen, Mic, Library, GraduationCap, PenLine, ChevronRight } from "lucide-react";
 import {
   loadHunter, loadHunterFromDB, getRankInfo, getTodayQuestStatus,
   DAILY_QUESTS, RANKS, type HunterData,
@@ -135,7 +135,6 @@ export default function Dashboard() {
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [username, setUsername] = useState<string>("");
-  const [showGrammarPopup, setShowGrammarPopup] = useState(false);
 
   useEffect(() => {
     setHunter(loadHunter());
@@ -147,14 +146,11 @@ export default function Dashboard() {
         if (user) {
           const [h, { data: profile }] = await Promise.all([
             loadHunterFromDB(user.id),
-            supabase.from("profiles").select("avatar_url, username, grammar_questions").eq("id", user.id).single(),
+            supabase.from("profiles").select("avatar_url, username").eq("id", user.id).single(),
           ]);
           setHunter(h);
           if (profile?.avatar_url) setAvatarUrl(profile.avatar_url);
           if (profile?.username) setUsername(profile.username);
-          const noGrammar = !profile?.grammar_questions || profile.grammar_questions.length === 0;
-          const dismissed = sessionStorage.getItem("grammar_popup_dismissed");
-          if (noGrammar && !dismissed) setShowGrammarPopup(true);
         }
       } catch { /* garde les données locales */ }
     }
@@ -202,45 +198,6 @@ export default function Dashboard() {
               NIVEAU {hunter.level} ATTEINT
             </div>
             <div className="text-[#a0b0d0] text-sm">Appuie n&apos;importe où pour continuer</div>
-          </div>
-        </div>
-      )}
-
-      {/* Grammar popup */}
-      {showGrammarPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
-          <div className="bg-[#0a1543] border border-[#FFD700]/40 rounded-2xl p-6 max-w-md w-full shadow-[0_0_40px_rgba(255,215,0,0.2)] space-y-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-[#FFD700]/10 border border-[#FFD700]/30">
-                  <AlertTriangle size={20} className="text-[#FFD700]" />
-                </div>
-                <div>
-                  <p className="text-white font-black text-base">Questions de grammaire manquantes</p>
-                  <p className="text-[#6b7280] text-xs">Mode Examen partiellement bloqué</p>
-                </div>
-              </div>
-              <button onClick={() => { setShowGrammarPopup(false); sessionStorage.setItem("grammar_popup_dismissed", "1"); }}
-                className="text-[#6b7280] hover:text-white transition-colors flex-shrink-0">
-                <X size={18} />
-              </button>
-            </div>
-            <p className="text-sm text-[#a0b0d0] leading-relaxed">
-              Pour débloquer le <span className="text-[#fbbf24] font-bold">Mode Examen complet</span>, tu dois d&apos;abord renseigner tes questions de grammaire dans ton profil.<br /><br />
-              Ces questions sont tirées au sort pendant l&apos;oral blanc pour simuler les vraies conditions du Bac.
-            </p>
-            <div className="flex items-center gap-3">
-              <Link href="/profile"
-                onClick={() => setShowGrammarPopup(false)}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#FFD700] text-[#050a2e] font-black text-sm uppercase tracking-widest hover:bg-yellow-300 transition-all">
-                Configurer maintenant
-              </Link>
-              <button
-                onClick={() => { setShowGrammarPopup(false); sessionStorage.setItem("grammar_popup_dismissed", "1"); }}
-                className="px-4 py-3 rounded-xl border border-[#19327f] text-[#6b7280] text-sm font-bold hover:text-white transition-all">
-                Plus tard
-              </button>
-            </div>
           </div>
         </div>
       )}

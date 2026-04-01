@@ -39,7 +39,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
-  const [grammarQuestions, setGrammarQuestions] = useState<string[]>([]);
+  const [grammarQuestions, setGrammarQuestions] = useState<string[]>(GRAMMAR_TOPICS.slice(0, 3));
   const [filiere, setFiliere] = useState<"general" | "stmg">("general");
   const [hunter, setHunter] = useState<HunterData | null>(null);
 
@@ -61,7 +61,8 @@ export default function ProfilePage() {
         setUsername(profile.username ?? user.user_metadata?.username ?? "");
         setAvatarUrl(profile.avatar_url ?? "");
         setAvatarPreview(profile.avatar_url ?? "");
-        setGrammarQuestions(profile.grammar_questions ?? []);
+        const gq = profile.grammar_questions;
+        setGrammarQuestions(gq && gq.length > 0 ? gq.filter((q: string) => GRAMMAR_TOPICS.includes(q)) : GRAMMAR_TOPICS.slice(0, 3));
         setFiliere(profile.filiere === "stmg" ? "stmg" : "general");
       } else {
         setUsername(user.user_metadata?.username ?? "");
