@@ -44,6 +44,8 @@ export default function MesTextesPage() {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("textes");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [maxTexts, setMaxTexts] = useState(16);
+  const [filiere, setFiliere] = useState<"general" | "stmg">("general");
 
   useEffect(() => {
     load();
@@ -64,12 +66,14 @@ export default function MesTextesPage() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const { data } = await supabase
-        .from("user_texts")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+      const [{ data }, { data: profile }] = await Promise.all([
+        supabase.from("user_texts").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+        supabase.from("profiles").select("filiere").eq("id", user.id).single(),
+      ]);
       setTexts(data ?? []);
+      const f = profile?.filiere === "stmg" ? "stmg" : "general";
+      setFiliere(f);
+      setMaxTexts(f === "stmg" ? 12 : 16);
     } finally {
       setLoading(false);
     }
@@ -109,7 +113,7 @@ export default function MesTextesPage() {
           <div>
             <h1 className="text-2xl font-black text-white tracking-wide">Données sauvegardées</h1>
             <p className="text-[#6b7280] text-sm">
-              {count}/12 textes enregistrés — utilisés dans le mode examen
+              {count}/{maxTexts} textes enregistrés — utilisés dans le mode examen
             </p>
           </div>
         </div>
@@ -158,18 +162,18 @@ export default function MesTextesPage() {
       <div className="bg-[#0a1543]/80 border border-[#19327f]/60 rounded-xl p-4 space-y-2">
         <div className="flex justify-between text-xs text-[#a0b0d0] font-mono">
           <span>Textes enregistrés</span>
-          <span className="font-bold text-[#00d9ff]">{count} / 12</span>
+          <span className="font-bold text-[#00d9ff]">{count} / {maxTexts}</span>
         </div>
         <div className="h-2 bg-[#050a2e] border border-[#19327f]/40 rounded-sm overflow-hidden">
           <div
             className="h-full rounded-sm transition-all duration-700"
             style={{
-              width: `${(count / 12) * 100}%`,
-              background: count >= 12 ? "linear-gradient(90deg, #FFD700, #fbbf24)" : "linear-gradient(90deg, #1a9fff, #00d9ff)",
+              width: `${(count / maxTexts) * 100}%`,
+              background: count >= maxTexts ? "linear-gradient(90deg, #FFD700, #fbbf24)" : "linear-gradient(90deg, #1a9fff, #00d9ff)",
             }}
           />
         </div>
-        {count >= 12 && (
+        {count >= maxTexts && (
           <p className="text-xs text-[#FFD700] font-bold">Maximum atteint — supprime un texte pour en ajouter un nouveau</p>
         )}
       </div>

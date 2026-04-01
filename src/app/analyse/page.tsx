@@ -32,11 +32,17 @@ export default function AnalysePage() {
   const [limitReached, setLimitReached] = useState(false);
   const [openMvt, setOpenMvt] = useState<number | null>(0);
   const [userId, setUserId] = useState<string | undefined>(undefined);
+  const [maxTexts, setMaxTexts] = useState(16);
 
   useEffect(() => {
     import("@/lib/supabase/client").then(({ createClient }) => {
-      createClient().auth.getUser().then(({ data: { user } }) => {
-        if (user) setUserId(user.id);
+      const supabase = createClient();
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (!user) return;
+        setUserId(user.id);
+        supabase.from("profiles").select("filiere").eq("id", user.id).single().then(({ data }) => {
+          setMaxTexts(data?.filiere === "stmg" ? 12 : 16);
+        });
       });
     });
   }, []);
@@ -71,7 +77,7 @@ export default function AnalysePage() {
         const { createClient } = await import("@/lib/supabase/client");
         const supabase = createClient();
         const { count } = await supabase.from("user_texts").select("*", { count: "exact", head: true }).eq("user_id", userId);
-        if ((count ?? 0) < 12) {
+        if ((count ?? 0) < maxTexts) {
           await supabase.from("user_texts").insert({ user_id: userId, titre: form.titre, auteur: form.auteur, oeuvre: form.oeuvre, texte: form.texte, axe: form.axe });
         }
       }

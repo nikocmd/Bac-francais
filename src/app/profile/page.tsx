@@ -19,6 +19,7 @@ export default function ProfilePage() {
   const [error, setError] = useState("");
   const [grammarQuestions, setGrammarQuestions] = useState<string[]>([]);
   const [newQuestion, setNewQuestion] = useState("");
+  const [filiere, setFiliere] = useState<"general" | "stmg">("general");
   const [hunter, setHunter] = useState<HunterData | null>(null);
 
   useEffect(() => {
@@ -31,7 +32,7 @@ export default function ProfilePage() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("username, avatar_url, grammar_questions")
+        .select("username, avatar_url, grammar_questions, filiere")
         .eq("id", user.id)
         .single();
 
@@ -40,6 +41,7 @@ export default function ProfilePage() {
         setAvatarUrl(profile.avatar_url ?? "");
         setAvatarPreview(profile.avatar_url ?? "");
         setGrammarQuestions(profile.grammar_questions ?? []);
+        setFiliere(profile.filiere === "stmg" ? "stmg" : "general");
       } else {
         setUsername(user.user_metadata?.username ?? "");
       }
@@ -82,6 +84,7 @@ export default function ProfilePage() {
       username,
       avatar_url: newAvatarUrl,
       grammar_questions: grammarQuestions,
+      filiere,
       updated_at: new Date().toISOString(),
     });
 
@@ -179,6 +182,28 @@ export default function ProfilePage() {
             className="w-full bg-[#050a2e]/50 border border-[#19327f]/30 rounded-xl px-4 py-3 text-sm
               text-[#6b7280] cursor-not-allowed"
           />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-xs font-bold text-[#a0b0d0] uppercase tracking-widest">Ma filière</label>
+          <div className="grid grid-cols-2 gap-3">
+            <button type="button" onClick={() => setFiliere("general")}
+              className={`p-4 rounded-xl border text-left transition-all ${filiere === "general"
+                ? "bg-[#1a9fff]/10 border-[#1a9fff]/60 shadow-[0_0_12px_rgba(26,159,255,0.2)]"
+                : "bg-[#050a2e] border-[#19327f]/40 hover:border-[#19327f]"}`}>
+              <p className="text-white font-black text-sm">📚 Bac Général</p>
+              <p className="text-[#6b7280] text-xs mt-1">16 textes max</p>
+              <p className="text-[#6b7280] text-xs">L, ES, S — voie générale</p>
+            </button>
+            <button type="button" onClick={() => setFiliere("stmg")}
+              className={`p-4 rounded-xl border text-left transition-all ${filiere === "stmg"
+                ? "bg-[#FFD700]/10 border-[#FFD700]/40 shadow-[0_0_12px_rgba(255,215,0,0.2)]"
+                : "bg-[#050a2e] border-[#19327f]/40 hover:border-[#19327f]"}`}>
+              <p className="text-white font-black text-sm">📊 Bac Techno</p>
+              <p className="text-[#FFD700] text-xs mt-1">12 textes max</p>
+              <p className="text-[#6b7280] text-xs">STMG, STI2D, ST2S…</p>
+            </button>
+          </div>
         </div>
 
         {error && (

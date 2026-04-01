@@ -165,6 +165,7 @@ export default function ExamenPage() {
   const [showQuit, setShowQuit] = useState(false);
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [isPremium, setIsPremium] = useState<boolean | null>(null);
+  const [filiere, setFiliere] = useState<"general" | "stmg">("general");
   const [recordingTarget, setRecordingTarget] = useState<"explication" | "oeuvre">("explication");
   const [generatingGrammar, setGeneratingGrammar] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -183,11 +184,12 @@ export default function ExamenPage() {
         setUserId(user.id);
         const [{ data: textsData }, { data: profileData }] = await Promise.all([
           supabase.from("user_texts").select("*").eq("user_id", user.id),
-          supabase.from("profiles").select("grammar_questions, is_premium").eq("id", user.id).single(),
+          supabase.from("profiles").select("grammar_questions, is_premium, filiere").eq("id", user.id).single(),
         ]);
         setTexts(textsData ?? []);
         setGrammarQuestions(profileData?.grammar_questions ?? []);
         setIsPremium(profileData?.is_premium === true);
+        setFiliere(profileData?.filiere === "stmg" ? "stmg" : "general");
       } finally { setLoading(false); }
     }
     loadData();
@@ -369,7 +371,7 @@ export default function ExamenPage() {
           <div className="text-6xl">⚖️</div>
           <h1 className="text-3xl font-black text-white tracking-widest uppercase">Oral du Bac</h1>
           <p className="text-[#a0b0d0] text-sm leading-relaxed">
-            Simulation officielle — barème BOEN 2024
+            Simulation officielle — barème BOEN 2024 · <span className={filiere === "stmg" ? "text-[#FFD700]" : "text-[#1a9fff]"}>{filiere === "stmg" ? "Bac Techno" : "Bac Général"}</span>
           </p>
         </div>
 
