@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { BookOpen, Trash2, Loader2, Plus, BarChart2, ChevronDown, ChevronUp, Library } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface UserText {
   id: string;
@@ -37,6 +38,7 @@ interface SavedAnalyse {
 type Tab = "textes" | "analyses" | "questions";
 
 export default function MesTextesPage() {
+  const router = useRouter();
   const [texts, setTexts] = useState<UserText[]>([]);
   const [savedAnalyses, setSavedAnalyses] = useState<SavedAnalyse[]>([]);
   const [oeuvreQuestions, setOeuvreQuestions] = useState<OeuvreQuestion[]>([]);
@@ -65,7 +67,7 @@ export default function MesTextesPage() {
       const { createClient } = await import("@/lib/supabase/client");
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) { router.push("/login"); return; }
       const [{ data }, { data: profile }] = await Promise.all([
         supabase.from("user_texts").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
         supabase.from("profiles").select("filiere").eq("id", user.id).single(),

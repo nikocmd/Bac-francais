@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { BookOpen, Loader2, ChevronDown, ChevronUp, Sparkles, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { addXP } from "@/lib/gamification";
@@ -25,6 +26,7 @@ interface Analyse {
 }
 
 export default function AnalysePage() {
+  const router = useRouter();
   const [form, setForm] = useState({ texte: "", titre: "", auteur: "", oeuvre: "", axe: "" });
   const [analyse, setAnalyse] = useState<Analyse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -38,7 +40,7 @@ export default function AnalysePage() {
     import("@/lib/supabase/client").then(({ createClient }) => {
       const supabase = createClient();
       supabase.auth.getUser().then(({ data: { user } }) => {
-        if (!user) return;
+        if (!user) { router.push("/login"); return; }
         setUserId(user.id);
         supabase.from("profiles").select("filiere").eq("id", user.id).single().then(({ data }) => {
           setMaxTexts(data?.filiere === "stmg" ? 12 : 16);

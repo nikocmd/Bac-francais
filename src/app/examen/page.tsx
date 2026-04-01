@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { Mic, MicOff, Loader2, RotateCcw, ChevronRight, AlertTriangle, Clock, Lock, BookOpen } from "lucide-react";
 import Link from "next/link";
 import { addXP } from "@/lib/gamification";
@@ -143,6 +144,7 @@ function RecordingUI({
 }
 
 export default function ExamenPage() {
+  const router = useRouter();
   const [step, setStep] = useState<Step>("briefing");
   const [mode, setMode] = useState<"complet" | "rapide">("complet");
   const [texts, setTexts] = useState<UserText[]>([]);
@@ -181,7 +183,7 @@ export default function ExamenPage() {
         const { createClient } = await import("@/lib/supabase/client");
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        if (!user) { router.push("/login"); return; }
         setUserId(user.id);
         const [{ data: textsData }, { data: profileData }] = await Promise.all([
           supabase.from("user_texts").select("*").eq("user_id", user.id),
