@@ -384,7 +384,7 @@ export default function ExamenPage() {
           <div className="space-y-2">
             <p className="text-xs text-[#00d9ff] font-bold uppercase tracking-widest">Partie 1 — 12 points</p>
             <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 gap-y-1 text-sm text-[#a0b0d0]">
-              <span>Lecture du texte + Explication linéaire</span><span className="text-[#6b7280]">12 min</span><span className="text-[#1a9fff] font-bold">10 pts</span>
+              <span>Explication linéaire</span><span className="text-[#6b7280]">12 min</span><span className="text-[#1a9fff] font-bold">10 pts</span>
               <span>Question de grammaire</span><span className="text-[#6b7280]">—</span><span className="text-[#1a9fff] font-bold">2 pts</span>
             </div>
           </div>
@@ -398,6 +398,7 @@ export default function ExamenPage() {
             <span className="text-white font-bold">Total</span>
             <span className="text-[#FFD700] font-black">20 points</span>
           </div>
+          <p className="text-[#6b7280] text-xs italic mt-2">La lecture à voix haute du texte n&apos;est pas simulée — passe directement à l&apos;explication linéaire.</p>
         </div>
 
         {/* Mode */}
@@ -530,7 +531,7 @@ export default function ExamenPage() {
         {/* Rappels */}
         <div className="bg-[#0a1543]/60 border border-[#19327f]/40 rounded-2xl p-5 space-y-2 text-sm text-[#a0b0d0]">
           <p className="text-[#FFD700] font-bold text-xs uppercase tracking-widest mb-2">Déroulement</p>
-          <p>① Lecture du texte + Explication linéaire (12 min, 10 pts)</p>
+          <p>① Explication linéaire (12 min, 10 pts)</p>
           <p>② Question de grammaire (2 pts)</p>
           <p>③ Présentation de ton œuvre (4 min, 8 pts)</p>
         </div>
@@ -556,7 +557,7 @@ export default function ExamenPage() {
       {...sharedRecordingProps}
       target="explication"
       title="✦ Partie 1 — Explication linéaire"
-      subtitle="Lecture + explication du texte · 10 points"
+      subtitle="Explication du texte · 10 points"
       duration="12 min"
       trans={explicationTranscription}
       setTranscription={setExplicationTranscription}
