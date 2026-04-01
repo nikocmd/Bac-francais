@@ -42,6 +42,7 @@ export default function MesTextesPage() {
   const [texts, setTexts] = useState<UserText[]>([]);
   const [savedAnalyses, setSavedAnalyses] = useState<SavedAnalyse[]>([]);
   const [oeuvreQuestions, setOeuvreQuestions] = useState<OeuvreQuestion[]>([]);
+  const [authed, setAuthed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("textes");
@@ -51,14 +52,6 @@ export default function MesTextesPage() {
 
   useEffect(() => {
     load();
-    try {
-      const stored = JSON.parse(localStorage.getItem("saved_analyses") || "[]");
-      setSavedAnalyses(stored);
-    } catch {}
-    try {
-      const stored = JSON.parse(localStorage.getItem("oeuvre_questions") || "[]");
-      setOeuvreQuestions(stored);
-    } catch {}
   }, []);
 
   async function load() {
@@ -68,6 +61,7 @@ export default function MesTextesPage() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
+      setAuthed(true);
       const [{ data }, { data: profile }] = await Promise.all([
         supabase.from("user_texts").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
         supabase.from("profiles").select("filiere").eq("id", user.id).single(),
@@ -76,6 +70,14 @@ export default function MesTextesPage() {
       const f = profile?.filiere === "stmg" ? "stmg" : "general";
       setFiliere(f);
       setMaxTexts(f === "stmg" ? 12 : 16);
+      try {
+        const stored = JSON.parse(localStorage.getItem("saved_analyses") || "[]");
+        setSavedAnalyses(stored);
+      } catch {}
+      try {
+        const stored = JSON.parse(localStorage.getItem("oeuvre_questions") || "[]");
+        setOeuvreQuestions(stored);
+      } catch {}
     } finally {
       setLoading(false);
     }
@@ -103,6 +105,12 @@ export default function MesTextesPage() {
   }
 
   const count = texts.length;
+
+  if (!authed) return (
+    <div className="min-h-[80vh] flex items-center justify-center">
+      <Loader2 size={28} className="text-[#1a9fff] animate-spin" />
+    </div>
+  );
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-10 space-y-8">

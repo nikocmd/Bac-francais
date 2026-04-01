@@ -35,12 +35,14 @@ export default function AnalysePage() {
   const [openMvt, setOpenMvt] = useState<number | null>(0);
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [maxTexts, setMaxTexts] = useState(16);
+  const [authed, setAuthed] = useState(false);
 
   useEffect(() => {
     import("@/lib/supabase/client").then(({ createClient }) => {
       const supabase = createClient();
       supabase.auth.getUser().then(({ data: { user } }) => {
         if (!user) { router.push("/login"); return; }
+        setAuthed(true);
         setUserId(user.id);
         supabase.from("profiles").select("filiere").eq("id", user.id).single().then(({ data }) => {
           setMaxTexts(data?.filiere === "stmg" ? 12 : 16);
@@ -89,6 +91,12 @@ export default function AnalysePage() {
       setLoading(false);
     }
   }
+
+  if (!authed) return (
+    <div className="min-h-[80vh] flex items-center justify-center">
+      <Loader2 size={28} className="text-[#1a9fff] animate-spin" />
+    </div>
+  );
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-10 space-y-8">

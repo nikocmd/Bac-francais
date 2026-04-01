@@ -323,20 +323,20 @@ export default function ExamenPage() {
   const noteBg = (n: number) => n >= 16 ? "bg-emerald-500/10 border-emerald-500/30" : n >= 12 ? "bg-amber-500/10 border-amber-500/30" : "bg-red-500/10 border-red-500/30";
   const prepColor = prepTimer < 60 ? "text-red-400" : prepTimer < 300 ? "text-amber-400" : "text-[#00d9ff]";
 
-  if (isPremium === false) return (
-    <div className="max-w-xl mx-auto px-4 py-20 space-y-4 text-center">
-      <h1 className="text-2xl font-bold">Mode Examen</h1>
-      <p className="text-[#9ca3af] text-sm mb-6">Cette fonctionnalité est réservée aux membres Premium.</p>
-      <Paywall title="Fonctionnalité Premium" description="Le mode examen est réservé aux membres Premium. Passe Premium pour simuler les conditions réelles du Bac avec notation BOEN." />
-    </div>
-  );
-
   if (loading) return (
     <div className="min-h-screen bg-[#050510] flex items-center justify-center px-4">
       <div className="text-center space-y-4">
         <div className="text-5xl animate-pulse">⚖️</div>
         <p className="text-[#1a9fff] font-black tracking-widest uppercase text-sm animate-pulse">Préparation de la salle d&apos;examen...</p>
       </div>
+    </div>
+  );
+
+  if (isPremium === false) return (
+    <div className="max-w-xl mx-auto px-4 py-20 space-y-4 text-center">
+      <h1 className="text-2xl font-bold">Mode Examen</h1>
+      <p className="text-[#9ca3af] text-sm mb-6">Cette fonctionnalité est réservée aux membres Premium.</p>
+      <Paywall title="Fonctionnalité Premium" description="Le mode examen est réservé aux membres Premium. Passe Premium pour simuler les conditions réelles du Bac avec notation BOEN." />
     </div>
   );
 
