@@ -168,6 +168,7 @@ export default function ExamenPage() {
   const [filiere, setFiliere] = useState<"general" | "stmg">("general");
   const [recordingTarget, setRecordingTarget] = useState<"explication" | "oeuvre">("explication");
   const [generatingGrammar, setGeneratingGrammar] = useState(false);
+  const [username, setUsername] = useState("");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -184,12 +185,13 @@ export default function ExamenPage() {
         setUserId(user.id);
         const [{ data: textsData }, { data: profileData }] = await Promise.all([
           supabase.from("user_texts").select("*").eq("user_id", user.id),
-          supabase.from("profiles").select("grammar_questions, is_premium, filiere").eq("id", user.id).single(),
+          supabase.from("profiles").select("grammar_questions, is_premium, filiere, username").eq("id", user.id).single(),
         ]);
         setTexts(textsData ?? []);
         setGrammarQuestions(profileData?.grammar_questions ?? []);
         setIsPremium(profileData?.is_premium === true);
         setFiliere(profileData?.filiere === "stmg" ? "stmg" : "general");
+        setUsername(profileData?.username ?? user.user_metadata?.username ?? "");
       } finally { setLoading(false); }
     }
     loadData();
@@ -370,6 +372,7 @@ export default function ExamenPage() {
         <div className="space-y-3">
           <div className="text-6xl">⚖️</div>
           <h1 className="text-3xl font-black text-white tracking-widest uppercase">Oral du Bac</h1>
+          {username && <p className="text-[#00d9ff] font-bold text-sm">Bienvenue, {username}</p>}
           <p className="text-[#a0b0d0] text-sm leading-relaxed">
             Simulation officielle — barème BOEN 2024 · <span className={filiere === "stmg" ? "text-[#FFD700]" : "text-[#1a9fff]"}>{filiere === "stmg" ? "Bac Techno" : "Bac Général"}</span>
           </p>
@@ -451,14 +454,46 @@ export default function ExamenPage() {
   );
 
   /* ── PREPARATION ── */
-  if (step === "preparation" && selectedText) return (
+  if (step === "preparation" && selectedText) {
+    const sessionDate = new Date();
+    const sessionLabel = `${sessionDate.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} · ${sessionDate.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`;
+    const candidatName = username || "Candidat";
+
+    return (
     <div className="min-h-screen bg-[#050510] px-4 py-8">
       <div className="max-w-2xl mx-auto space-y-6">
+        {/* En-tête officiel salle */}
+        <div className="bg-[#0a1543]/90 border border-[#FFD700]/30 rounded-2xl p-6 space-y-4
+          shadow-[0_0_30px_rgba(255,215,0,0.08)]">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="space-y-1">
+              <p className="text-[10px] text-[#FFD700]/60 uppercase tracking-[0.3em] font-bold">Épreuve anticipée de Français — Session {sessionDate.getFullYear()}</p>
+              <h2 className="text-xl font-black text-white tracking-wide">Salle de préparation</h2>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] text-[#a0b0d0] uppercase tracking-widest">
+                {mode === "rapide" ? "⚡ Express" : "⏱ Complet"}
+              </p>
+              <span className={`text-xs px-2.5 py-1 rounded-md border font-bold ${filiere === "stmg" ? "border-[#FFD700]/40 text-[#FFD700] bg-[#FFD700]/10" : "border-[#1a9fff]/40 text-[#1a9fff] bg-[#1a9fff]/10"}`}>
+                {filiere === "stmg" ? "Bac Techno" : "Bac Général"}
+              </span>
+            </div>
+          </div>
+          <div className="border-t border-[#19327f]/40 pt-3 grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <p className="text-[10px] text-[#6b7280] uppercase tracking-widest mb-0.5">Candidat</p>
+              <p className="text-white font-black">{candidatName}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] text-[#6b7280] uppercase tracking-widest mb-0.5">Date & heure</p>
+              <p className="text-[#a0b0d0] text-xs capitalize">{sessionLabel}</p>
+            </div>
+          </div>
+        </div>
+
         {/* Timer */}
-        <div className="text-center space-y-2">
-          <p className="text-xs text-[#a0b0d0] font-bold uppercase tracking-widest">
-            {mode === "rapide" ? "⚡ Mode rapide" : "⏱ Mode complet"} — Préparation
-          </p>
+        <div className="text-center space-y-1">
+          <p className="text-[10px] text-[#a0b0d0] uppercase tracking-[0.3em] font-bold">Temps de préparation restant</p>
           <div className={`text-6xl font-mono font-black ${prepColor}`}>{fmt(prepTimer)}</div>
           {prepTimer === 0 && <p className="text-red-400 text-sm font-bold animate-pulse">Temps écoulé — lance ta prestation !</p>}
         </div>
@@ -508,6 +543,7 @@ export default function ExamenPage() {
       </div>
     </div>
   );
+  }
 
   const sharedRecordingProps = {
     timer, recording, transcribing, guiltIdx, limitReached, error, showQuit,
