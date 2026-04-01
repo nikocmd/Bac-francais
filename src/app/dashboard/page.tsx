@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { BookOpen, Mic, Library, GraduationCap, PenLine, ChevronRight } from "lucide-react";
 import {
@@ -130,6 +131,7 @@ function QuestCard({ quest, done, onClick }: {
 
 /* ── Main dashboard ─────────────────────────────────────────────────── */
 export default function Dashboard() {
+  const router = useRouter();
   const [hunter, setHunter] = useState<HunterData | null>(null);
   const [notif, setNotif] = useState<string | null>(null);
   const [showLevelUp, setShowLevelUp] = useState(false);
@@ -143,6 +145,7 @@ export default function Dashboard() {
         const { createClient } = await import("@/lib/supabase/client");
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
+        if (!user) { router.push("/login"); return; }
         if (user) {
           const [h, { data: profile }] = await Promise.all([
             loadHunterFromDB(user.id),

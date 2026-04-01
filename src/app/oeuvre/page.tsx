@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Library, Loader2, Send, Bot, User, Sparkles, Search, X, CheckCircle, MessageCircle, BookmarkPlus, BookmarkCheck } from "lucide-react";
 import { addXP } from "@/lib/gamification";
 import Paywall from "@/components/Paywall";
@@ -58,6 +59,7 @@ const AIDE_SUGGESTIONS = [
 ];
 
 export default function OeuvrePage() {
+  const router = useRouter();
   // Oeuvre selection
   const [oeuvre, setOeuvre] = useState("");
   const [auteur, setAuteur] = useState("");
@@ -114,7 +116,7 @@ export default function OeuvrePage() {
       const { createClient } = await import("@/lib/supabase/client");
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setIsPremium(false); return; }
+      if (!user) { router.push("/login"); return; }
       setUserId(user.id);
       const { data } = await supabase.from("profiles").select("oeuvre_choisie, auteur_choisi, is_premium").eq("id", user.id).single();
       setIsPremium(data?.is_premium === true);

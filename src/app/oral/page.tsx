@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Mic, MicOff, Loader2, Send, Star, CheckCircle,
   AlertCircle, Lightbulb, Zap, RotateCcw
@@ -14,6 +15,7 @@ interface Feedback {
 }
 
 export default function OralPage() {
+  const router = useRouter();
   const [transcription, setTranscription] = useState("");
   const [contexte, setContexte] = useState("");
   const [type, setType] = useState("Explication de texte linéaire");
@@ -40,7 +42,7 @@ export default function OralPage() {
           const { data } = await client.from("profiles").select("is_premium").eq("id", user.id).single();
           setIsPremium(data?.is_premium === true);
         } else {
-          setIsPremium(false);
+          router.push("/login"); return;
         }
       });
     });
