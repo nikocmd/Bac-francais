@@ -192,8 +192,8 @@ export default function ProfilePage() {
                 ? "bg-[#1a9fff]/10 border-[#1a9fff]/60 shadow-[0_0_12px_rgba(26,159,255,0.2)]"
                 : "bg-[#050a2e] border-[#19327f]/40 hover:border-[#19327f]"}`}>
               <p className="text-white font-black text-sm">📚 Bac Général</p>
-              <p className="text-[#6b7280] text-xs mt-1">16 textes max</p>
-              <p className="text-[#6b7280] text-xs">L, ES, S — voie générale</p>
+              <p className="text-[#6b7280] text-xs mt-1">16 textes au programme</p>
+              <p className="text-[#6b7280] text-xs">Spécialités — voie générale</p>
             </button>
             <button type="button" onClick={() => setFiliere("stmg")}
               className={`p-4 rounded-xl border text-left transition-all ${filiere === "stmg"
