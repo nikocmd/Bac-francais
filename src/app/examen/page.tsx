@@ -409,18 +409,24 @@ export default function ExamenPage() {
           <div className="grid grid-cols-2 gap-3">
             <button onClick={() => setMode("complet")}
               className={`p-4 rounded-xl border text-left transition-all ${mode === "complet"
-                ? "bg-[#1a9fff]/10 border-[#1a9fff]/60 shadow-[0_0_15px_rgba(26,159,255,0.2)]"
+                ? "bg-[#1a9fff]/10 border-[#1a9fff]/60 shadow-[0_0_15px_rgba(26,159,255,0.3)]"
                 : "bg-[#0a1543]/60 border-[#19327f]/40 hover:border-[#19327f]"}`}>
-              <p className="text-white font-black text-sm">⏱ Complet</p>
-              <p className="text-[#6b7280] text-xs mt-1">30 min de préparation</p>
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-white font-black text-sm">⏱ Complet</p>
+                {mode === "complet" && <span className="text-[10px] font-black text-[#1a9fff] bg-[#1a9fff]/20 px-2 py-0.5 rounded-full">✓ SÉLECTIONNÉ</span>}
+              </div>
+              <p className="text-[#6b7280] text-xs">30 min de préparation</p>
               <p className="text-[#6b7280] text-xs">Conditions réelles</p>
             </button>
             <button onClick={() => setMode("rapide")}
               className={`p-4 rounded-xl border text-left transition-all ${mode === "rapide"
-                ? "bg-[#FFD700]/10 border-[#FFD700]/40 shadow-[0_0_15px_rgba(255,215,0,0.2)]"
+                ? "bg-[#FFD700]/10 border-[#FFD700]/40 shadow-[0_0_15px_rgba(255,215,0,0.3)]"
                 : "bg-[#0a1543]/60 border-[#19327f]/40 hover:border-[#19327f]"}`}>
-              <p className="text-white font-black text-sm">⚡ Rapide</p>
-              <p className="text-[#6b7280] text-xs mt-1">5 min de préparation</p>
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-white font-black text-sm">⚡ Rapide</p>
+                {mode === "rapide" && <span className="text-[10px] font-black text-[#FFD700] bg-[#FFD700]/20 px-2 py-0.5 rounded-full">✓ SÉLECTIONNÉ</span>}
+              </div>
+              <p className="text-[#6b7280] text-xs">5 min de préparation</p>
               <p className="text-[#6b7280] text-xs">Entraînement express</p>
             </button>
           </div>

@@ -41,6 +41,7 @@ export default function ProfilePage() {
   const [error, setError] = useState("");
   const [grammarQuestions, setGrammarQuestions] = useState<string[]>(GRAMMAR_TOPICS.slice(0, 3));
   const [filiere, setFiliere] = useState<"general" | "stmg">("general");
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [hunter, setHunter] = useState<HunterData | null>(null);
 
   useEffect(() => {
@@ -290,13 +291,32 @@ export default function ProfilePage() {
       <div className="bg-[#0a1543]/80 border border-red-500/20 rounded-2xl p-6
         shadow-[0_0_20px_rgba(239,68,68,0.1)] backdrop-blur">
         <h2 className="text-xs font-black text-red-400 uppercase tracking-widest mb-4">✦ Session</h2>
-        <button onClick={handleLogout}
+        <button onClick={() => setShowLogoutConfirm(true)}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm
             bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 transition-all">
           <LogOut size={15} />
           Se déconnecter
         </button>
       </div>
+
+      {/* Modal confirmation déconnexion */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+          <div className="bg-[#0a1543] border border-red-500/40 rounded-2xl p-8 max-w-sm w-full space-y-5 text-center shadow-[0_0_40px_rgba(239,68,68,0.2)]">
+            <LogOut size={32} className="text-red-400 mx-auto" />
+            <h3 className="text-xl font-black text-white">Se déconnecter ?</h3>
+            <p className="text-[#a0b0d0] text-sm">Tu seras redirigé vers la page de connexion.</p>
+            <button onClick={handleLogout}
+              className="w-full py-3 rounded-xl bg-red-500 hover:bg-red-400 text-white font-black uppercase tracking-widest text-sm transition-all">
+              Confirmer
+            </button>
+            <button onClick={() => setShowLogoutConfirm(false)}
+              className="w-full py-2 text-xs text-[#6b7280] hover:text-white transition-colors">
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

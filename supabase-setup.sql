@@ -7,6 +7,13 @@ create table if not exists public.profiles (
   id uuid references auth.users(id) on delete cascade primary key,
   username text,
   avatar_url text,
+  filiere text default 'general',
+  is_premium boolean default false,
+  stripe_customer_id text,
+  free_uses integer default 0,
+  oeuvre_choisie text,
+  auteur_choisi text,
+  grammar_questions text[] default '{}',
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -28,23 +35,46 @@ create table if not exists public.hunter_data (
   updated_at timestamptz default now()
 );
 
--- 3. Activer Row Level Security
+-- 3. Table des textes enregistrés par l'utilisateur
+create table if not exists public.user_texts (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  titre text,
+  auteur text,
+  oeuvre text,
+  texte text not null,
+  axe text,
+  created_at timestamptz default now()
+);
+
+-- 4. Activer Row Level Security
 alter table public.profiles enable row level security;
 alter table public.hunter_data enable row level security;
+alter table public.user_texts enable row level security;
 
--- 4. Policies profils
+-- 5. Policies profils
 create policy "Voir son propre profil" on public.profiles
   for select using (auth.uid() = id);
 create policy "Modifier son propre profil" on public.profiles
   for all using (auth.uid() = id);
 
--- 5. Policies hunter_data
+-- 6. Policies hunter_data
 create policy "Voir ses propres données" on public.hunter_data
   for select using (auth.uid() = user_id);
 create policy "Modifier ses propres données" on public.hunter_data
   for all using (auth.uid() = user_id);
 
--- 6. Créer profil automatiquement à l'inscription
+-- 7. Policies user_texts
+create policy "Voir ses propres textes" on public.user_texts
+  for select using (auth.uid() = user_id);
+create policy "Ajouter ses propres textes" on public.user_texts
+  for insert with check (auth.uid() = user_id);
+create policy "Modifier ses propres textes" on public.user_texts
+  for update using (auth.uid() = user_id);
+create policy "Supprimer ses propres textes" on public.user_texts
+  for delete using (auth.uid() = user_id);
+
+-- 8. Créer profil automatiquement à l'inscription
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
@@ -63,7 +93,7 @@ create or replace trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
--- 7. Storage bucket pour les avatars
+-- 9. Storage bucket pour les avatars
 insert into storage.buckets (id, name, public)
 values ('avatars', 'avatars', true)
 on conflict do nothing;

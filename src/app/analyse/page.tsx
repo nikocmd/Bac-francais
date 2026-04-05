@@ -25,17 +25,34 @@ interface Analyse {
   ouverture: string;
 }
 
+const DRAFT_KEY = "analyse_draft";
+const MIN_TEXT_LENGTH = 100;
+
 export default function AnalysePage() {
   const router = useRouter();
   const [form, setForm] = useState({ texte: "", titre: "", auteur: "", oeuvre: "", axe: "" });
   const [analyse, setAnalyse] = useState<Analyse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [limitReached, setLimitReached] = useState(false);
   const [openMvt, setOpenMvt] = useState<number | null>(0);
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [maxTexts, setMaxTexts] = useState(16);
   const [authed, setAuthed] = useState(false);
+
+  // Restaurer le brouillon
+  useEffect(() => {
+    try {
+      const draft = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null");
+      if (draft) setForm(draft);
+    } catch {}
+  }, []);
+
+  // Autosave brouillon
+  useEffect(() => {
+    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(form)); } catch {}
+  }, [form]);
 
   useEffect(() => {
     import("@/lib/supabase/client").then(({ createClient }) => {
@@ -51,8 +68,20 @@ export default function AnalysePage() {
     });
   }, []);
 
+  function validate() {
+    const errs: Record<string, string> = {};
+    if (!form.auteur.trim()) errs.auteur = "L'auteur est obligatoire.";
+    if (!form.oeuvre.trim()) errs.oeuvre = "L'œuvre est obligatoire.";
+    if (!form.texte.trim()) errs.texte = "Le texte est obligatoire.";
+    else if (form.texte.trim().length < MIN_TEXT_LENGTH) errs.texte = `Le texte est trop court (minimum ${MIN_TEXT_LENGTH} caractères).`;
+    return errs;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const errs = validate();
+    if (Object.keys(errs).length > 0) { setFieldErrors(errs); return; }
+    setFieldErrors({});
     setLoading(true);
     setError("");
     setAnalyse(null);
@@ -64,9 +93,12 @@ export default function AnalysePage() {
       });
       const data = await res.json();
       if (data.error === "LIMIT_REACHED") { setLimitReached(true); return; }
-      if (data.error) { setError(data.error); return; }
+      if (data.error) { setError(data.error || "Une erreur s'est produite. Réessaie."); return; }
+      if (!data.analyse) { setError("La génération a échoué. Vérifie que le texte est bien un extrait littéraire."); return; }
       setAnalyse(data.analyse);
       setOpenMvt(0);
+      // Effacer le brouillon après succès
+      try { localStorage.removeItem(DRAFT_KEY); } catch {}
       // Sauvegarde de l'analyse complète en localStorage
       try {
         const entry = { id: Date.now().toString(), ...form, analyse: data.analyse, savedAt: new Date().toISOString() };
@@ -91,6 +123,8 @@ export default function AnalysePage() {
       setLoading(false);
     }
   }
+
+  const canSubmit = !loading && form.auteur.trim() && form.oeuvre.trim() && form.texte.trim().length >= MIN_TEXT_LENGTH;
 
   if (!authed) return (
     <div className="min-h-[80vh] flex items-center justify-center">
@@ -117,22 +151,26 @@ export default function AnalysePage() {
       <form onSubmit={handleSubmit} className="space-y-4 bg-[#12121a] rounded-2xl border border-[#1e1e2e] p-6">
         <div className="grid md:grid-cols-3 gap-4">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-[#9ca3af]">Auteur</label>
+            <label className="text-sm font-medium text-[#9ca3af]">Auteur <span className="text-red-400">*</span></label>
             <input
-              className="w-full bg-[#0a0a0f] border border-[#2a2a3e] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-violet-500 transition-colors"
+              className={cn("w-full bg-[#0a0a0f] border rounded-lg px-3 py-2 text-sm focus:outline-none transition-colors",
+                fieldErrors.auteur ? "border-red-500 focus:border-red-400" : "border-[#2a2a3e] focus:border-violet-500")}
               placeholder="ex: Molière"
               value={form.auteur}
-              onChange={e => setForm(f => ({ ...f, auteur: e.target.value }))}
+              onChange={e => { setForm(f => ({ ...f, auteur: e.target.value })); setFieldErrors(fe => ({ ...fe, auteur: "" })); }}
             />
+            {fieldErrors.auteur && <p className="text-red-400 text-xs">{fieldErrors.auteur}</p>}
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-[#9ca3af]">Œuvre</label>
+            <label className="text-sm font-medium text-[#9ca3af]">Œuvre <span className="text-red-400">*</span></label>
             <input
-              className="w-full bg-[#0a0a0f] border border-[#2a2a3e] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-violet-500 transition-colors"
+              className={cn("w-full bg-[#0a0a0f] border rounded-lg px-3 py-2 text-sm focus:outline-none transition-colors",
+                fieldErrors.oeuvre ? "border-red-500 focus:border-red-400" : "border-[#2a2a3e] focus:border-violet-500")}
               placeholder="ex: Dom Juan"
               value={form.oeuvre}
-              onChange={e => setForm(f => ({ ...f, oeuvre: e.target.value }))}
+              onChange={e => { setForm(f => ({ ...f, oeuvre: e.target.value })); setFieldErrors(fe => ({ ...fe, oeuvre: "" })); }}
             />
+            {fieldErrors.oeuvre && <p className="text-red-400 text-xs">{fieldErrors.oeuvre}</p>}
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-[#9ca3af]">Titre de l&apos;extrait</label>
@@ -154,21 +192,31 @@ export default function AnalysePage() {
           />
         </div>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-[#9ca3af]">Texte à analyser <span className="text-red-400">*</span></label>
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium text-[#9ca3af]">Texte à analyser <span className="text-red-400">*</span></label>
+            <span className={cn("text-xs", form.texte.length < MIN_TEXT_LENGTH ? "text-[#6b7280]" : "text-emerald-400")}>
+              {form.texte.length} / {MIN_TEXT_LENGTH} min
+            </span>
+          </div>
           <textarea
-            className="w-full bg-[#0a0a0f] border border-[#2a2a3e] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-violet-500 transition-colors resize-none font-mono leading-relaxed"
+            className={cn("w-full bg-[#0a0a0f] border rounded-lg px-3 py-2 text-sm focus:outline-none transition-colors resize-none font-mono leading-relaxed",
+              fieldErrors.texte ? "border-red-500 focus:border-red-400" : "border-[#2a2a3e] focus:border-violet-500")}
             rows={10}
-            placeholder="Colle ton texte ici..."
+            placeholder="Colle ton texte ici (extrait littéraire uniquement, minimum 100 caractères)..."
             value={form.texte}
-            onChange={e => setForm(f => ({ ...f, texte: e.target.value }))}
-            required
+            onChange={e => { setForm(f => ({ ...f, texte: e.target.value })); setFieldErrors(fe => ({ ...fe, texte: "" })); }}
           />
+          {fieldErrors.texte && <p className="text-red-400 text-xs">{fieldErrors.texte}</p>}
         </div>
         {limitReached && <Paywall />}
-        {error && !limitReached && <p className="text-red-400 text-sm">{error}</p>}
+        {error && !limitReached && (
+          <div className="flex items-start gap-2 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
+            <p className="text-red-400 text-sm">{error}</p>
+          </div>
+        )}
         <button
           type="submit"
-          disabled={loading || !form.texte.trim()}
+          disabled={!canSubmit}
           className="flex items-center gap-2 px-6 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold transition-all"
         >
           {loading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}

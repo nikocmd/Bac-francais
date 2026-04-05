@@ -25,7 +25,7 @@ export default function RootLayout({
         <Navbar />
         <main className="flex-1">{children}</main>
         <footer className="border-t border-[#1e1e2e] py-6 text-center text-sm text-[#6b7280]">
-          © 2025 BacFrançais.ai — Propulsé par Claude IA
+          © {new Date().getFullYear()} BacFrançais.ai — Propulsé par Claude IA
         </footer>
       </body>
     </html>

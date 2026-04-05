@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { BookOpen, Mic, Library, GraduationCap, LayoutDashboard, User, LogOut, FileText, Crown } from "lucide-react";
+import { BookOpen, Mic, Library, GraduationCap, LayoutDashboard, User, LogOut, FileText, Crown, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const links = [
@@ -20,6 +20,8 @@ export default function Navbar() {
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [authReady, setAuthReady] = useState(false);
 
@@ -65,6 +67,7 @@ export default function Navbar() {
   }
 
   return (
+    <>
     <nav className="sticky top-0 z-50 border-b border-[#19327f]/40 bg-[#050510]/95 backdrop-blur-md">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
@@ -99,8 +102,14 @@ export default function Navbar() {
           </Link>
         </div>
 
+        {/* Hamburger mobile */}
+        <button className="md:hidden p-2 rounded-lg text-[#6b7280] hover:text-white hover:bg-[#0a1543] transition-all"
+          onClick={() => setMobileOpen(o => !o)}>
+          {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
+
         {/* User avatar */}
-        <div className="relative">
+        <div className="relative hidden md:block">
           {!authReady ? (
             <div className="w-8 h-8 rounded-full bg-[#0a1543] border border-[#19327f]/40 animate-pulse" />
           ) : userId ? (
@@ -132,7 +141,7 @@ export default function Navbar() {
                       hover:bg-[#FFD700]/10 transition-colors">
                     <Crown size={14} /> Premium
                   </Link>
-                  <button onClick={handleLogout}
+                  <button onClick={() => { setMenuOpen(false); setShowLogoutConfirm(true); }}
                     className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-red-400
                       hover:bg-red-500/10 transition-colors">
                     <LogOut size={14} /> Se déconnecter
@@ -150,19 +159,65 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile nav */}
-      <div className="md:hidden flex border-t border-[#19327f]/30 overflow-x-auto">
-        {[...links, { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard }].map(({ href, label, icon: Icon }) => (
-          <Link key={href} href={href}
-            className={cn(
-              "flex flex-col items-center gap-0.5 px-4 py-2 text-xs font-medium flex-1 whitespace-nowrap transition-all",
-              path === href ? "text-[#00d9ff] border-b-2 border-[#1a9fff]" : "text-[#6b7280]"
-            )}>
-            <Icon size={16} />
-            {label}
-          </Link>
-        ))}
-      </div>
+
+      {/* Mobile menu déroulant */}
+      {mobileOpen && (
+        <div className="md:hidden border-t border-[#19327f]/30 bg-[#050510]/98 backdrop-blur-md">
+          <div className="flex flex-col px-4 py-3 space-y-1">
+            {[...links, { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard }].map(({ href, label, icon: Icon }) => (
+              <Link key={href} href={href} onClick={() => setMobileOpen(false)}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all",
+                  path === href
+                    ? "bg-[#1a9fff]/20 text-[#00d9ff] border border-[#1a9fff]/30"
+                    : "text-[#6b7280] hover:text-white hover:bg-[#0a1543]"
+                )}>
+                <Icon size={18} />
+                {label}
+              </Link>
+            ))}
+            <div className="border-t border-[#19327f]/30 pt-2 mt-1">
+              {userId ? (
+                <>
+                  <Link href="/profile" onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-[#a0b0d0] hover:text-white hover:bg-[#0a1543] transition-all">
+                    <User size={18} /> Mon profil
+                  </Link>
+                  <button onClick={() => { setMobileOpen(false); setShowLogoutConfirm(true); }}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-red-400 hover:bg-red-500/10 transition-all">
+                    <LogOut size={18} /> Se déconnecter
+                  </button>
+                </>
+              ) : (
+                <Link href="/login" onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-[#1a9fff] hover:bg-[#1a9fff]/10 transition-all font-bold">
+                  Connexion
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
+
+    {/* Modal confirmation déconnexion */}
+    {showLogoutConfirm && (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+        <div className="bg-[#0a1543] border border-red-500/40 rounded-2xl p-8 max-w-sm w-full space-y-5 text-center shadow-[0_0_40px_rgba(239,68,68,0.2)]">
+          <LogOut size={32} className="text-red-400 mx-auto" />
+          <h3 className="text-xl font-black text-white">Se déconnecter ?</h3>
+          <p className="text-[#a0b0d0] text-sm">Tu seras redirigé vers la page de connexion.</p>
+          <button onClick={handleLogout}
+            className="w-full py-3 rounded-xl bg-red-500 hover:bg-red-400 text-white font-black uppercase tracking-widest text-sm transition-all">
+            Confirmer
+          </button>
+          <button onClick={() => setShowLogoutConfirm(false)}
+            className="w-full py-2 text-xs text-[#6b7280] hover:text-white transition-colors">
+            Annuler
+          </button>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
