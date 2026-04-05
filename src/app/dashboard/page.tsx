@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { BookOpen, Mic, Library, GraduationCap, PenLine, ChevronRight } from "lucide-react";
+import { BookOpen, Mic, Library, GraduationCap, Camera, ChevronRight, Loader2 } from "lucide-react";
 import {
   loadHunter, loadHunterFromDB, getRankInfo, getTodayQuestStatus,
   DAILY_QUESTS, RANKS, type HunterData,
@@ -137,6 +137,9 @@ export default function Dashboard() {
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [username, setUsername] = useState<string>("");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setHunter(loadHunter());
@@ -146,21 +149,40 @@ export default function Dashboard() {
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) { router.push("/login"); return; }
-        if (user) {
-          const [h, { data: profile }] = await Promise.all([
-            loadHunterFromDB(user.id),
-            supabase.from("profiles").select("avatar_url, username").eq("id", user.id).single(),
-          ]);
-          setHunter(h);
-          if (profile?.avatar_url) setAvatarUrl(profile.avatar_url);
-          if (profile?.username) setUsername(profile.username);
-        }
+        setUserId(user.id);
+        const [h, { data: profile }] = await Promise.all([
+          loadHunterFromDB(user.id),
+          supabase.from("profiles").select("avatar_url, username").eq("id", user.id).single(),
+        ]);
+        setHunter(h);
+        if (profile?.avatar_url) setAvatarUrl(profile.avatar_url);
+        if (profile?.username) setUsername(profile.username);
       } catch { /* garde les données locales */ }
     }
     syncFromDB();
   }, []);
 
   const dismissNotif = useCallback(() => setNotif(null), []);
+
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !userId) return;
+    setUploadingAvatar(true);
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      const ext = file.name.split(".").pop();
+      const path = `${userId}/avatar.${ext}`;
+      const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+      if (error) return;
+      const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+      const url = data.publicUrl + `?t=${Date.now()}`;
+      await supabase.from("profiles").update({ avatar_url: url }).eq("id", userId);
+      setAvatarUrl(url);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  }
 
   if (!hunter) return (
     <div className="min-h-screen bg-[#050510] flex items-center justify-center">
@@ -214,15 +236,26 @@ export default function Dashboard() {
 
             {/* Avatar + rank */}
             <div className="relative">
-              <div className={`w-20 h-20 rounded-full bg-gradient-to-br from-[#0a1543] to-[#19327f]
-                flex items-center justify-center border-2 ${RANK_STYLES[hunter.rank]}
-                shadow-[0_0_30px_rgba(26,159,255,0.4)] overflow-hidden`}>
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                ) : (
-                  <PenLine size={36} className="text-[#1a9fff]" />
-                )}
-              </div>
+              <button onClick={() => fileInputRef.current?.click()}
+                className="group relative w-20 h-20 rounded-full overflow-hidden border-2 cursor-pointer
+                  bg-gradient-to-br from-[#0a1543] to-[#19327f] shadow-[0_0_30px_rgba(26,159,255,0.4)]
+                  focus:outline-none"
+                style={{ borderColor: RANK_STYLES[hunter.rank].match(/border-\S+/)?.[0]?.replace("border-", "") }}>
+                <div className={`w-full h-full flex items-center justify-center border-2 rounded-full ${RANK_STYLES[hunter.rank]} overflow-hidden`}>
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <Camera size={28} className="text-[#1a9fff]" />
+                  )}
+                </div>
+                {/* Overlay au survol */}
+                <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
+                  {uploadingAvatar
+                    ? <Loader2 size={20} className="text-white animate-spin" />
+                    : <Camera size={20} className="text-white" />}
+                </div>
+              </button>
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
               <div className={`absolute -bottom-2 -right-2 w-8 h-8 rounded border-2 flex items-center
                 justify-center text-sm font-black ${RANK_BG[hunter.rank]} ${RANK_STYLES[hunter.rank]}`}>
                 {hunter.rank}
