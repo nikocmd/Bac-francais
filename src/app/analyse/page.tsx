@@ -27,10 +27,20 @@ interface Analyse {
 
 const DRAFT_KEY = "analyse_draft";
 const MIN_TEXT_LENGTH = 100;
+const EMPTY_FORM = { texte: "", titre: "", auteur: "", oeuvre: "", axe: "" };
+
+function loadDraft() {
+  if (typeof window === "undefined") return EMPTY_FORM;
+  try {
+    const draft = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null");
+    if (draft && typeof draft === "object") return draft;
+  } catch {}
+  return EMPTY_FORM;
+}
 
 export default function AnalysePage() {
   const router = useRouter();
-  const [form, setForm] = useState({ texte: "", titre: "", auteur: "", oeuvre: "", axe: "" });
+  const [form, setForm] = useState(loadDraft);
   const [analyse, setAnalyse] = useState<Analyse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -41,15 +51,7 @@ export default function AnalysePage() {
   const [maxTexts, setMaxTexts] = useState(16);
   const [authed, setAuthed] = useState(false);
 
-  // Restaurer le brouillon
-  useEffect(() => {
-    try {
-      const draft = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null");
-      if (draft) setForm(draft);
-    } catch {}
-  }, []);
-
-  // Autosave brouillon
+  // Autosave brouillon à chaque changement
   useEffect(() => {
     try { localStorage.setItem(DRAFT_KEY, JSON.stringify(form)); } catch {}
   }, [form]);
