@@ -1,18 +1,26 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { requirePremium } from "@/lib/usage";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const MAX_TRANSCRIPTION = 8_000;
 
 export async function POST(request: Request) {
   const usage = await requirePremium();
   if (!usage.allowed) {
     return Response.json({ error: "LIMIT_REACHED" }, { status: 403 });
   }
+  if (!checkRateLimit(`examen:${usage.userId}`, 3, 60_000)) {
+    return Response.json({ error: "Trop de requêtes. Attends 1 minute." }, { status: 429 });
+  }
 
   const { explicationTranscription, oeuvreTranscription, texte, oeuvre, auteur, grammarQuestion, grammarAnswer } = await request.json();
 
   if (!explicationTranscription?.trim()) {
     return Response.json({ error: "La transcription est requise." }, { status: 400 });
+  }
+  if (explicationTranscription.length > MAX_TRANSCRIPTION || (oeuvreTranscription?.length ?? 0) > MAX_TRANSCRIPTION) {
+    return Response.json({ error: "Transcription trop longue." }, { status: 400 });
   }
 
   const prompt = `Tu es un jury officiel du Baccalauréat de français (épreuve orale). Tu évalues une prestation dans des conditions réelles selon le barème OFFICIEL du BOEN.

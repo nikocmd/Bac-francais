@@ -1,11 +1,26 @@
+import { requirePremium } from "@/lib/usage";
+import { checkRateLimit } from "@/lib/rateLimit";
+
 export const maxDuration = 60;
+const MAX_AUDIO_MB = 20;
 
 export async function POST(request: Request) {
+  const usage = await requirePremium();
+  if (!usage.allowed) {
+    return Response.json({ error: "LIMIT_REACHED" }, { status: 403 });
+  }
+  if (!checkRateLimit(`transcribe:${usage.userId}`, 10, 60_000)) {
+    return Response.json({ error: "Trop de requêtes. Attends 1 minute." }, { status: 429 });
+  }
+
   const formData = await request.formData();
   const audio = formData.get("audio") as File | null;
 
   if (!audio || audio.size === 0) {
     return Response.json({ error: "Fichier audio manquant." }, { status: 400 });
+  }
+  if (audio.size > MAX_AUDIO_MB * 1024 * 1024) {
+    return Response.json({ error: `Fichier trop volumineux (max ${MAX_AUDIO_MB}MB).` }, { status: 400 });
   }
 
 const mime = (audio.type || "audio/webm").split(";")[0].toLowerCase();

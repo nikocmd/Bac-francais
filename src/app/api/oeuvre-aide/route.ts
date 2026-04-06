@@ -1,18 +1,26 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { requirePremium } from "@/lib/usage";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const MAX_QUESTION = 1_000;
 
 export async function POST(request: Request) {
   const usage = await requirePremium();
   if (!usage.allowed) {
     return Response.json({ error: "LIMIT_REACHED" }, { status: 403 });
   }
+  if (!checkRateLimit(`oeuvre-aide:${usage.userId}`, 10, 60_000)) {
+    return Response.json({ error: "Trop de requêtes. Attends 1 minute." }, { status: 429 });
+  }
 
   const { question, contexte } = await request.json();
 
   if (!question?.trim()) {
     return Response.json({ error: "La question est requise." }, { status: 400 });
+  }
+  if (question.length > MAX_QUESTION) {
+    return Response.json({ error: "Question trop longue (max 1000 caractères)." }, { status: 400 });
   }
 
   const prompt = `Tu es un conseiller spécialisé dans le Bac de Français. L'élève n'a PAS ENCORE choisi son œuvre pour l'oral et te pose des questions pour l'aider à choisir.

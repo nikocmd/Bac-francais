@@ -167,6 +167,14 @@ export default function Dashboard() {
   async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file || !userId) return;
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Image trop lourde (max 2MB).");
+      return;
+    }
+    if (!file.type.startsWith("image/")) {
+      alert("Fichier non supporté. Utilise une image (JPG, PNG, WebP).");
+      return;
+    }
     setUploadingAvatar(true);
     try {
       const { createClient } = await import("@/lib/supabase/client");

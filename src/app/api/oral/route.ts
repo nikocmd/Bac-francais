@@ -1,18 +1,26 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { requirePremium } from "@/lib/usage";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const MAX_TRANSCRIPTION = 8_000;
 
 export async function POST(request: Request) {
   const usage = await requirePremium();
   if (!usage.allowed) {
     return Response.json({ error: "LIMIT_REACHED" }, { status: 403 });
   }
+  if (!checkRateLimit(`oral:${usage.userId}`, 5, 60_000)) {
+    return Response.json({ error: "Trop de requêtes. Attends 1 minute." }, { status: 429 });
+  }
 
   const { transcription, contexte, type } = await request.json();
 
   if (!transcription?.trim()) {
     return Response.json({ error: "La transcription est requise." }, { status: 400 });
+  }
+  if (transcription.length > MAX_TRANSCRIPTION) {
+    return Response.json({ error: "Transcription trop longue." }, { status: 400 });
   }
 
   const prompt = `Tu es un jury du Baccalauréat de français, expérimenté et bienveillant mais exigeant. Tu évalues la prestation orale d'un lycéen.

@@ -1,12 +1,25 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { requirePremium } from "@/lib/usage";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(request: Request) {
+  const usage = await requirePremium();
+  if (!usage.allowed) {
+    return Response.json({ error: "LIMIT_REACHED" }, { status: 403 });
+  }
+  if (!checkRateLimit(`grammaire:${usage.userId}`, 10, 60_000)) {
+    return Response.json({ error: "Trop de requêtes. Attends 1 minute." }, { status: 429 });
+  }
+
   const { sujet } = await request.json();
 
   if (!sujet?.trim()) {
     return Response.json({ error: "Le sujet est requis." }, { status: 400 });
+  }
+  if (sujet.length > 200) {
+    return Response.json({ error: "Sujet trop long." }, { status: 400 });
   }
 
   const prompt = `Tu es un examinateur du Baccalauréat de Français. Tu dois générer UNE question de grammaire pour l'oral du Bac.
