@@ -21,37 +21,52 @@ Nature, berce-le chaudement : il a froid.
 Les parfums ne font pas frissonner sa narine ;
 Il dort dans le soleil, la main sur sa poitrine,
 Tranquille. Il a deux trous rouges au côté droit.`,
-  problematique: "Comment Rimbaud utilise-t-il l'harmonie trompeuse du cadre naturel pour dénoncer les horreurs de la guerre ?",
+  introduction: {
+    situation: "Arthur Rimbaud écrit ce sonnet en 1870, à l'âge de 16 ans, en pleine guerre franco-prussienne. Ce texte appartient à ses premières œuvres réalistes, marquées par un engagement politique fort contre la violence militaire.",
+    mouvement_general: "Le poème se présente d'abord comme un tableau bucolique et serein — un val verdoyant, un soldat qui repose — avant de basculer brutalement dans l'horreur de la mort. C'est ce renversement qui constitue tout le génie du texte.",
+    problematique: "Comment Rimbaud utilise-t-il l'harmonie trompeuse du cadre naturel pour dénoncer les horreurs de la guerre ?",
+    plan: ["Un tableau idyllique de la nature (v. 1–4)", "Le portrait ambigu du soldat endormi (v. 5–11)", "La révélation brutale de la mort (v. 12–14)"],
+  },
   mouvements: [
     {
       numero: 1,
       titre: "Un tableau idyllique de la nature",
       lignes: "v. 1–4",
+      intro: "Le premier quatrain installe un décor champêtre à la beauté presque excessive. Rimbaud mobilise toutes les ressources du lyrisme pour créer une illusion de paradis.",
       procedes: [
-        { procede: "Personnification", exemple: "où chante une rivière", effet: "La nature est vivante, accueillante — crée une atmosphère de paix trompeuse." },
-        { procede: "Accumulation de lumière", exemple: "mousse de rayons", effet: "L'excès de lumière prépare l'ironie finale : le soldat est au soleil mais a froid." },
+        { procede: "Personnification", exemple: "où chante une rivière", effet: "La nature est dotée d'une voix, elle semble heureuse et vivante — cette animation crée une atmosphère de paix qui sera cruellement démentie." },
+        { procede: "Accumulation sensorielle", exemple: "mousse de rayons / haillons d'argent", effet: "L'accumulation d'éléments lumineux et sonores sature l'espace de beauté, instaurant une douceur trompeuse qui prépare le lecteur au piège final." },
+        { procede: "Hyperbole / excès de lumière", exemple: "le soleil, de la montagne fière, / Luit", effet: "Le soleil est 'fier', presque souverain — son insistance est ironique : il brille sur un mort. L'abondance de lumière souligne par contraste le froid du soldat." },
       ],
     },
     {
       numero: 2,
-      titre: "Le soldat endormi — portrait ambigu",
+      titre: "Le portrait ambigu du soldat endormi",
       lignes: "v. 5–11",
+      intro: "Les deux quatrains suivants introduisent le personnage central : un soldat jeune, immobile. Rimbaud multiplie les indices de mort sans jamais le nommer, entretenant délibérément l'ambiguïté entre sommeil et trépas.",
       procedes: [
-        { procede: "Euphémisme / litote", exemple: "Dort ; il est étendu", effet: "Le mot 'dort' retarde la révélation de la mort, entretient l'illusion." },
-        { procede: "Comparaison", exemple: "Souriant comme sourirait un enfant malade", effet: "Rapproche la mort de l'innocence, suscite la pitié et accentue l'horreur." },
+        { procede: "Euphémisme / litote", exemple: "Dort ; il est étendu dans l'herbe", effet: "Le verbe 'dort', répété trois fois dans le poème, est un euphémisme pour 'est mort'. Cette litote retarde la révélation et maintient le lecteur dans l'illusion." },
+        { procede: "Comparaison pathétique", exemple: "Souriant comme sourirait un enfant malade", effet: "Le rapprochement soldat/enfant malade suscite la pitié et l'attendrissement. La maladie suggère la mort sans la dire, et l'image de l'enfant dénonce l'absurdité de mourir si jeune à la guerre." },
+        { procede: "Apostrophe à la nature", exemple: "Nature, berce-le chaudement : il a froid", effet: "Rimbaud interpelle directement la Nature comme une mère — ironie poignante car la Nature ne peut rien pour un mort. La phrase 'il a froid' glisse un indice implacable : on ne dit pas d'un dormant qu'il a froid." },
       ],
     },
     {
       numero: 3,
-      titre: "La chute — la révélation brutale",
+      titre: "La révélation brutale de la mort",
       lignes: "v. 12–14",
+      intro: "Le dernier tercet opère la rupture fondamentale du poème. Après onze vers de beauté et d'illusion, Rimbaud brise le rêve en deux mots. La chute est d'autant plus violente que le piège était bien tendu.",
       procedes: [
-        { procede: "Rupture de ton", exemple: "Il a deux trous rouges au côté droit", effet: "Brutalité du langage clinique après la douceur poétique — effet de choc maximal." },
-        { procede: "Ironie dramatique", exemple: "Tranquille.", effet: "Le mot anodin précède immédiatement la blessure mortelle — dénonciation de la guerre." },
+        { procede: "Rupture de ton (chute)", exemple: "Il a deux trous rouges au côté droit", effet: "Le vocabulaire clinique, prosaïque, tranche avec la douceur poétique des vers précédents. 'Deux trous rouges' — aucun mot ne cherche à adoucir : c'est la mort crue, réaliste, militaire. L'effet de choc est maximal." },
+        { procede: "Ironie dramatique", exemple: "Tranquille. Il a deux trous rouges", effet: "L'adjectif 'Tranquille', placé juste avant la révélation, crée une ironie mordante : le mot suggère la paix, le repos — mais c'est la tranquillité de la mort. Ce retournement condense tout l'art de Rimbaud." },
+        { procede: "Zeugme / rupture syntaxique", exemple: "Il dort dans le soleil, la main sur sa poitrine, / Tranquille.", effet: "La phrase se clôt sur 'Tranquille.' — point final, isolé. Cette ponctuation volontairement abrupte mime l'arrêt brutal de la vie et laisse le lecteur sans recours face à l'horreur." },
       ],
     },
   ],
-  conclusion: "Rimbaud construit un piège poétique : le lecteur est bercé par une nature paradisiaque pour mieux ressentir le choc de la mort violente. Ce sonnet est un réquisitoire contre la guerre franco-prussienne de 1870.",
+  conclusion: {
+    bilan: "Rimbaud construit un véritable piège poétique : le lecteur est bercé par onze vers d'une nature paradisiaque, chaleureuse et lumineuse, pour être frappé de plein fouet par la réalité de la guerre au dernier vers. La beauté du cadre naturel n'est pas une consolation, c'est une accusation.",
+    portee: "Ce sonnet est un réquisitoire politique contre la guerre franco-prussienne de 1870. En choisissant d'écrire sur un soldat inconnu — sans nom, sans grade — Rimbaud universalise la tragédie. Le 'dormeur du val' pourrait être n'importe quel jeune homme sacrifié.",
+    ouverture: "On peut rapprocher ce texte de 'Dulce et Decorum Est' de Wilfred Owen (1917), qui utilise le même procédé de dénonciation ironique de la guerre — preuve que cette esthétique de la désillusion poétique traverse les époques et les langues.",
+  },
 };
 
 export default async function Home() {
@@ -93,68 +108,200 @@ export default async function Home() {
       </section>
 
       {/* ── VITRINE ANALYSE ── */}
-      <section className="py-8 space-y-5">
-        <div className="text-center space-y-2 mb-8">
+      <section className="py-8">
+        {/* Header */}
+        <div className="text-center space-y-2 mb-10">
           <p className="text-xs font-bold text-[#a78bfa] uppercase tracking-widest">✦ Exemple d&apos;analyse</p>
-          <h2 className="text-2xl font-black text-white">Le Dormeur du Val — Rimbaud (1870)</h2>
-          <p className="text-[#6b7280] text-sm">Voici ce que l&apos;IA génère en quelques secondes pour tes textes</p>
+          <h2 className="text-3xl font-black text-white">Vois ce que l&apos;IA génère pour toi</h2>
+          <p className="text-[#6b7280] text-sm">Analyse complète d&apos;un texte en quelques secondes, prête pour l&apos;oral</p>
         </div>
 
-        <div className="bg-[#0a1543]/60 border border-[#19327f]/40 rounded-2xl p-5">
-          <p className="text-xs font-bold text-[#6b7280] uppercase tracking-widest mb-3">Texte original</p>
-          <p className="text-sm text-[#a0b0d0] leading-relaxed whitespace-pre-line font-mono">{VITRINE_ANALYSE.texte}</p>
-        </div>
+        {/* Card principale avec effet glow */}
+        <div className="relative rounded-3xl border border-violet-500/20 bg-[#0c0c18] shadow-[0_0_80px_rgba(139,92,246,0.08)] overflow-hidden">
 
-        <div className="bg-violet-500/10 border border-violet-500/30 rounded-2xl p-5">
-          <p className="text-xs font-bold text-violet-400 uppercase tracking-widest mb-2">Problématique générée</p>
-          <p className="text-[#e8e8f0] font-medium text-base italic">&ldquo;{VITRINE_ANALYSE.problematique}&rdquo;</p>
-        </div>
+          {/* Barre de titre façon app */}
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#1e1e2e] bg-[#0a0a14]">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500/70" />
+              <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/70" />
+              <span className="w-2.5 h-2.5 rounded-full bg-green-500/70" />
+            </div>
+            <div className="flex items-center gap-2 text-xs text-[#6b7280] font-mono">
+              <BookOpen size={12} className="text-violet-400" />
+              Le Dormeur du Val — Rimbaud · 1870
+            </div>
+            <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-violet-500/15 text-violet-300 border border-violet-500/20">
+              IA
+            </span>
+          </div>
 
-        <div className="space-y-3">
-          <p className="text-xs font-bold text-[#6b7280] uppercase tracking-widest">Mouvements du texte</p>
-          {VITRINE_ANALYSE.mouvements.map((mvt) => (
-            <div key={mvt.numero} className="bg-[#12121a] border border-[#1e1e2e] rounded-2xl overflow-hidden">
-              <div className="flex items-center gap-3 p-4">
-                <span className="flex-shrink-0 w-7 h-7 rounded-full bg-violet-600 text-white text-xs font-bold flex items-center justify-center">
-                  {mvt.numero}
-                </span>
-                <div>
-                  <p className="font-semibold text-[#e8e8f0] text-sm">{mvt.titre}</p>
-                  <p className="text-xs text-[#6b7280]">{mvt.lignes}</p>
+          <div className="p-5 md:p-7 space-y-6">
+
+            {/* Ligne 1 : Poème + Intro */}
+            <div className="grid md:grid-cols-2 gap-4">
+
+              {/* Poème numéroté */}
+              <div className="bg-[#07070f] rounded-2xl border border-[#1a1a2e] p-5">
+                <p className="text-[10px] font-bold text-[#6b7280] uppercase tracking-widest mb-4">Texte original</p>
+                <div className="space-y-0.5 font-mono text-sm">
+                  {VITRINE_ANALYSE.texte.split("\n").map((line, i) => (
+                    <div key={i} className="flex gap-3 group">
+                      <span className="w-5 flex-shrink-0 text-right text-[10px] text-[#3a3a4e] group-hover:text-violet-500 leading-6 select-none">
+                        {line.trim() !== "" ? i + 1 : ""}
+                      </span>
+                      <span className={`leading-6 ${line.trim() === "" ? "h-3 block" : "text-[#9ca3af] group-hover:text-[#c4c4d4]"} transition-colors`}>
+                        {line}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <div className="px-4 pb-4 border-t border-[#1e1e2e] space-y-3 pt-3">
-                {mvt.procedes.map((p, j) => (
-                  <div key={j} className="grid md:grid-cols-3 gap-3">
-                    <div className="bg-[#0a0a0f] rounded-xl p-3">
-                      <p className="text-xs font-semibold text-violet-400 mb-1">Procédé</p>
-                      <p className="text-sm text-[#e8e8f0] font-medium">{p.procede}</p>
+
+              {/* Introduction */}
+              <div className="flex flex-col gap-3">
+                {/* Mini stats */}
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { label: "Mouvements", value: "3" },
+                    { label: "Procédés", value: "9" },
+                    { label: "~10 min", value: "oral" },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="bg-[#07070f] rounded-xl border border-[#1a1a2e] p-3 text-center">
+                      <p className="text-lg font-black text-white">{value}</p>
+                      <p className="text-[10px] text-[#6b7280] mt-0.5">{label}</p>
                     </div>
-                    <div className="bg-[#0a0a0f] rounded-xl p-3">
-                      <p className="text-xs font-semibold text-amber-400 mb-1">Citation</p>
-                      <p className="text-sm text-[#e8e8f0] italic">&ldquo;{p.exemple}&rdquo;</p>
-                    </div>
-                    <div className="bg-[#0a0a0f] rounded-xl p-3">
-                      <p className="text-xs font-semibold text-emerald-400 mb-1">Effet</p>
-                      <p className="text-sm text-[#c9c9d4]">{p.effet}</p>
-                    </div>
+                  ))}
+                </div>
+
+                {/* Situation du texte */}
+                <div className="bg-[#07070f] rounded-2xl border border-[#1a1a2e] p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
+                    <p className="text-[10px] font-bold text-sky-400 uppercase tracking-widest">Introduction — Situation du texte</p>
                   </div>
-                ))}
+                  <p className="text-[#9ca3af] text-xs leading-relaxed">{VITRINE_ANALYSE.introduction.situation}</p>
+                </div>
+
+                {/* Mouvement général */}
+                <div className="bg-[#07070f] rounded-2xl border border-[#1a1a2e] p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
+                    <p className="text-[10px] font-bold text-sky-400 uppercase tracking-widest">Mouvement général</p>
+                  </div>
+                  <p className="text-[#9ca3af] text-xs leading-relaxed">{VITRINE_ANALYSE.introduction.mouvement_general}</p>
+                </div>
+
+                {/* Problématique */}
+                <div className="bg-gradient-to-br from-violet-500/10 to-violet-900/10 rounded-2xl border border-violet-500/25 p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
+                    <p className="text-[10px] font-bold text-violet-400 uppercase tracking-widest">Problématique</p>
+                  </div>
+                  <p className="text-[#e8e8f0] font-semibold text-sm leading-relaxed italic">
+                    &ldquo;{VITRINE_ANALYSE.introduction.problematique}&rdquo;
+                  </p>
+                </div>
+
+                {/* Plan annoncé */}
+                <div className="bg-[#07070f] rounded-2xl border border-[#1a1a2e] p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
+                    <p className="text-[10px] font-bold text-violet-400 uppercase tracking-widest">Annonce du plan</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    {VITRINE_ANALYSE.introduction.plan.map((p, i) => (
+                      <div key={i} className="flex items-start gap-2">
+                        <span className="flex-shrink-0 w-4 h-4 rounded-full bg-violet-600/60 text-white text-[9px] font-black flex items-center justify-center mt-0.5">{i + 1}</span>
+                        <p className="text-xs text-[#9ca3af]">{p}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
-          ))}
+
+            {/* Mouvements */}
+            <div className="space-y-3">
+              <p className="text-[10px] font-bold text-[#6b7280] uppercase tracking-widest">Mouvements du texte</p>
+              {VITRINE_ANALYSE.mouvements.map((mvt) => (
+                <div key={mvt.numero} className="rounded-2xl border border-[#1a1a2e] overflow-hidden bg-[#07070f]">
+                  {/* En-tête mouvement */}
+                  <div className="flex items-center gap-3 px-5 py-3.5 bg-[#0d0d1a]">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-violet-600/80 text-white text-[11px] font-black flex items-center justify-center">
+                      {mvt.numero}
+                    </span>
+                    <p className="font-bold text-[#e8e8f0] text-sm flex-1">{mvt.titre}</p>
+                    <span className="text-xs text-[#6b7280] font-mono bg-[#0a0a14] px-2 py-0.5 rounded-md border border-[#1e1e2e]">
+                      {mvt.lignes}
+                    </span>
+                  </div>
+                  {/* Phrase d'introduction du mouvement */}
+                  <div className="px-5 py-3 border-b border-[#1a1a2e]">
+                    <p className="text-xs text-[#6b7280] leading-relaxed italic">{mvt.intro}</p>
+                  </div>
+                  {/* Tableau procédés */}
+                  <div className="divide-y divide-[#1a1a2e]">
+                    {mvt.procedes.map((p, j) => (
+                      <div key={j} className="grid md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#1a1a2e]">
+                        <div className="px-4 py-3.5 flex items-start gap-2.5">
+                          <span className="flex-shrink-0 w-1 h-1 rounded-full bg-violet-400 mt-2" />
+                          <div>
+                            <p className="text-[10px] font-bold text-violet-400 uppercase tracking-wider mb-1">Procédé</p>
+                            <p className="text-sm text-[#e8e8f0] font-semibold">{p.procede}</p>
+                          </div>
+                        </div>
+                        <div className="px-4 py-3.5 flex items-start gap-2.5">
+                          <span className="flex-shrink-0 w-1 h-1 rounded-full bg-amber-400 mt-2" />
+                          <div>
+                            <p className="text-[10px] font-bold text-amber-400 uppercase tracking-wider mb-1">Citation</p>
+                            <p className="text-sm text-[#c9a96e] italic">&ldquo;{p.exemple}&rdquo;</p>
+                          </div>
+                        </div>
+                        <div className="px-4 py-3.5 flex items-start gap-2.5">
+                          <span className="flex-shrink-0 w-1 h-1 rounded-full bg-emerald-400 mt-2" />
+                          <div>
+                            <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-1">Effet</p>
+                            <p className="text-xs text-[#9ca3af] leading-relaxed">{p.effet}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Conclusion */}
+            <div className="rounded-2xl border border-emerald-500/20 overflow-hidden bg-[#07070f]">
+              <div className="flex items-center gap-2 px-5 py-3.5 bg-[#0d0d1a] border-b border-[#1a1a2e]">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Conclusion</p>
+              </div>
+              <div className="divide-y divide-[#1a1a2e]">
+                <div className="px-5 py-4">
+                  <p className="text-[10px] font-bold text-[#6b7280] uppercase tracking-wider mb-1.5">Bilan</p>
+                  <p className="text-sm text-[#c9c9d4] leading-relaxed">{VITRINE_ANALYSE.conclusion.bilan}</p>
+                </div>
+                <div className="px-5 py-4">
+                  <p className="text-[10px] font-bold text-[#6b7280] uppercase tracking-wider mb-1.5">Portée du texte</p>
+                  <p className="text-sm text-[#c9c9d4] leading-relaxed">{VITRINE_ANALYSE.conclusion.portee}</p>
+                </div>
+                <div className="px-5 py-4">
+                  <p className="text-[10px] font-bold text-[#6b7280] uppercase tracking-wider mb-1.5">Ouverture</p>
+                  <p className="text-sm text-[#9ca3af] leading-relaxed italic">{VITRINE_ANALYSE.conclusion.ouverture}</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
         </div>
 
-        <div className="bg-[#12121a] border border-[#1e1e2e] rounded-2xl p-5">
-          <p className="text-xs font-bold text-[#6b7280] uppercase tracking-widest mb-3">Conclusion</p>
-          <p className="text-[#c9c9d4] text-sm leading-relaxed">{VITRINE_ANALYSE.conclusion}</p>
-        </div>
-
-        <div className="text-center pt-2">
+        <div className="text-center pt-8">
           <Link href="/register"
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-black text-sm uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(139,92,246,0.4)]">
+            className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-black text-sm uppercase tracking-widest transition-all shadow-[0_0_24px_rgba(139,92,246,0.45)]">
             <BookOpen size={16} /> Générer mes analyses
           </Link>
+          <p className="text-xs text-[#6b7280] mt-3">Accès immédiat · Sans carte bancaire</p>
         </div>
       </section>
 
