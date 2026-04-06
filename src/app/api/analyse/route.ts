@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "LIMIT_REACHED" }, { status: 403 });
   }
 
-  if (!checkRateLimit(`analyse:${usage.userId}`, 5, 60_000)) {
+  if (!checkRateLimit(`analyse:${usage.userId}`, 10, 60_000)) {
     return Response.json({ error: "Trop de requêtes. Attends 1 minute." }, { status: 429 });
   }
 
