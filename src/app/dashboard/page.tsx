@@ -307,7 +307,7 @@ export default function Dashboard() {
             </div>
 
             {/* Quick stats */}
-            <div className="grid grid-cols-2 gap-2 text-center min-w-fit">
+            <div className="grid grid-cols-2 gap-2 text-center w-full md:w-auto md:min-w-fit">
               {[
                 { l: "Analyses", v: hunter.totalAnalyses, c: "#a78bfa" },
                 { l: "Oraux", v: hunter.totalOrals, c: "#38bdf8" },

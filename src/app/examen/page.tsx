@@ -373,7 +373,7 @@ export default function ExamenPage() {
       <div className="max-w-lg w-full space-y-8 text-center">
         <div className="space-y-3">
           <div className="text-6xl">⚖️</div>
-          <h1 className="text-3xl font-black text-white tracking-widest uppercase">Oral du Bac</h1>
+          <h1 className="text-2xl md:text-3xl font-black text-white tracking-widest uppercase">Oral du Bac</h1>
           {username && <p className="text-[#00d9ff] font-bold text-sm">Bienvenue, {username}</p>}
           <p className="text-[#a0b0d0] text-sm leading-relaxed">
             Simulation officielle — barème BOEN 2024 · <span className={filiere === "stmg" ? "text-[#FFD700]" : "text-[#1a9fff]"}>{filiere === "stmg" ? "Bac Techno" : "Bac Général"}</span>
@@ -385,14 +385,14 @@ export default function ExamenPage() {
           <p className="text-[#FFD700] text-xs font-black uppercase tracking-widest">Déroulement officiel</p>
           <div className="space-y-2">
             <p className="text-xs text-[#00d9ff] font-bold uppercase tracking-widest">Partie 1 — 12 points</p>
-            <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 gap-y-1 text-sm text-[#a0b0d0]">
+            <div className="grid grid-cols-[1fr_auto_auto] gap-x-2 md:gap-x-4 gap-y-1 text-xs md:text-sm text-[#a0b0d0]">
               <span>Explication linéaire</span><span className="text-[#6b7280]">12 min</span><span className="text-[#1a9fff] font-bold">10 pts</span>
               <span>Question de grammaire</span><span className="text-[#6b7280]">—</span><span className="text-[#1a9fff] font-bold">2 pts</span>
             </div>
           </div>
           <div className="space-y-2">
             <p className="text-xs text-[#00d9ff] font-bold uppercase tracking-widest">Partie 2 — 8 points</p>
-            <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 gap-y-1 text-sm text-[#a0b0d0]">
+            <div className="grid grid-cols-[1fr_auto_auto] gap-x-2 md:gap-x-4 gap-y-1 text-xs md:text-sm text-[#a0b0d0]">
               <span>Présentation de l&apos;œuvre</span><span className="text-[#6b7280]">4 min</span><span className="text-[#1a9fff] font-bold">8 pts</span>
             </div>
           </div>

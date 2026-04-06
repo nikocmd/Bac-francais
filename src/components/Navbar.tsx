@@ -71,8 +71,8 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 border-b border-[#19327f]/40 bg-[#050510]/95 backdrop-blur-md">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 font-bold text-lg">
-          <img src="/logo.svg" alt="logo" className="w-7 h-7" />
+        <Link href="/" className="flex items-center gap-2 font-bold text-base md:text-lg flex-shrink-0">
+          <img src="/logo.svg" alt="logo" className="w-7 h-7 flex-shrink-0" />
           <span className="gradient-text">BacFrançais.ai</span>
         </Link>
 

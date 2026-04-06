@@ -82,11 +82,11 @@ export default async function Home() {
 
       {/* ── HERO ── */}
       <section className="py-20 text-center space-y-6">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#1a9fff]/10 border border-[#1a9fff]/30 text-[#00d9ff] text-xs font-bold uppercase tracking-widest">
-          <Zap size={12} /> Simulation officielle · Barème BOEN 2024
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#1a9fff]/10 border border-[#1a9fff]/30 text-[#00d9ff] text-[10px] md:text-xs font-bold uppercase tracking-widest text-center">
+          <Zap size={12} className="flex-shrink-0" /> Simulation officielle · Barème BOEN 2024
         </div>
 
-        <h1 className="text-5xl md:text-7xl font-black leading-tight tracking-tight">
+        <h1 className="text-4xl md:text-5xl lg:text-7xl font-black leading-tight tracking-tight">
           Décroche ta mention<br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1a9fff] to-[#a78bfa]">au Bac de Français</span>
         </h1>
@@ -242,26 +242,38 @@ export default async function Home() {
                   {/* Tableau procédés */}
                   <div className="divide-y divide-[#1a1a2e]">
                     {mvt.procedes.map((p, j) => (
-                      <div key={j} className="grid md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#1a1a2e]">
-                        <div className="px-4 py-3.5 flex items-start gap-2.5">
-                          <span className="flex-shrink-0 w-1 h-1 rounded-full bg-violet-400 mt-2" />
-                          <div>
-                            <p className="text-[10px] font-bold text-violet-400 uppercase tracking-wider mb-1">Procédé</p>
-                            <p className="text-sm text-[#e8e8f0] font-semibold">{p.procede}</p>
+                      <div key={j}>
+                        {/* Mobile : carte compacte */}
+                        <div className="md:hidden px-4 py-3 space-y-1.5">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-[10px] font-bold text-violet-400 uppercase tracking-wider">Procédé</span>
+                            <span className="text-sm text-[#e8e8f0] font-semibold">{p.procede}</span>
+                            <span className="text-[#c9a96e] italic text-xs">&ldquo;{p.exemple}&rdquo;</span>
                           </div>
+                          <p className="text-xs text-[#9ca3af] leading-relaxed pl-1">{p.effet}</p>
                         </div>
-                        <div className="px-4 py-3.5 flex items-start gap-2.5">
-                          <span className="flex-shrink-0 w-1 h-1 rounded-full bg-amber-400 mt-2" />
-                          <div>
-                            <p className="text-[10px] font-bold text-amber-400 uppercase tracking-wider mb-1">Citation</p>
-                            <p className="text-sm text-[#c9a96e] italic">&ldquo;{p.exemple}&rdquo;</p>
+                        {/* Desktop : 3 colonnes */}
+                        <div className="hidden md:grid md:grid-cols-3 divide-x divide-[#1a1a2e]">
+                          <div className="px-4 py-3.5 flex items-start gap-2.5">
+                            <span className="flex-shrink-0 w-1 h-1 rounded-full bg-violet-400 mt-2" />
+                            <div>
+                              <p className="text-[10px] font-bold text-violet-400 uppercase tracking-wider mb-1">Procédé</p>
+                              <p className="text-sm text-[#e8e8f0] font-semibold">{p.procede}</p>
+                            </div>
                           </div>
-                        </div>
-                        <div className="px-4 py-3.5 flex items-start gap-2.5">
-                          <span className="flex-shrink-0 w-1 h-1 rounded-full bg-emerald-400 mt-2" />
-                          <div>
-                            <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-1">Effet</p>
-                            <p className="text-xs text-[#9ca3af] leading-relaxed">{p.effet}</p>
+                          <div className="px-4 py-3.5 flex items-start gap-2.5">
+                            <span className="flex-shrink-0 w-1 h-1 rounded-full bg-amber-400 mt-2" />
+                            <div>
+                              <p className="text-[10px] font-bold text-amber-400 uppercase tracking-wider mb-1">Citation</p>
+                              <p className="text-sm text-[#c9a96e] italic">&ldquo;{p.exemple}&rdquo;</p>
+                            </div>
+                          </div>
+                          <div className="px-4 py-3.5 flex items-start gap-2.5">
+                            <span className="flex-shrink-0 w-1 h-1 rounded-full bg-emerald-400 mt-2" />
+                            <div>
+                              <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-1">Effet</p>
+                              <p className="text-xs text-[#9ca3af] leading-relaxed">{p.effet}</p>
+                            </div>
                           </div>
                         </div>
                       </div>

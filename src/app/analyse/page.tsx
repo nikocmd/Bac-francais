@@ -268,18 +268,30 @@ export default function AnalysePage() {
                 {openMvt === i && (
                   <div className="px-5 pb-5 space-y-3 border-t border-[#1e1e2e]">
                     {mvt.procedes.map((p, j) => (
-                      <div key={j} className="grid md:grid-cols-3 gap-3 pt-3">
-                        <div className="bg-[#0a0a0f] rounded-xl p-3">
-                          <p className="text-xs font-semibold text-violet-400 mb-1">Procédé</p>
-                          <p className="text-sm text-[#e8e8f0] font-medium">{p.procede}</p>
+                      <div key={j} className="pt-3">
+                        {/* Mobile : compact */}
+                        <div className="md:hidden bg-[#0a0a0f] rounded-xl p-3 space-y-1.5">
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                            <span className="text-[10px] font-bold text-violet-400 uppercase tracking-wider">Procédé</span>
+                            <span className="text-sm text-[#e8e8f0] font-medium">{p.procede}</span>
+                            <span className="text-xs text-[#c9a96e] italic">&ldquo;{p.exemple}&rdquo;</span>
+                          </div>
+                          <p className="text-xs text-[#9ca3af] leading-relaxed">{p.effet}</p>
                         </div>
-                        <div className="bg-[#0a0a0f] rounded-xl p-3">
-                          <p className="text-xs font-semibold text-amber-400 mb-1">Citation</p>
-                          <p className="text-sm text-[#e8e8f0] italic">&ldquo;{p.exemple}&rdquo;</p>
-                        </div>
-                        <div className="bg-[#0a0a0f] rounded-xl p-3">
-                          <p className="text-xs font-semibold text-emerald-400 mb-1">Effet</p>
-                          <p className="text-sm text-[#c9c9d4]">{p.effet}</p>
+                        {/* Desktop : 3 colonnes */}
+                        <div className="hidden md:grid md:grid-cols-3 gap-3">
+                          <div className="bg-[#0a0a0f] rounded-xl p-3">
+                            <p className="text-xs font-semibold text-violet-400 mb-1">Procédé</p>
+                            <p className="text-sm text-[#e8e8f0] font-medium">{p.procede}</p>
+                          </div>
+                          <div className="bg-[#0a0a0f] rounded-xl p-3">
+                            <p className="text-xs font-semibold text-amber-400 mb-1">Citation</p>
+                            <p className="text-sm text-[#e8e8f0] italic">&ldquo;{p.exemple}&rdquo;</p>
+                          </div>
+                          <div className="bg-[#0a0a0f] rounded-xl p-3">
+                            <p className="text-xs font-semibold text-emerald-400 mb-1">Effet</p>
+                            <p className="text-sm text-[#c9c9d4]">{p.effet}</p>
+                          </div>
                         </div>
                       </div>
                     ))}
