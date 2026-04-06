@@ -159,7 +159,7 @@ export default function AnalysePage() {
                 fieldErrors.auteur ? "border-red-500 focus:border-red-400" : "border-[#2a2a3e] focus:border-violet-500")}
               placeholder="ex: Molière"
               value={form.auteur}
-              onChange={e => { setForm(f => ({ ...f, auteur: e.target.value })); setFieldErrors(fe => ({ ...fe, auteur: "" })); }}
+              onChange={e => { setForm((f: typeof EMPTY_FORM) => ({ ...f, auteur: e.target.value })); setFieldErrors((fe: Record<string, string>) => ({ ...fe, auteur: "" })); }}
             />
             {fieldErrors.auteur && <p className="text-red-400 text-xs">{fieldErrors.auteur}</p>}
           </div>
@@ -170,7 +170,7 @@ export default function AnalysePage() {
                 fieldErrors.oeuvre ? "border-red-500 focus:border-red-400" : "border-[#2a2a3e] focus:border-violet-500")}
               placeholder="ex: Dom Juan"
               value={form.oeuvre}
-              onChange={e => { setForm(f => ({ ...f, oeuvre: e.target.value })); setFieldErrors(fe => ({ ...fe, oeuvre: "" })); }}
+              onChange={e => { setForm((f: typeof EMPTY_FORM) => ({ ...f, oeuvre: e.target.value })); setFieldErrors((fe: Record<string, string>) => ({ ...fe, oeuvre: "" })); }}
             />
             {fieldErrors.oeuvre && <p className="text-red-400 text-xs">{fieldErrors.oeuvre}</p>}
           </div>
@@ -180,7 +180,7 @@ export default function AnalysePage() {
               className="w-full bg-[#0a0a0f] border border-[#2a2a3e] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-violet-500 transition-colors"
               placeholder="ex: Scène 2, Acte I"
               value={form.titre}
-              onChange={e => setForm(f => ({ ...f, titre: e.target.value }))}
+              onChange={e => setForm((f: typeof EMPTY_FORM) => ({ ...f, titre: e.target.value }))}
             />
           </div>
         </div>
@@ -190,7 +190,7 @@ export default function AnalysePage() {
             className="w-full bg-[#0a0a0f] border border-[#2a2a3e] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-violet-500 transition-colors"
             placeholder="ex: Comment Molière fait-il de Dom Juan un personnage séduisant mais dangereux ?"
             value={form.axe}
-            onChange={e => setForm(f => ({ ...f, axe: e.target.value }))}
+            onChange={e => setForm((f: typeof EMPTY_FORM) => ({ ...f, axe: e.target.value }))}
           />
         </div>
         <div className="space-y-1.5">
@@ -206,7 +206,7 @@ export default function AnalysePage() {
             rows={10}
             placeholder="Colle ton texte ici (extrait littéraire uniquement, minimum 100 caractères)..."
             value={form.texte}
-            onChange={e => { setForm(f => ({ ...f, texte: e.target.value })); setFieldErrors(fe => ({ ...fe, texte: "" })); }}
+            onChange={e => { setForm((f: typeof EMPTY_FORM) => ({ ...f, texte: e.target.value })); setFieldErrors((fe: Record<string, string>) => ({ ...fe, texte: "" })); }}
           />
           {fieldErrors.texte && <p className="text-red-400 text-xs">{fieldErrors.texte}</p>}
         </div>
