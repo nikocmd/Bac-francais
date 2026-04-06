@@ -37,6 +37,8 @@ Tranquille. Il a deux trous rouges au côté droit.`,
         { procede: "Personnification", exemple: "où chante une rivière", effet: "La nature est dotée d'une voix, elle semble heureuse et vivante — cette animation crée une atmosphère de paix qui sera cruellement démentie." },
         { procede: "Accumulation sensorielle", exemple: "mousse de rayons / haillons d'argent", effet: "L'accumulation d'éléments lumineux et sonores sature l'espace de beauté, instaurant une douceur trompeuse qui prépare le lecteur au piège final." },
         { procede: "Hyperbole / excès de lumière", exemple: "le soleil, de la montagne fière, / Luit", effet: "Le soleil est 'fier', presque souverain — son insistance est ironique : il brille sur un mort. L'abondance de lumière souligne par contraste le froid du soldat." },
+        { procede: "Métaphore filée", exemple: "un trou de verdure", effet: "L'image du 'trou' est ambiguë : cocon protecteur ou fosse ? Ce mot creuse déjà, dès le premier vers, une anticipation inconsciente de la mort." },
+        { procede: "Harmonie imitative", exemple: "chante une rivière / mousse de rayons", effet: "Les sonorités douces (nasales, fricatives) et les termes évoquant légèreté et mouvement créent une musicalité apaisante qui endort la méfiance du lecteur." },
       ],
     },
     {
@@ -46,8 +48,10 @@ Tranquille. Il a deux trous rouges au côté droit.`,
       intro: "Les deux quatrains suivants introduisent le personnage central : un soldat jeune, immobile. Rimbaud multiplie les indices de mort sans jamais le nommer, entretenant délibérément l'ambiguïté entre sommeil et trépas.",
       procedes: [
         { procede: "Euphémisme / litote", exemple: "Dort ; il est étendu dans l'herbe", effet: "Le verbe 'dort', répété trois fois dans le poème, est un euphémisme pour 'est mort'. Cette litote retarde la révélation et maintient le lecteur dans l'illusion." },
-        { procede: "Comparaison pathétique", exemple: "Souriant comme sourirait un enfant malade", effet: "Le rapprochement soldat/enfant malade suscite la pitié et l'attendrissement. La maladie suggère la mort sans la dire, et l'image de l'enfant dénonce l'absurdité de mourir si jeune à la guerre." },
-        { procede: "Apostrophe à la nature", exemple: "Nature, berce-le chaudement : il a froid", effet: "Rimbaud interpelle directement la Nature comme une mère — ironie poignante car la Nature ne peut rien pour un mort. La phrase 'il a froid' glisse un indice implacable : on ne dit pas d'un dormant qu'il a froid." },
+        { procede: "Comparaison pathétique", exemple: "Souriant comme sourirait un enfant malade", effet: "Le rapprochement soldat/enfant malade suscite la pitié et l'attendrissement. L'image de l'enfant dénonce l'absurdité de mourir si jeune à la guerre." },
+        { procede: "Apostrophe à la nature", exemple: "Nature, berce-le chaudement : il a froid", effet: "Rimbaud interpelle directement la Nature comme une mère — ironie poignante car elle ne peut rien pour un mort. 'Il a froid' est un indice implacable : on ne dit pas d'un dormant qu'il a froid." },
+        { procede: "Oxymore", exemple: "Pâle dans son lit vert", effet: "Le lit est à la fois tombe (vert de la nature) et berceau (douceur du mot 'lit'). La pâleur du visage tranche avec la vivacité du cadre — l'oxymore signale que quelque chose cloche." },
+        { procede: "Enjambement / rythme brisé", exemple: "Souriant comme / Sourirait un enfant", effet: "La coupe entre les deux tercets crée une suspension du sens. Le lecteur retient son souffle — comme si Rimbaud hésitait à prononcer ce qu'il voit." },
       ],
     },
     {
@@ -56,9 +60,11 @@ Tranquille. Il a deux trous rouges au côté droit.`,
       lignes: "v. 12–14",
       intro: "Le dernier tercet opère la rupture fondamentale du poème. Après onze vers de beauté et d'illusion, Rimbaud brise le rêve en deux mots. La chute est d'autant plus violente que le piège était bien tendu.",
       procedes: [
-        { procede: "Rupture de ton (chute)", exemple: "Il a deux trous rouges au côté droit", effet: "Le vocabulaire clinique, prosaïque, tranche avec la douceur poétique des vers précédents. 'Deux trous rouges' — aucun mot ne cherche à adoucir : c'est la mort crue, réaliste, militaire. L'effet de choc est maximal." },
-        { procede: "Ironie dramatique", exemple: "Tranquille. Il a deux trous rouges", effet: "L'adjectif 'Tranquille', placé juste avant la révélation, crée une ironie mordante : le mot suggère la paix, le repos — mais c'est la tranquillité de la mort. Ce retournement condense tout l'art de Rimbaud." },
-        { procede: "Zeugme / rupture syntaxique", exemple: "Il dort dans le soleil, la main sur sa poitrine, / Tranquille.", effet: "La phrase se clôt sur 'Tranquille.' — point final, isolé. Cette ponctuation volontairement abrupte mime l'arrêt brutal de la vie et laisse le lecteur sans recours face à l'horreur." },
+        { procede: "Rupture de ton (chute)", exemple: "Il a deux trous rouges au côté droit", effet: "Le vocabulaire clinique, prosaïque, tranche avec la douceur poétique. 'Deux trous rouges' — aucun mot ne cherche à adoucir : c'est la mort crue, réaliste, militaire. L'effet de choc est maximal." },
+        { procede: "Ironie dramatique", exemple: "Tranquille. Il a deux trous rouges", effet: "L'adjectif 'Tranquille', placé juste avant la révélation, crée une ironie mordante : le mot suggère la paix, le repos — mais c'est la tranquillité de la mort." },
+        { procede: "Zeugme / rupture syntaxique", exemple: "la main sur sa poitrine, / Tranquille.", effet: "La phrase se clôt sur 'Tranquille.' — point final, isolé. Cette ponctuation abrupte mime l'arrêt brutal de la vie et laisse le lecteur sans recours face à l'horreur." },
+        { procede: "Négation restrictive", exemple: "Les parfums ne font pas frissonner sa narine", effet: "La tournure négative dit ce que le corps ne fait plus : frissonner. Elle transforme une action ordinaire en preuve de mort, avec une froideur clinique qui renforce l'horreur." },
+        { procede: "Antithèse lumière / froid", exemple: "Il dort dans le soleil […] il a froid", effet: "Le paradoxe final est absolu : le soleil brille, mais le soldat a froid. L'antithèse concentre toute l'ironie du poème — la nature indifférente éclaire un cadavre sans le réchauffer." },
       ],
     },
   ],
@@ -163,7 +169,7 @@ export default async function Home() {
                 <div className="grid grid-cols-3 gap-2">
                   {[
                     { label: "Mouvements", value: "3" },
-                    { label: "Procédés", value: "9" },
+                    { label: "Procédés", value: "15" },
                     { label: "~10 min", value: "oral" },
                   ].map(({ label, value }) => (
                     <div key={label} className="bg-[#07070f] rounded-xl border border-[#1a1a2e] p-3 text-center">
