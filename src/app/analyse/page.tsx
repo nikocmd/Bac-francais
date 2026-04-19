@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { BookOpen, Loader2, ChevronDown, ChevronUp, Sparkles, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { addXP } from "@/lib/gamification";
-import Paywall from "@/components/Paywall";
 
 interface Procede {
   procede: string;
@@ -45,7 +44,6 @@ export default function AnalysePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [limitReached, setLimitReached] = useState(false);
   const [openMvt, setOpenMvt] = useState<number | null>(0);
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [maxTexts, setMaxTexts] = useState(16);
@@ -61,9 +59,10 @@ export default function AnalysePage() {
       const supabase = createClient();
       supabase.auth.getUser().then(({ data: { user } }) => {
         if (!user) { router.push("/login"); return; }
-        setAuthed(true);
-        setUserId(user.id);
-        supabase.from("profiles").select("filiere").eq("id", user.id).single().then(({ data }) => {
+        supabase.from("profiles").select("filiere, is_premium").eq("id", user.id).single().then(({ data }) => {
+          if (!data?.is_premium) { router.push("/premium"); return; }
+          setAuthed(true);
+          setUserId(user.id);
           setMaxTexts(data?.filiere === "stmg" ? 12 : 16);
         });
       });
@@ -94,7 +93,6 @@ export default function AnalysePage() {
         body: JSON.stringify(form),
       });
       const data = await res.json();
-      if (data.error === "LIMIT_REACHED") { setLimitReached(true); return; }
       if (data.error) { setError(data.error || "Une erreur s'est produite. Réessaie."); return; }
       if (!data.analyse) { setError("La génération a échoué. Vérifie que le texte est bien un extrait littéraire."); return; }
       setAnalyse(data.analyse);
@@ -210,8 +208,7 @@ export default function AnalysePage() {
           />
           {fieldErrors.texte && <p className="text-red-400 text-xs">{fieldErrors.texte}</p>}
         </div>
-        {limitReached && <Paywall />}
-        {error && !limitReached && (
+        {error && (
           <div className="flex items-start gap-2 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
             <p className="text-red-400 text-sm">{error}</p>
           </div>

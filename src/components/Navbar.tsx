@@ -13,7 +13,7 @@ const links = [
   { href: "/mes-textes", label: "Données", icon: FileText },
 ];
 
-interface Profile { username: string; avatar_url: string }
+interface Profile { username: string; avatar_url: string; is_premium: boolean }
 
 export default function Navbar() {
   const path = usePathname();
@@ -41,9 +41,9 @@ export default function Navbar() {
           return;
         }
         setUserId(user.id);
-        const { data } = await supabase.from("profiles").select("username, avatar_url").eq("id", user.id).single();
+        const { data } = await supabase.from("profiles").select("username, avatar_url, is_premium").eq("id", user.id).single();
         if (data) setProfile(data);
-        else setProfile({ username: user.user_metadata?.username ?? "Élève", avatar_url: "" });
+        else setProfile({ username: user.user_metadata?.username ?? "Élève", avatar_url: "", is_premium: false });
         setAuthReady(true);
       }
       load();
@@ -62,6 +62,7 @@ export default function Navbar() {
     await supabase.auth.signOut();
     setProfile(null);
     setUserId(null);
+    setShowLogoutConfirm(false);
     router.push("/login");
     router.refresh();
   }
@@ -73,7 +74,7 @@ export default function Navbar() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 font-bold text-base md:text-lg flex-shrink-0">
           <img src="/logo.svg" alt="logo" className="w-7 h-7 flex-shrink-0" />
-          <span className="gradient-text">BacFrançais.ai</span>
+          <span className="gradient-text">BacFrançaisAI</span>
         </Link>
 
         {/* Desktop links */}
@@ -136,11 +137,17 @@ export default function Navbar() {
                       hover:bg-[#19327f]/30 hover:text-white transition-colors">
                     <User size={14} /> Mon profil
                   </Link>
-                  <Link href="/premium" onClick={() => setMenuOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-3 text-sm text-[#FFD700]
-                      hover:bg-[#FFD700]/10 transition-colors">
-                    <Crown size={14} /> Premium
-                  </Link>
+                  {profile?.is_premium ? (
+                    <div className="flex items-center gap-2.5 px-4 py-3 text-sm text-[#FFD700]">
+                      <Crown size={14} /> <span className="font-black">Premium actif 👑</span>
+                    </div>
+                  ) : (
+                    <Link href="/premium" onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-3 text-sm text-[#FFD700]
+                        hover:bg-[#FFD700]/10 transition-colors">
+                      <Crown size={14} /> Passer Premium
+                    </Link>
+                  )}
                   <button onClick={() => { setMenuOpen(false); setShowLogoutConfirm(true); }}
                     className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-red-400
                       hover:bg-red-500/10 transition-colors">

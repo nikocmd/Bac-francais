@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Camera, Save, LogOut, User, Mail, PenLine } from "lucide-react";
+import { Loader2, Camera, Save, LogOut, User, Mail, PenLine, Crown } from "lucide-react";
 
 const GRAMMAR_TOPICS = [
   "La négation",
@@ -43,6 +43,8 @@ export default function ProfilePage() {
   const [filiere, setFiliere] = useState<"general" | "stmg">("general");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [hunter, setHunter] = useState<HunterData | null>(null);
+  const [isPremium, setIsPremium] = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -54,7 +56,7 @@ export default function ProfilePage() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("username, avatar_url, grammar_questions, filiere")
+        .select("username, avatar_url, grammar_questions, filiere, is_premium")
         .eq("id", user.id)
         .single();
 
@@ -65,6 +67,7 @@ export default function ProfilePage() {
         const gq = profile.grammar_questions;
         setGrammarQuestions(gq && gq.length > 0 ? gq.filter((q: string) => GRAMMAR_TOPICS.includes(q)) : GRAMMAR_TOPICS.slice(0, 3));
         setFiliere(profile.filiere === "stmg" ? "stmg" : "general");
+        setIsPremium(profile.is_premium ?? false);
       } else {
         setUsername(user.user_metadata?.username ?? "");
       }
@@ -115,6 +118,17 @@ export default function ProfilePage() {
     setSuccess(true);
     setTimeout(() => setSuccess(false), 3000);
     setSaving(false);
+  }
+
+  async function handlePortal() {
+    setPortalLoading(true);
+    try {
+      const res = await fetch("/api/stripe/portal", { method: "POST" });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+      else alert(data.error ?? "Erreur inconnue");
+    } catch { alert("Erreur réseau"); }
+    finally { setPortalLoading(false); }
   }
 
   async function handleLogout() {
@@ -285,6 +299,41 @@ export default function ProfilePage() {
           {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
           {saving ? "Sauvegarde..." : "Sauvegarder"}
         </button>
+      </div>
+
+      {/* Abonnement */}
+      <div className="bg-[#0a1543]/80 border border-[#FFD700]/20 rounded-2xl p-6 space-y-4
+        shadow-[0_0_20px_rgba(255,215,0,0.08)] backdrop-blur">
+        <h2 className="text-xs font-black text-[#FFD700] uppercase tracking-widest">✦ Abonnement</h2>
+        {isPremium ? (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#FFD700]/10 border border-[#FFD700]/30">
+              <Crown size={18} className="text-[#FFD700] flex-shrink-0" />
+              <div>
+                <p className="text-[#FFD700] font-black text-sm">Premium actif 👑</p>
+                <p className="text-[#a0b0d0] text-xs mt-0.5">Accès illimité à toutes les fonctionnalités</p>
+              </div>
+            </div>
+            <button onClick={handlePortal} disabled={portalLoading}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm
+                bg-[#FFD700]/10 border border-[#FFD700]/30 text-[#FFD700] hover:bg-[#FFD700]/20
+                transition-all disabled:opacity-50">
+              {portalLoading ? <Loader2 size={15} className="animate-spin" /> : <Crown size={15} />}
+              {portalLoading ? "Chargement..." : "Gérer mon abonnement"}
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-[#6b7280] text-sm">Tu n&apos;as pas encore d&apos;abonnement Premium.</p>
+            <a href="/premium"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-sm
+                bg-[#FFD700] text-[#050a2e] hover:bg-[#ffe84d] transition-all
+                shadow-[0_0_15px_rgba(255,215,0,0.3)]">
+              <Crown size={15} />
+              Passer Premium — 9.99€/mois
+            </a>
+          </div>
+        )}
       </div>
 
       {/* Danger zone */}

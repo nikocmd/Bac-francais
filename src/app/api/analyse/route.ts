@@ -1,9 +1,9 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { checkUsage, incrementUsage } from "@/lib/usage";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { analyseSchema, parseBody } from "@/lib/schemas";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-const MAX_TEXT = 5_000;
 
 export async function POST(request: Request) {
   const usage = await checkUsage();
@@ -15,14 +15,10 @@ export async function POST(request: Request) {
     return Response.json({ error: "Trop de requêtes. Attends 1 minute." }, { status: 429 });
   }
 
-  const { texte, titre, auteur, oeuvre, axe } = await request.json();
-
-  if (!texte?.trim()) {
-    return Response.json({ error: "Le texte est requis." }, { status: 400 });
-  }
-  if (texte.length > MAX_TEXT) {
-    return Response.json({ error: `Texte trop long (max ${MAX_TEXT} caractères).` }, { status: 400 });
-  }
+  const raw = await request.json();
+  const parsed = parseBody(analyseSchema, raw);
+  if (!parsed.success) return Response.json({ error: parsed.error }, { status: 400 });
+  const { texte, titre, auteur, oeuvre, axe } = parsed.data;
 
   const prompt = `Tu es un professeur de français expert en littérature, spécialisé dans la préparation du Baccalauréat français (première générale et technologique).
 

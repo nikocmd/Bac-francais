@@ -53,10 +53,10 @@ const mime = (audio.type || "audio/webm").split(";")[0].toLowerCase();
 
   if (!res.ok) {
     const err = await res.text();
-    console.error("Groq error:", err);
+    console.error("Groq error:", res.status, err);
     // Invalid/corrupt audio (too short, partial recording) → treat as inaudible
     if (res.status === 400) return Response.json({ inaudible: true });
-    return Response.json({ error: `Groq ${res.status}: ${err}` }, { status: 500 });
+    return Response.json({ error: "Erreur de transcription. Réessaie." }, { status: 500 });
   }
 
   const data = await res.json();

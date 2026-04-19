@@ -139,6 +139,7 @@ export default function Dashboard() {
   const [username, setUsername] = useState<string>("");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [isPremium, setIsPremium] = useState<boolean | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -152,11 +153,12 @@ export default function Dashboard() {
         setUserId(user.id);
         const [h, { data: profile }] = await Promise.all([
           loadHunterFromDB(user.id),
-          supabase.from("profiles").select("avatar_url, username").eq("id", user.id).single(),
+          supabase.from("profiles").select("avatar_url, username, is_premium").eq("id", user.id).single(),
         ]);
         setHunter(h);
         if (profile?.avatar_url) setAvatarUrl(profile.avatar_url);
         if (profile?.username) setUsername(profile.username);
+        setIsPremium(profile?.is_premium ?? false);
       } catch { /* garde les données locales */ }
     }
     syncFromDB();
@@ -216,6 +218,24 @@ export default function Dashboard() {
 
       {/* Notification */}
       {notif && <SystemNotif message={notif} onDone={dismissNotif} />}
+
+      {/* Bandeau Premium pour non-premium */}
+      {isPremium === false && (
+        <div className="max-w-5xl mx-auto mb-6">
+          <Link href="/premium" className="flex items-center justify-between gap-4 px-5 py-3.5 rounded-xl bg-gradient-to-r from-[#FFD700]/10 to-[#0a1543]/80 border border-[#FFD700]/40 hover:border-[#FFD700]/70 transition-all group">
+            <div className="flex items-center gap-3">
+              <span className="text-xl">👑</span>
+              <div>
+                <p className="text-sm font-black text-[#FFD700]">Passe Premium pour un accès illimité</p>
+                <p className="text-xs text-[#a0b0d0]">Analyses, oral, examen, œuvre — sans limite. 9.99€/mois.</p>
+              </div>
+            </div>
+            <span className="flex-shrink-0 px-4 py-2 rounded-lg bg-[#FFD700] text-[#050a2e] text-xs font-black uppercase tracking-widest group-hover:bg-[#ffe44d] transition-all">
+              Voir l&apos;offre →
+            </span>
+          </Link>
+        </div>
+      )}
 
       {/* Level up overlay */}
       {showLevelUp && (

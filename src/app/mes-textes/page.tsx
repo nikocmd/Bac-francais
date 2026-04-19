@@ -1,8 +1,61 @@
 "use client";
 import { useEffect, useState } from "react";
-import { BookOpen, Trash2, Loader2, Plus, BarChart2, ChevronDown, ChevronUp, Library } from "lucide-react";
+import { BookOpen, Trash2, Loader2, Plus, BarChart2, ChevronDown, ChevronUp, Library, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+
+const EXAMPLE_ANALYSE = {
+  id: "__example__",
+  titre: "Le Dormeur du Val",
+  auteur: "Arthur Rimbaud",
+  oeuvre: "Poésies (1870)",
+  axe: "Comment Rimbaud utilise-t-il l'harmonie trompeuse du cadre naturel pour dénoncer les horreurs de la guerre ?",
+  savedAt: "",
+  analyse: {
+    problematique: "Comment Rimbaud utilise-t-il l'harmonie trompeuse du cadre naturel pour dénoncer les horreurs de la guerre ?",
+    introduction: "Arthur Rimbaud écrit ce sonnet en 1870, à l'âge de 16 ans, en pleine guerre franco-prussienne. Le poème se présente d'abord comme un tableau bucolique avant de basculer brutalement dans l'horreur de la mort.",
+    mouvements: [
+      {
+        numero: 1,
+        titre: "Un tableau idyllique de la nature",
+        lignes: "v. 1–4",
+        procedes: [
+          { procede: "Personnification", exemple: "où chante une rivière", effet: "La nature est dotée d'une voix — cette animation crée une atmosphère de paix qui sera cruellement démentie." },
+          { procede: "Métaphore filée", exemple: "un trou de verdure", effet: "L'image du 'trou' est ambiguë : cocon protecteur ou fosse ? Ce mot anticipe inconsciemment la mort." },
+          { procede: "Harmonie imitative", exemple: "chante une rivière / mousse de rayons", effet: "Les sonorités douces créent une musicalité apaisante qui endort la méfiance du lecteur." },
+          { procede: "Accumulation sensorielle", exemple: "mousse de rayons / haillons d'argent", effet: "L'accumulation d'éléments lumineux et sonores sature l'espace de beauté, instaurant une douceur trompeuse." },
+          { procede: "Hyperbole", exemple: "le soleil, de la montagne fière, / Luit", effet: "Le soleil 'fier' brille sur un mort — l'ironie souligne par contraste le froid du soldat." },
+        ],
+      },
+      {
+        numero: 2,
+        titre: "Le portrait ambigu du soldat endormi",
+        lignes: "v. 5–11",
+        procedes: [
+          { procede: "Euphémisme / litote", exemple: "Dort ; il est étendu dans l'herbe", effet: "Le verbe 'dort', répété, euphémise 'est mort'. Il retarde la révélation et maintient l'illusion." },
+          { procede: "Apostrophe à la nature", exemple: "Nature, berce-le chaudement : il a froid", effet: "'Il a froid' est un indice implacable : on ne dit pas d'un dormant qu'il a froid." },
+          { procede: "Oxymore", exemple: "Pâle dans son lit vert", effet: "Le lit est à la fois tombe et berceau. La pâleur du visage tranche avec la vivacité du cadre." },
+          { procede: "Comparaison pathétique", exemple: "Souriant comme sourirait un enfant malade", effet: "Le rapprochement soldat/enfant dénonce l'absurdité de mourir si jeune à la guerre." },
+          { procede: "Enjambement", exemple: "Souriant comme / Sourirait un enfant", effet: "La coupe crée une suspension du sens — comme si Rimbaud hésitait à prononcer ce qu'il voit." },
+        ],
+      },
+      {
+        numero: 3,
+        titre: "La révélation brutale de la mort",
+        lignes: "v. 12–14",
+        procedes: [
+          { procede: "Rupture de ton (chute)", exemple: "Il a deux trous rouges au côté droit", effet: "Le vocabulaire clinique tranche avec la douceur poétique. La mort est crue, réaliste, militaire." },
+          { procede: "Ironie dramatique", exemple: "Tranquille. Il a deux trous rouges", effet: "'Tranquille' place juste avant la révélation crée une ironie mordante : c'est la tranquillité de la mort." },
+          { procede: "Zeugme", exemple: "la main sur sa poitrine, / Tranquille.", effet: "Le point final isolé mime l'arrêt brutal de la vie." },
+          { procede: "Négation restrictive", exemple: "Les parfums ne font pas frissonner sa narine", effet: "La tournure négative dit ce que le corps ne fait plus — preuve de mort avec une froideur clinique." },
+          { procede: "Antithèse lumière / froid", exemple: "Il dort dans le soleil […] il a froid", effet: "Le paradoxe final est absolu : la nature indifférente éclaire un cadavre sans le réchauffer." },
+        ],
+      },
+    ],
+    conclusion: "Rimbaud construit un véritable piège poétique : le lecteur est bercé par onze vers d'une nature paradisiaque puis frappé de plein fouet par la réalité de la guerre. La beauté du cadre n'est pas une consolation, c'est une accusation.",
+    ouverture: "Ce sonnet est un réquisitoire contre la guerre franco-prussienne de 1870. En choisissant un soldat inconnu, Rimbaud universalise la tragédie — le 'dormeur du val' pourrait être n'importe quel jeune homme sacrifié.",
+  },
+};
 
 interface UserText {
   id: string;
@@ -192,30 +245,31 @@ export default function MesTextesPage() {
         <div className="flex items-center justify-center py-20">
           <Loader2 size={28} className="text-[#1a9fff] animate-spin" />
         </div>
-      ) : count === 0 ? (
-        <div className="text-center py-20 space-y-6">
-          <div className="text-6xl">📚</div>
-          <div className="space-y-2">
-            <p className="text-white font-black text-xl">Ta bibliothèque est vide</p>
-            <p className="text-[#6b7280] text-sm max-w-sm mx-auto leading-relaxed">
-              Chaque analyse linéaire que tu génères sauvegarde automatiquement le texte ici.<br />
-              Ces textes seront tirés au sort le jour de ton <span className="text-[#1a9fff] font-bold">mode examen</span>.
-            </p>
-          </div>
-          <div className="bg-[#0a1543]/80 border border-[#19327f]/60 rounded-2xl p-5 max-w-sm mx-auto text-left space-y-2">
-            <p className="text-[#FFD700] text-xs font-black uppercase tracking-widest">Comment ça marche</p>
-            <p className="text-sm text-[#a0b0d0]">① Fais une analyse linéaire de ton texte</p>
-            <p className="text-sm text-[#a0b0d0]">② Le texte est sauvegardé ici automatiquement</p>
-            <p className="text-sm text-[#a0b0d0]">③ Le mode examen le tire au sort pour te tester</p>
-          </div>
-          <Link href="/analyse"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#1a9fff] text-[#050a2e] font-black text-sm uppercase tracking-widest hover:bg-[#00d9ff] transition-all shadow-[0_0_20px_rgba(26,159,255,0.4)]">
-            <Plus size={15} />
-            Analyser mon premier texte
-          </Link>
-        </div>
       ) : activeTab === "textes" ? (
         /* ── Mes textes tab ── */
+        count === 0 ? (
+          <div className="text-center py-16 space-y-5">
+            <div className="text-6xl">📚</div>
+            <div className="space-y-2">
+              <p className="text-white font-black text-xl">Ta bibliothèque est vide</p>
+              <p className="text-[#6b7280] text-sm max-w-sm mx-auto leading-relaxed">
+                Chaque analyse linéaire que tu génères sauvegarde automatiquement le texte ici.<br />
+                Ces textes seront tirés au sort le jour de ton <span className="text-[#1a9fff] font-bold">mode examen</span>.
+              </p>
+            </div>
+            <div className="bg-[#0a1543]/80 border border-[#19327f]/60 rounded-2xl p-5 max-w-sm mx-auto text-left space-y-2">
+              <p className="text-[#FFD700] text-xs font-black uppercase tracking-widest">Comment ça marche</p>
+              <p className="text-sm text-[#a0b0d0]">① Fais une analyse linéaire de ton texte</p>
+              <p className="text-sm text-[#a0b0d0]">② Le texte est sauvegardé ici automatiquement</p>
+              <p className="text-sm text-[#a0b0d0]">③ Le mode examen le tire au sort pour te tester</p>
+            </div>
+            <Link href="/analyse"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#1a9fff] text-[#050a2e] font-black text-sm uppercase tracking-widest hover:bg-[#00d9ff] transition-all shadow-[0_0_20px_rgba(26,159,255,0.4)]">
+              <Plus size={15} />
+              Analyser mon premier texte
+            </Link>
+          </div>
+        ) : (
         <div className="space-y-3">
           {texts.map((t, i) => (
             <div key={t.id}
@@ -247,24 +301,82 @@ export default function MesTextesPage() {
             </div>
           ))}
         </div>
+        )
       ) : activeTab === "analyses" ? (
         /* ── Mes analyses tab ── */
-        savedAnalyses.length === 0 ? (
-          <div className="text-center py-20 space-y-4">
-            <div className="text-6xl">🔬</div>
-            <p className="text-white font-black text-xl">Aucune analyse sauvegardée</p>
-            <p className="text-[#6b7280] text-sm max-w-sm mx-auto">Génère une analyse linéaire — elle apparaîtra ici automatiquement.</p>
-            <Link href="/analyse" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#a78bfa] text-[#050a2e] font-black text-sm uppercase tracking-widest hover:bg-[#c4b5fd] transition-all">
-              <Plus size={15} /> Faire une analyse
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {savedAnalyses.map((a, i) => {
+        <div className="space-y-3">
+          {/* Carte exemple — toujours présente, ne compte pas dans le quota */}
+          {(() => {
+            const a = EXAMPLE_ANALYSE;
+            const isOpen = expandedId === a.id;
+            return (
+              <div className="border-2 border-violet-500/40 rounded-2xl overflow-hidden bg-gradient-to-br from-violet-500/5 to-[#0c0c18] group">
+                <button
+                  onClick={() => setExpandedId(isOpen ? null : a.id)}
+                  className="w-full flex items-center gap-4 p-5 text-left">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-violet-600/20 border border-violet-500/40 flex items-center justify-center">
+                    <Sparkles size={14} className="text-violet-400" />
+                  </div>
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-white font-bold text-sm">{a.titre}</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-[#a78bfa]/10 border border-[#a78bfa]/20 text-[#a78bfa]">{a.oeuvre}</span>
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-violet-500/20 border border-violet-500/30 text-violet-300 uppercase tracking-widest">Exemple</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-[#6b7280]">
+                      <span>{a.auteur}</span>
+                      <span className="italic truncate max-w-xs">{a.axe}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className="text-[10px] text-violet-400/60 font-mono">Ne compte pas</span>
+                    {isOpen ? <ChevronUp size={16} className="text-[#a78bfa]" /> : <ChevronDown size={16} className="text-[#6b7280]" />}
+                  </div>
+                </button>
+                {isOpen && (
+                  <div className="border-t border-violet-500/20 p-5 space-y-4">
+                    <div className="space-y-1">
+                      <p className="text-xs font-black text-[#FFD700] uppercase tracking-widest">Problématique</p>
+                      <p className="text-sm text-[#e2e8f0] italic">{a.analyse.problematique}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-xs font-black text-[#00d9ff] uppercase tracking-widest">Mouvements</p>
+                      {a.analyse.mouvements.map((m) => (
+                        <div key={m.numero} className="bg-[#050a2e] border border-[#19327f]/40 rounded-xl p-3 space-y-1">
+                          <p className="text-xs font-bold text-white">Mvt {m.numero} — {m.titre} <span className="text-[#6b7280] font-normal">({m.lignes})</span></p>
+                          {m.procedes.map((p, j) => (
+                            <p key={j} className="text-xs text-[#a0b0d0]">
+                              <span className="text-[#a78bfa] font-bold">{p.procede}</span>
+                              {p.exemple && <span className="text-[#6b7280]"> — « {p.exemple} »</span>}
+                              {p.effet && <span className="text-[#9ca3af]"> → {p.effet}</span>}
+                            </p>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs font-black text-[#a78bfa] uppercase tracking-widest">Conclusion</p>
+                      <p className="text-sm text-[#a0b0d0]">{a.analyse.conclusion}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
+          {/* Analyses réelles de l'utilisateur */}
+          {savedAnalyses.length === 0 ? (
+            <div className="text-center py-12 space-y-3 bg-[#0a1543]/40 border border-[#19327f]/40 rounded-2xl">
+              <p className="text-[#6b7280] text-sm">Tes analyses générées apparaîtront ici automatiquement.</p>
+              <Link href="/analyse" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#a78bfa] text-[#050a2e] font-black text-sm uppercase tracking-widest hover:bg-[#c4b5fd] transition-all">
+                <Plus size={14} /> Faire une analyse
+              </Link>
+            </div>
+          ) : (
+            savedAnalyses.map((a, i) => {
               const isOpen = expandedId === a.id;
               return (
                 <div key={a.id} className="bg-[#0a1543]/80 border border-[#19327f]/60 rounded-2xl overflow-hidden hover:border-[#a78bfa]/30 transition-all group">
-                  {/* Header */}
                   <button
                     onClick={() => setExpandedId(isOpen ? null : a.id)}
                     className="w-full flex items-center gap-4 p-5 text-left">
@@ -290,7 +402,6 @@ export default function MesTextesPage() {
                       {isOpen ? <ChevronUp size={16} className="text-[#a78bfa]" /> : <ChevronDown size={16} className="text-[#6b7280]" />}
                     </div>
                   </button>
-                  {/* Expanded content */}
                   {isOpen && (
                     <div className="border-t border-[#19327f]/60 p-5 space-y-4">
                       {a.analyse.problematique && (
@@ -326,9 +437,9 @@ export default function MesTextesPage() {
                   )}
                 </div>
               );
-            })}
-          </div>
-        )
+            })
+          )}
+        </div>
       ) : activeTab === "questions" ? (
         /* ── Mes questions oeuvre tab ── */
         oeuvreQuestions.length === 0 ? (

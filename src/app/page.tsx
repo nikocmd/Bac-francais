@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { BookOpen, Mic, Library, GraduationCap, ArrowRight, CheckCircle, Crown, Zap, ChevronDown, ChevronUp } from "lucide-react";
+import { BookOpen, Mic, Library, GraduationCap, ArrowRight, CheckCircle, Crown, Zap } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 
 const VITRINE_ANALYSE = {
@@ -78,10 +78,8 @@ Tranquille. Il a deux trous rouges au côté droit.`,
 export default async function Home() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (user) {
-    const { data: profile } = await supabase.from("profiles").select("is_premium").eq("id", user.id).single();
-    if (profile?.is_premium) redirect("/dashboard");
-  }
+  // Tout utilisateur connecté → dashboard (la landing est pour les visiteurs)
+  if (user) redirect("/dashboard");
 
   return (
     <div className="max-w-5xl mx-auto px-4 space-y-0">
@@ -115,17 +113,13 @@ export default async function Home() {
 
       {/* ── VITRINE ANALYSE ── */}
       <section className="py-8">
-        {/* Header */}
         <div className="text-center space-y-2 mb-10">
           <p className="text-xs font-bold text-[#a78bfa] uppercase tracking-widest">✦ Exemple d&apos;analyse</p>
           <h2 className="text-3xl font-black text-white">Vois ce que l&apos;IA génère pour toi</h2>
           <p className="text-[#6b7280] text-sm">Analyse complète d&apos;un texte en quelques secondes, prête pour l&apos;oral</p>
         </div>
 
-        {/* Card principale avec effet glow */}
         <div className="relative rounded-3xl border border-violet-500/20 bg-[#0c0c18] shadow-[0_0_80px_rgba(139,92,246,0.08)] overflow-hidden">
-
-          {/* Barre de titre façon app */}
           <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#1e1e2e] bg-[#0a0a14]">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-red-500/70" />
@@ -136,17 +130,12 @@ export default async function Home() {
               <BookOpen size={12} className="text-violet-400" />
               Le Dormeur du Val — Rimbaud · 1870
             </div>
-            <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-violet-500/15 text-violet-300 border border-violet-500/20">
-              IA
-            </span>
+            <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-violet-500/15 text-violet-300 border border-violet-500/20">IA</span>
           </div>
 
           <div className="p-5 md:p-7 space-y-6">
-
-            {/* Ligne 1 : Poème + Intro */}
+            {/* Poème + Intro */}
             <div className="grid md:grid-cols-2 gap-4">
-
-              {/* Poème numéroté */}
               <div className="bg-[#07070f] rounded-2xl border border-[#1a1a2e] p-5">
                 <p className="text-[10px] font-bold text-[#6b7280] uppercase tracking-widest mb-4">Texte original</p>
                 <div className="space-y-0.5 font-mono text-sm">
@@ -163,57 +152,29 @@ export default async function Home() {
                 </div>
               </div>
 
-              {/* Introduction */}
               <div className="flex flex-col gap-3">
-                {/* Mini stats */}
                 <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { label: "Mouvements", value: "3" },
-                    { label: "Procédés", value: "15" },
-                    { label: "~10 min", value: "oral" },
-                  ].map(({ label, value }) => (
+                  {[{ label: "Mouvements", value: "3" }, { label: "Procédés", value: "15" }, { label: "~10 min", value: "oral" }].map(({ label, value }) => (
                     <div key={label} className="bg-[#07070f] rounded-xl border border-[#1a1a2e] p-3 text-center">
                       <p className="text-lg font-black text-white">{value}</p>
                       <p className="text-[10px] text-[#6b7280] mt-0.5">{label}</p>
                     </div>
                   ))}
                 </div>
-
-                {/* Situation du texte */}
                 <div className="bg-[#07070f] rounded-2xl border border-[#1a1a2e] p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
-                    <p className="text-[10px] font-bold text-sky-400 uppercase tracking-widest">Introduction — Situation du texte</p>
-                  </div>
+                  <div className="flex items-center gap-2 mb-2"><span className="w-1.5 h-1.5 rounded-full bg-sky-400" /><p className="text-[10px] font-bold text-sky-400 uppercase tracking-widest">Situation du texte</p></div>
                   <p className="text-[#9ca3af] text-xs leading-relaxed">{VITRINE_ANALYSE.introduction.situation}</p>
                 </div>
-
-                {/* Mouvement général */}
                 <div className="bg-[#07070f] rounded-2xl border border-[#1a1a2e] p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
-                    <p className="text-[10px] font-bold text-sky-400 uppercase tracking-widest">Mouvement général</p>
-                  </div>
+                  <div className="flex items-center gap-2 mb-2"><span className="w-1.5 h-1.5 rounded-full bg-sky-400" /><p className="text-[10px] font-bold text-sky-400 uppercase tracking-widest">Mouvement général</p></div>
                   <p className="text-[#9ca3af] text-xs leading-relaxed">{VITRINE_ANALYSE.introduction.mouvement_general}</p>
                 </div>
-
-                {/* Problématique */}
                 <div className="bg-gradient-to-br from-violet-500/10 to-violet-900/10 rounded-2xl border border-violet-500/25 p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
-                    <p className="text-[10px] font-bold text-violet-400 uppercase tracking-widest">Problématique</p>
-                  </div>
-                  <p className="text-[#e8e8f0] font-semibold text-sm leading-relaxed italic">
-                    &ldquo;{VITRINE_ANALYSE.introduction.problematique}&rdquo;
-                  </p>
+                  <div className="flex items-center gap-2 mb-2"><span className="w-1.5 h-1.5 rounded-full bg-violet-400" /><p className="text-[10px] font-bold text-violet-400 uppercase tracking-widest">Problématique</p></div>
+                  <p className="text-[#e8e8f0] font-semibold text-sm leading-relaxed italic">&ldquo;{VITRINE_ANALYSE.introduction.problematique}&rdquo;</p>
                 </div>
-
-                {/* Plan annoncé */}
                 <div className="bg-[#07070f] rounded-2xl border border-[#1a1a2e] p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
-                    <p className="text-[10px] font-bold text-violet-400 uppercase tracking-widest">Annonce du plan</p>
-                  </div>
+                  <div className="flex items-center gap-2 mb-2"><span className="w-1.5 h-1.5 rounded-full bg-violet-400" /><p className="text-[10px] font-bold text-violet-400 uppercase tracking-widest">Annonce du plan</p></div>
                   <div className="space-y-1.5">
                     {VITRINE_ANALYSE.introduction.plan.map((p, i) => (
                       <div key={i} className="flex items-start gap-2">
@@ -231,25 +192,17 @@ export default async function Home() {
               <p className="text-[10px] font-bold text-[#6b7280] uppercase tracking-widest">Mouvements du texte</p>
               {VITRINE_ANALYSE.mouvements.map((mvt) => (
                 <div key={mvt.numero} className="rounded-2xl border border-[#1a1a2e] overflow-hidden bg-[#07070f]">
-                  {/* En-tête mouvement */}
                   <div className="flex items-center gap-3 px-5 py-3.5 bg-[#0d0d1a]">
-                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-violet-600/80 text-white text-[11px] font-black flex items-center justify-center">
-                      {mvt.numero}
-                    </span>
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-violet-600/80 text-white text-[11px] font-black flex items-center justify-center">{mvt.numero}</span>
                     <p className="font-bold text-[#e8e8f0] text-sm flex-1">{mvt.titre}</p>
-                    <span className="text-xs text-[#6b7280] font-mono bg-[#0a0a14] px-2 py-0.5 rounded-md border border-[#1e1e2e]">
-                      {mvt.lignes}
-                    </span>
+                    <span className="text-xs text-[#6b7280] font-mono bg-[#0a0a14] px-2 py-0.5 rounded-md border border-[#1e1e2e]">{mvt.lignes}</span>
                   </div>
-                  {/* Phrase d'introduction du mouvement */}
                   <div className="px-5 py-3 border-b border-[#1a1a2e]">
                     <p className="text-xs text-[#6b7280] leading-relaxed italic">{mvt.intro}</p>
                   </div>
-                  {/* Tableau procédés */}
                   <div className="divide-y divide-[#1a1a2e]">
                     {mvt.procedes.map((p, j) => (
                       <div key={j}>
-                        {/* Mobile : carte compacte */}
                         <div className="md:hidden px-4 py-3 space-y-1.5">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-[10px] font-bold text-violet-400 uppercase tracking-wider">Procédé</span>
@@ -258,28 +211,18 @@ export default async function Home() {
                           </div>
                           <p className="text-xs text-[#9ca3af] leading-relaxed pl-1">{p.effet}</p>
                         </div>
-                        {/* Desktop : 3 colonnes */}
                         <div className="hidden md:grid md:grid-cols-3 divide-x divide-[#1a1a2e]">
                           <div className="px-4 py-3.5 flex items-start gap-2.5">
                             <span className="flex-shrink-0 w-1 h-1 rounded-full bg-violet-400 mt-2" />
-                            <div>
-                              <p className="text-[10px] font-bold text-violet-400 uppercase tracking-wider mb-1">Procédé</p>
-                              <p className="text-sm text-[#e8e8f0] font-semibold">{p.procede}</p>
-                            </div>
+                            <div><p className="text-[10px] font-bold text-violet-400 uppercase tracking-wider mb-1">Procédé</p><p className="text-sm text-[#e8e8f0] font-semibold">{p.procede}</p></div>
                           </div>
                           <div className="px-4 py-3.5 flex items-start gap-2.5">
                             <span className="flex-shrink-0 w-1 h-1 rounded-full bg-amber-400 mt-2" />
-                            <div>
-                              <p className="text-[10px] font-bold text-amber-400 uppercase tracking-wider mb-1">Citation</p>
-                              <p className="text-sm text-[#c9a96e] italic">&ldquo;{p.exemple}&rdquo;</p>
-                            </div>
+                            <div><p className="text-[10px] font-bold text-amber-400 uppercase tracking-wider mb-1">Citation</p><p className="text-sm text-[#c9a96e] italic">&ldquo;{p.exemple}&rdquo;</p></div>
                           </div>
                           <div className="px-4 py-3.5 flex items-start gap-2.5">
                             <span className="flex-shrink-0 w-1 h-1 rounded-full bg-emerald-400 mt-2" />
-                            <div>
-                              <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-1">Effet</p>
-                              <p className="text-xs text-[#9ca3af] leading-relaxed">{p.effet}</p>
-                            </div>
+                            <div><p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-1">Effet</p><p className="text-xs text-[#9ca3af] leading-relaxed">{p.effet}</p></div>
                           </div>
                         </div>
                       </div>
@@ -296,21 +239,11 @@ export default async function Home() {
                 <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Conclusion</p>
               </div>
               <div className="divide-y divide-[#1a1a2e]">
-                <div className="px-5 py-4">
-                  <p className="text-[10px] font-bold text-[#6b7280] uppercase tracking-wider mb-1.5">Bilan</p>
-                  <p className="text-sm text-[#c9c9d4] leading-relaxed">{VITRINE_ANALYSE.conclusion.bilan}</p>
-                </div>
-                <div className="px-5 py-4">
-                  <p className="text-[10px] font-bold text-[#6b7280] uppercase tracking-wider mb-1.5">Portée du texte</p>
-                  <p className="text-sm text-[#c9c9d4] leading-relaxed">{VITRINE_ANALYSE.conclusion.portee}</p>
-                </div>
-                <div className="px-5 py-4">
-                  <p className="text-[10px] font-bold text-[#6b7280] uppercase tracking-wider mb-1.5">Ouverture</p>
-                  <p className="text-sm text-[#9ca3af] leading-relaxed italic">{VITRINE_ANALYSE.conclusion.ouverture}</p>
-                </div>
+                <div className="px-5 py-4"><p className="text-[10px] font-bold text-[#6b7280] uppercase tracking-wider mb-1.5">Bilan</p><p className="text-sm text-[#c9c9d4] leading-relaxed">{VITRINE_ANALYSE.conclusion.bilan}</p></div>
+                <div className="px-5 py-4"><p className="text-[10px] font-bold text-[#6b7280] uppercase tracking-wider mb-1.5">Portée du texte</p><p className="text-sm text-[#c9c9d4] leading-relaxed">{VITRINE_ANALYSE.conclusion.portee}</p></div>
+                <div className="px-5 py-4"><p className="text-[10px] font-bold text-[#6b7280] uppercase tracking-wider mb-1.5">Ouverture</p><p className="text-sm text-[#9ca3af] leading-relaxed italic">{VITRINE_ANALYSE.conclusion.ouverture}</p></div>
               </div>
             </div>
-
           </div>
         </div>
 

@@ -136,9 +136,7 @@ export default function PremiumPage() {
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="space-y-2">
               <p className="text-[#6b7280] font-bold">Gratuit</p>
-              <p className="text-[#6b7280]">✓ 1 utilisation offerte</p>
-              <p className="text-[#2a3a6e] line-through">Analyses illimitées</p>
-              <p className="text-[#2a3a6e] line-through">Oral illimité</p>
+              <p className="text-[#6b7280]">✓ 1 exemple offert</p>
             </div>
             <div className="space-y-2">
               <p className="text-[#FFD700] font-bold">Premium</p>
