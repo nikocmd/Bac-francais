@@ -10,12 +10,32 @@ function createAdminClient() {
   );
 }
 
-export async function POST(request: Request) {
-  // Protection par secret header
+export async function GET(request: Request) {
   const auth = request.headers.get("x-sync-secret");
-  if (auth !== SECRET) {
-    return Response.json({ error: "Non autorisé" }, { status: 401 });
-  }
+  if (auth !== SECRET) return Response.json({ error: "Non autorisé" }, { status: 401 });
+
+  const supabase = createAdminClient();
+
+  // Lister tous les users Supabase
+  const { data, error } = await supabase.auth.admin.listUsers({ perPage: 200 });
+  if (error) return Response.json({ error: error.message }, { status: 500 });
+
+  const users = data.users.map(u => ({
+    id: u.id,
+    email: u.email,
+  }));
+
+  // Lister tous les profiles avec stripe_customer_id
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, stripe_customer_id, is_premium");
+
+  return Response.json({ users, profiles });
+}
+
+export async function POST(request: Request) {
+  const auth = request.headers.get("x-sync-secret");
+  if (auth !== SECRET) return Response.json({ error: "Non autorisé" }, { status: 401 });
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: "2026-03-25.dahlia" as never,
@@ -24,7 +44,11 @@ export async function POST(request: Request) {
 
   const results: { email: string; customerId: string; uid: string | null; action: string }[] = [];
 
-  // 1. Récupère toutes les subscriptions actives Stripe
+  // Liste tous les users Supabase pour matching
+  const { data: authData } = await supabase.auth.admin.listUsers({ perPage: 200 });
+  const allUsers = authData?.users ?? [];
+
+  // Récupère toutes les subscriptions actives Stripe
   const subscriptions = await stripe.subscriptions.list({
     status: "active",
     limit: 100,
@@ -36,22 +60,20 @@ export async function POST(request: Request) {
     const customerId = customer.id;
     const email = customer.email ?? "";
 
-    // 2. Cherche l'utilisateur dans Supabase par stripe_customer_id
+    // Cherche par stripe_customer_id dans profiles
     let { data: profile } = await supabase
       .from("profiles")
       .select("id, is_premium")
       .eq("stripe_customer_id", customerId)
       .single();
 
-    // 3. Si pas trouvé par customer_id, cherche par email dans auth.users
     let uid: string | null = profile?.id ?? null;
 
-    if (!profile) {
-      const { data: users } = await supabase.auth.admin.listUsers();
-      const match = users?.users?.find(u => u.email === email);
+    // Si pas trouvé, cherche par email dans auth users
+    if (!uid) {
+      const match = allUsers.find(u => u.email?.toLowerCase() === email.toLowerCase());
       if (match) {
         uid = match.id;
-        // Met à jour le stripe_customer_id
         await supabase
           .from("profiles")
           .update({ stripe_customer_id: customerId })
@@ -60,7 +82,6 @@ export async function POST(request: Request) {
     }
 
     if (uid) {
-      // 4. Active le premium
       const { error } = await supabase
         .from("profiles")
         .update({ is_premium: true })
@@ -82,8 +103,5 @@ export async function POST(request: Request) {
     }
   }
 
-  return Response.json({
-    total: subscriptions.data.length,
-    results,
-  });
+  return Response.json({ total: subscriptions.data.length, results });
 }
