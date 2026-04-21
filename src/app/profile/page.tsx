@@ -330,7 +330,7 @@ export default function ProfilePage() {
                 bg-[#FFD700] text-[#050a2e] hover:bg-[#ffe84d] transition-all
                 shadow-[0_0_15px_rgba(255,215,0,0.3)]">
               <Crown size={15} />
-              Passer Premium — 9.99€/mois
+              Passer Premium — 15€/mois
             </a>
           </div>
         )}

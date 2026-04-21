@@ -10,6 +10,6 @@ export const PLANS = {
   premium: {
     priceId: process.env.STRIPE_PRICE_PREMIUM || "",
     name: "Premium",
-    price: "9.99€/mois",
+    price: "15€/mois",
   },
 };

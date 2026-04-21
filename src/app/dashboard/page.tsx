@@ -227,7 +227,7 @@ export default function Dashboard() {
               <span className="text-xl">👑</span>
               <div>
                 <p className="text-sm font-black text-[#FFD700]">Passe Premium pour un accès illimité</p>
-                <p className="text-xs text-[#a0b0d0]">Analyses, oral, examen, œuvre — sans limite. 9.99€/mois.</p>
+                <p className="text-xs text-[#a0b0d0]">Analyses, oral, examen, œuvre — sans limite. 15€/mois.</p>
               </div>
             </div>
             <span className="flex-shrink-0 px-4 py-2 rounded-lg bg-[#FFD700] text-[#050a2e] text-xs font-black uppercase tracking-widest group-hover:bg-[#ffe44d] transition-all">

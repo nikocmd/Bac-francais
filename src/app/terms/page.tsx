@@ -56,7 +56,7 @@ export default function TermsPage() {
       <section className="mb-10">
         <h2 className="text-xl font-semibold mb-3">5. Conditions financières</h2>
         <p className="text-[#b0b0c0] leading-relaxed mb-3">
-          L'abonnement Premium est facturé <strong>9,99 € TTC par mois</strong>. Le paiement est prélevé automatiquement chaque mois via Stripe.
+          L'abonnement Premium est facturé <strong>15,00 € TTC par mois</strong>. Le paiement est prélevé automatiquement chaque mois via Stripe.
         </p>
         <ul className="list-disc list-inside text-[#b0b0c0] space-y-2">
           <li><strong>Sans engagement</strong> : résiliation possible à tout moment, sans frais</li>

@@ -93,7 +93,7 @@ export default function PremiumPage() {
         <div className="bg-gradient-to-b from-[#FFD700]/5 to-[#0a1543]/80 border-2 border-[#FFD700]/40 rounded-2xl p-8 space-y-6 shadow-[0_0_40px_rgba(255,215,0,0.15)]">
           <div className="text-center">
             <div className="flex items-baseline justify-center gap-1">
-              <span className="text-5xl font-black text-white">9.99€</span>
+              <span className="text-5xl font-black text-white">15€</span>
               <span className="text-[#a0b0d0]">/mois</span>
             </div>
             <p className="text-xs text-[#6b7280] mt-1">Annulable à tout moment</p>

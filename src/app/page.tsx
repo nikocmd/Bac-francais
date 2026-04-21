@@ -337,7 +337,7 @@ export default async function Home() {
             <div>
               <p className="text-[#FFD700] text-xs font-bold uppercase tracking-widest mb-2">Premium</p>
               <div className="flex items-baseline gap-1">
-                <p className="text-4xl font-black text-white">9.99€</p>
+                <p className="text-4xl font-black text-white">15€</p>
                 <p className="text-[#6b7280] text-sm">/mois</p>
               </div>
             </div>
