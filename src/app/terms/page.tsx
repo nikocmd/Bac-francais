@@ -61,8 +61,8 @@ export default function TermsPage() {
         <ul className="list-disc list-inside text-[#b0b0c0] space-y-2">
           <li><strong>Sans engagement</strong> : résiliation possible à tout moment, sans frais</li>
           <li><strong>Résiliation</strong> : l'accès Premium reste actif jusqu'à la fin de la période déjà payée</li>
-          <li><strong>Droit de rétractation</strong> : conformément à l'article L221-18 du Code de la consommation, vous disposez de 14 jours à compter de la souscription pour vous rétracter, sauf si vous avez expressément demandé l'exécution du service avant ce délai</li>
-          <li><strong>Remboursement</strong> : toute demande de remboursement hors délai légal est soumise à l'appréciation de l'éditeur, à adresser à <a href="mailto:contact@bacfrancaisai.fr" className="text-blue-400 underline">contact@bacfrancaisai.fr</a></li>
+          <li><strong>Droit de rétractation</strong> : conformément à l'article L221-28 13° du Code de la consommation, le droit de rétractation de 14 jours <strong>ne s'applique pas</strong> aux contenus numériques non fournis sur support matériel dont l'exécution a commencé avec l'accord préalable exprès du consommateur et renonciation expresse à son droit de rétractation. En souscrivant à l'offre Premium, vous reconnaissez avoir expressément consenti à l'accès immédiat au service et renoncez expressément à votre droit de rétractation dès l'activation de votre abonnement.</li>
+          <li><strong>Absence de remboursement</strong> : du fait de la nature numérique du service et de l'accès immédiat accordé à la souscription, aucun remboursement ne pourra être demandé après activation. En cas de difficultés exceptionnelles, vous pouvez contacter <a href="mailto:contact@bacfrancaisai.fr" className="text-blue-400 underline">contact@bacfrancaisai.fr</a></li>
         </ul>
       </section>
 
