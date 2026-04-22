@@ -61,7 +61,8 @@ Réponds UNIQUEMENT avec un objet JSON valide (sans markdown) avec cette structu
     const feedback = JSON.parse(jsonMatch[0]);
     return Response.json({ feedback });
   } catch (err) {
-    console.error(err);
-    return Response.json({ error: "Erreur lors de l'évaluation." }, { status: 500 });
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[oral]", msg);
+    return Response.json({ error: msg }, { status: 500 });
   }
 }
