@@ -1,11 +1,11 @@
-import { requirePremium } from "@/lib/usage";
+import { requirePaid } from "@/lib/usage";
 import { checkRateLimit } from "@/lib/rateLimit";
 
 export const maxDuration = 60;
 const MAX_AUDIO_MB = 20;
 
 export async function POST(request: Request) {
-  const usage = await requirePremium();
+  const usage = await requirePaid();
   if (!usage.allowed) {
     return Response.json({ error: "LIMIT_REACHED" }, { status: 403 });
   }

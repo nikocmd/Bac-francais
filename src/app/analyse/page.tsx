@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { BookOpen, Loader2, ChevronDown, ChevronUp, Sparkles, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { addXP } from "@/lib/gamification";
+import Paywall from "@/components/Paywall";
 
 interface Procede {
   procede: string;
@@ -99,12 +100,23 @@ export default function AnalysePage() {
       setOpenMvt(0);
       // Effacer le brouillon après succès
       try { localStorage.removeItem(DRAFT_KEY); } catch {}
-      // Sauvegarde de l'analyse complète en localStorage
+      // Sauvegarde de l'analyse complète en Supabase
       try {
-        const entry = { id: Date.now().toString(), ...form, analyse: data.analyse, savedAt: new Date().toISOString() };
-        const prev = JSON.parse(localStorage.getItem("saved_analyses") || "[]");
-        prev.unshift(entry);
-        localStorage.setItem("saved_analyses", JSON.stringify(prev.slice(0, 30)));
+        if (userId) {
+          const { createClient } = await import("@/lib/supabase/client");
+          const supabase = createClient();
+          const entry = {
+            id: Date.now().toString(),
+            user_id: userId,
+            titre: form.titre,
+            auteur: form.auteur,
+            oeuvre: form.oeuvre,
+            axe: form.axe,
+            result: data.analyse,
+            saved_at: new Date().toISOString(),
+          };
+          await supabase.from("saved_analyses").insert(entry);
+        }
       } catch {}
       const { leveledUp } = await addXP("analyse", userId);
       if (leveledUp) window.dispatchEvent(new CustomEvent("levelup"));
@@ -208,7 +220,8 @@ export default function AnalysePage() {
           />
           {fieldErrors.texte && <p className="text-red-400 text-xs">{fieldErrors.texte}</p>}
         </div>
-        {error && (
+        {error === "LIMIT_REACHED" && <Paywall />}
+        {error && error !== "LIMIT_REACHED" && (
           <div className="flex items-start gap-2 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
             <p className="text-red-400 text-sm">{error}</p>
           </div>

@@ -1,12 +1,12 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { requirePremium } from "@/lib/usage";
+import { requirePaid } from "@/lib/usage";
 import { checkRateLimit } from "@/lib/rateLimit";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 const MAX_QUESTION = 1_000;
 
 export async function POST(request: Request) {
-  const usage = await requirePremium();
+  const usage = await requirePaid();
   if (!usage.allowed) {
     return Response.json({ error: "LIMIT_REACHED" }, { status: 403 });
   }

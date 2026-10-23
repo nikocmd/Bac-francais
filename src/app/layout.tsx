@@ -87,9 +87,12 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
+      { url: "/favicon.png", type: "image/png", sizes: "32x32" },
+      { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
       { url: "/favicon.svg", type: "image/svg+xml" },
     ],
-    apple: "/favicon.svg",
+    apple: [{ url: "/icon-192.png", sizes: "192x192", type: "image/png" }],
+    shortcut: "/favicon.png",
   },
   verification: {
     google: process.env.GOOGLE_SITE_VERIFICATION,
@@ -176,13 +179,13 @@ export default function RootLayout({
         <main className="flex-1">{children}</main>
         <footer className="border-t border-[#1e1e2e] py-6 text-center text-sm text-[#6b7280]">
           <p>© {new Date().getFullYear()} BacFrançaisAI</p>
-          <p className="mt-2 flex justify-center gap-4">
+          <div className="mt-2 flex justify-center gap-4">
             <a href="/privacy" className="hover:text-[#e8e8f0] transition-colors">Politique de confidentialité</a>
             <span>·</span>
             <a href="/terms" className="hover:text-[#e8e8f0] transition-colors">CGU</a>
             <span>·</span>
             <ContactPopup />
-          </p>
+          </div>
         </footer>
       </body>
     </html>

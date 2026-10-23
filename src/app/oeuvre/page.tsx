@@ -210,16 +210,24 @@ async function handleConfirm() {
     setAideMessages([]);
   }
 
-  function saveQuestion(msgIndex: number) {
+  async function saveQuestion(msgIndex: number) {
     // msgIndex is the assistant message index; the user question is at msgIndex-1
     const reponse = messages[msgIndex]?.content;
     const question = messages[msgIndex - 1]?.content;
-    if (!reponse) return;
-    const entry = { id: Date.now().toString(), oeuvre, auteur, question: question ?? "", reponse, savedAt: new Date().toISOString() };
+    if (!reponse || !userId) return;
+    const entry = {
+      id: Date.now().toString(),
+      user_id: userId,
+      oeuvre,
+      auteur,
+      question: question ?? "",
+      reponse,
+      saved_at: new Date().toISOString(),
+    };
     try {
-      const prev = JSON.parse(localStorage.getItem("oeuvre_questions") || "[]");
-      prev.unshift(entry);
-      localStorage.setItem("oeuvre_questions", JSON.stringify(prev.slice(0, 50)));
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      await supabase.from("oeuvre_questions").insert(entry);
     } catch {}
     setSavedIds(prev => new Set(prev).add(msgIndex));
   }

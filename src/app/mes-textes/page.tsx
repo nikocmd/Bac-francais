@@ -98,7 +98,7 @@ export default function MesTextesPage() {
   const [authed, setAuthed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<Tab>("textes");
+  const [activeTab, setActiveTab] = useState<Tab>("analyses");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [maxTexts, setMaxTexts] = useState(16);
   const [filiere, setFiliere] = useState<"general" | "stmg">("general");
@@ -115,22 +115,40 @@ export default function MesTextesPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
       setAuthed(true);
-      const [{ data }, { data: profile }] = await Promise.all([
+      const [{ data }, { data: profile }, { data: analysesData }] = await Promise.all([
         supabase.from("user_texts").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
         supabase.from("profiles").select("filiere").eq("id", user.id).single(),
+        supabase.from("saved_analyses").select("*").eq("user_id", user.id).order("saved_at", { ascending: false }),
       ]);
       setTexts(data ?? []);
       const f = profile?.filiere === "stmg" ? "stmg" : "general";
       setFiliere(f);
       setMaxTexts(f === "stmg" ? 12 : 16);
-      try {
-        const stored = JSON.parse(localStorage.getItem("saved_analyses") || "[]");
-        setSavedAnalyses(stored);
-      } catch {}
-      try {
-        const stored = JSON.parse(localStorage.getItem("oeuvre_questions") || "[]");
-        setOeuvreQuestions(stored);
-      } catch {}
+      // Analyses depuis Supabase
+      const analyses = (analysesData ?? []).map((a) => ({
+        id: a.id,
+        titre: a.titre,
+        auteur: a.auteur,
+        oeuvre: a.oeuvre,
+        axe: a.axe,
+        savedAt: a.saved_at,
+        analyse: a.result,
+      }));
+      setSavedAnalyses(analyses);
+      const { data: questionsData } = await supabase
+        .from("oeuvre_questions")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("saved_at", { ascending: false });
+      const questions = (questionsData ?? []).map((q) => ({
+        id: q.id,
+        oeuvre: q.oeuvre,
+        auteur: q.auteur,
+        question: q.question,
+        reponse: q.reponse,
+        savedAt: q.saved_at,
+      }));
+      setOeuvreQuestions(questions);
     } finally {
       setLoading(false);
     }
@@ -145,16 +163,22 @@ export default function MesTextesPage() {
     setDeleting(null);
   }
 
-  function deleteAnalyse(id: string) {
-    const updated = savedAnalyses.filter(a => a.id !== id);
-    setSavedAnalyses(updated);
-    try { localStorage.setItem("saved_analyses", JSON.stringify(updated)); } catch {}
+  async function deleteAnalyse(id: string) {
+    setSavedAnalyses(prev => prev.filter(a => a.id !== id));
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      await supabase.from("saved_analyses").delete().eq("id", id);
+    } catch {}
   }
 
-  function deleteQuestion(id: string) {
-    const updated = oeuvreQuestions.filter(q => q.id !== id);
-    setOeuvreQuestions(updated);
-    try { localStorage.setItem("oeuvre_questions", JSON.stringify(updated)); } catch {}
+  async function deleteQuestion(id: string) {
+    setOeuvreQuestions(prev => prev.filter(q => q.id !== id));
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      await supabase.from("oeuvre_questions").delete().eq("id", id);
+    } catch {}
   }
 
   const count = texts.length;
@@ -190,16 +214,6 @@ export default function MesTextesPage() {
       {/* Tab switcher */}
       <div className="flex gap-1 bg-[#050a2e] border border-[#19327f]/60 rounded-xl p-1 w-fit">
         <button
-          onClick={() => setActiveTab("textes")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
-            activeTab === "textes"
-              ? "bg-[#0a1543] border border-[#19327f] text-[#00d9ff] shadow-[0_0_10px_rgba(26,159,255,0.2)]"
-              : "text-[#6b7280] hover:text-[#a0b0d0]"
-          }`}>
-          <BookOpen size={14} />
-          Mes textes
-        </button>
-        <button
           onClick={() => setActiveTab("analyses")}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
             activeTab === "analyses"
@@ -218,6 +232,16 @@ export default function MesTextesPage() {
           }`}>
           <Library size={14} />
           Œuvre
+        </button>
+        <button
+          onClick={() => setActiveTab("textes")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+            activeTab === "textes"
+              ? "bg-[#0a1543] border border-[#19327f] text-[#00d9ff] shadow-[0_0_10px_rgba(26,159,255,0.2)]"
+              : "text-[#6b7280] hover:text-[#a0b0d0]"
+          }`}>
+          <BookOpen size={14} />
+          Mes textes
         </button>
       </div>
 
@@ -295,7 +319,7 @@ export default function MesTextesPage() {
               <button
                 onClick={() => handleDelete(t.id)}
                 disabled={deleting === t.id}
-                className="flex-shrink-0 p-2 rounded-lg text-[#2a3a6e] hover:text-red-400 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100">
+                className="flex-shrink-0 p-2 rounded-lg text-[#4a5a8e] hover:text-red-400 hover:bg-red-500/10 transition-all md:opacity-0 md:group-hover:opacity-100">
                 {deleting === t.id ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
               </button>
             </div>
@@ -377,13 +401,13 @@ export default function MesTextesPage() {
               const isOpen = expandedId === a.id;
               return (
                 <div key={a.id} className="bg-[#0a1543]/80 border border-[#19327f]/60 rounded-2xl overflow-hidden hover:border-[#a78bfa]/30 transition-all group">
-                  <button
-                    onClick={() => setExpandedId(isOpen ? null : a.id)}
-                    className="w-full flex items-center gap-4 p-5 text-left">
+                  <div className="flex items-center gap-4 p-5">
                     <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-[#050a2e] border border-[#19327f]/60 flex items-center justify-center">
                       <span className="text-xs font-black text-[#a78bfa] font-mono">{i + 1}</span>
                     </div>
-                    <div className="flex-1 min-w-0 space-y-1">
+                    <button
+                      onClick={() => setExpandedId(isOpen ? null : a.id)}
+                      className="flex-1 min-w-0 space-y-1 text-left">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-white font-bold text-sm">{a.titre || "Extrait sans titre"}</span>
                         {a.oeuvre && <span className="text-xs px-2 py-0.5 rounded-full bg-[#a78bfa]/10 border border-[#a78bfa]/20 text-[#a78bfa]">{a.oeuvre}</span>}
@@ -392,16 +416,18 @@ export default function MesTextesPage() {
                         {a.auteur && <span>{a.auteur}</span>}
                         {a.axe && <span className="italic truncate max-w-xs">{a.axe}</span>}
                       </div>
-                    </div>
+                    </button>
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className="text-xs text-[#2a3a6e]">{new Date(a.savedAt).toLocaleDateString("fr-FR")}</span>
-                      <button onClick={(e) => { e.stopPropagation(); deleteAnalyse(a.id); }}
-                        className="p-1.5 rounded-lg text-[#2a3a6e] hover:text-red-400 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100">
+                      <span className="text-xs text-[#2a3a6e] hidden sm:block">{new Date(a.savedAt).toLocaleDateString("fr-FR")}</span>
+                      <button onClick={() => deleteAnalyse(a.id)}
+                        className="p-1.5 rounded-lg text-[#4a5a8e] hover:text-red-400 hover:bg-red-500/10 transition-all md:opacity-0 md:group-hover:opacity-100">
                         <Trash2 size={14} />
                       </button>
-                      {isOpen ? <ChevronUp size={16} className="text-[#a78bfa]" /> : <ChevronDown size={16} className="text-[#6b7280]" />}
+                      <button onClick={() => setExpandedId(isOpen ? null : a.id)} className="p-1">
+                        {isOpen ? <ChevronUp size={16} className="text-[#a78bfa]" /> : <ChevronDown size={16} className="text-[#6b7280]" />}
+                      </button>
                     </div>
-                  </button>
+                  </div>
                   {isOpen && (
                     <div className="border-t border-[#19327f]/60 p-5 space-y-4">
                       {a.analyse.problematique && (
@@ -469,7 +495,7 @@ export default function MesTextesPage() {
                       <p className="text-xs text-[#2a3a6e] font-mono">{new Date(q.savedAt).toLocaleDateString("fr-FR")}</p>
                     </div>
                     <button onClick={() => deleteQuestion(q.id)}
-                      className="flex-shrink-0 p-2 rounded-lg text-[#2a3a6e] hover:text-red-400 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100">
+                      className="flex-shrink-0 p-2 rounded-lg text-[#4a5a8e] hover:text-red-400 hover:bg-red-500/10 transition-all md:opacity-0 md:group-hover:opacity-100">
                       <Trash2 size={14} />
                     </button>
                   </div>

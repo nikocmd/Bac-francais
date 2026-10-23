@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2, BookOpen } from "lucide-react";
+import { Loader2, BookOpen, Mail } from "lucide-react";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -11,6 +11,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [emailSent, setEmailSent] = useState(false);
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
@@ -25,8 +26,41 @@ export default function RegisterPage() {
       options: { data: { username } },
     });
     if (error) { setError(error.message); setLoading(false); return; }
-    router.push("/dashboard");
-    router.refresh();
+    setEmailSent(true);
+    setLoading(false);
+  }
+
+  if (emailSent) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center px-4">
+        <div className="w-full max-w-md text-center space-y-6">
+          <div className="flex justify-center">
+            <div className="p-4 rounded-2xl bg-[#0a1543] border border-[#1a9fff]/30 shadow-[0_0_30px_rgba(26,159,255,0.2)]">
+              <Mail size={32} className="text-[#1a9fff]" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-2xl font-black text-white">Vérifie ton email</h1>
+            <p className="text-[#a0b0d0] text-sm leading-relaxed">
+              Un lien de confirmation a été envoyé à<br />
+              <span className="text-[#00d9ff] font-bold">{email}</span>
+            </p>
+          </div>
+          <div className="bg-[#0a1543]/80 border border-[#19327f] rounded-2xl p-5 text-left space-y-3">
+            <p className="text-xs font-black text-[#FFD700] uppercase tracking-widest">Comment ça marche</p>
+            <p className="text-sm text-[#a0b0d0]">① Ouvre ton email et clique sur le lien de confirmation</p>
+            <p className="text-sm text-[#a0b0d0]">② Tu seras automatiquement connecté à ton compte</p>
+            <p className="text-sm text-[#a0b0d0]">③ Commence à utiliser BacFrançaisAI 🎉</p>
+          </div>
+          <p className="text-xs text-[#6b7280]">
+            Tu ne vois rien ? Vérifie tes spams ou{" "}
+            <button onClick={() => setEmailSent(false)} className="text-[#1a9fff] hover:text-[#00d9ff] font-bold">
+              réessaie
+            </button>
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (

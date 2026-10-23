@@ -1,14 +1,14 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { requirePremium } from "@/lib/usage";
+import { checkFeature, recordUse } from "@/lib/usage";
 import { checkRateLimit } from "@/lib/rateLimit";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 const MAX_QUESTION = 1_000;
 
 export async function POST(request: Request) {
-  const usage = await requirePremium();
+  const usage = await checkFeature("oeuvre");
   if (!usage.allowed) {
-    return Response.json({ error: "LIMIT_REACHED" }, { status: 403 });
+    return Response.json({ error: "LIMIT_REACHED", reason: usage.reason }, { status: 403 });
   }
   if (!checkRateLimit(`oeuvre:${usage.userId}`, 20, 60_000)) {
     return Response.json({ error: "Trop de requêtes. Attends 1 minute." }, { status: 429 });
@@ -45,6 +45,7 @@ RÈGLES DE RÉPONSE :
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const result = await model.generateContent(prompt);
     const reponse = result.response.text();
+    if (usage.userId) await recordUse(usage.userId, "oeuvre");
     return Response.json({ reponse });
   } catch (err) {
     console.error(err);

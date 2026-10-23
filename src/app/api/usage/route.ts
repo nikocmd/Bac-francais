@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { BASIC_LIMITS, getMonthlyUsage } from "@/lib/usage";
 
 export async function GET() {
   const supabase = await createClient();
@@ -15,13 +16,19 @@ export async function GET() {
 
   const { data } = await supabase
     .from("profiles")
-    .select("is_premium, free_uses")
+    .select("is_premium, plan, free_uses")
     .eq("id", user.id)
     .single();
 
+  const isPaid = data?.is_premium === true;
+  const plan = !isPaid ? "free" : data?.plan === "basic" ? "basic" : "premium";
+
   return Response.json({
-    isPremium: data?.is_premium === true,
+    isPremium: isPaid,
+    plan,
     used: data?.free_uses ?? 0,
     limit: 1,
+    monthly: plan === "basic" ? await getMonthlyUsage(user.id) : null,
+    limits: plan === "basic" ? BASIC_LIMITS : null,
   });
 }

@@ -1,14 +1,14 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { requirePremium } from "@/lib/usage";
+import { checkFeature, recordUse } from "@/lib/usage";
 import { checkRateLimit } from "@/lib/rateLimit";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 const MAX_TRANSCRIPTION = 8_000;
 
 export async function POST(request: Request) {
-  const usage = await requirePremium();
+  const usage = await checkFeature("examen");
   if (!usage.allowed) {
-    return Response.json({ error: "LIMIT_REACHED" }, { status: 403 });
+    return Response.json({ error: "LIMIT_REACHED", reason: usage.reason }, { status: 403 });
   }
   if (!checkRateLimit(`examen:${usage.userId}`, 5, 60_000)) {
     return Response.json({ error: "Trop de requêtes. Attends 1 minute." }, { status: 429 });
@@ -94,6 +94,7 @@ Réponds UNIQUEMENT avec un objet JSON valide (sans markdown) :
       return Response.json({ error: "Réponse invalide de l'IA." }, { status: 500 });
     }
     const resultat = JSON.parse(jsonMatch[0]);
+    if (usage.userId) await recordUse(usage.userId, "examen");
     return Response.json({ resultat });
   } catch (err) {
     console.error(err);

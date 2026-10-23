@@ -1,14 +1,5 @@
-import { stripe } from "@/lib/stripe";
-import { createServerClient } from "@supabase/ssr";
-
-// Use service role to bypass RLS
-function createAdminClient() {
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { cookies: { getAll: () => [], setAll: () => {} } }
-  );
-}
+import { stripe, tierFromPriceId } from "@/lib/stripe";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(request: Request) {
   const body = await request.text();
@@ -26,8 +17,9 @@ export async function POST(request: Request) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
     const uid = session.metadata?.supabase_uid;
+    const tier = session.metadata?.tier === "basic" ? "basic" : "premium";
     if (uid) {
-      await supabase.from("profiles").update({ is_premium: true }).eq("id", uid);
+      await supabase.from("profiles").update({ is_premium: true, plan: tier }).eq("id", uid);
     }
   }
 
@@ -35,9 +27,9 @@ export async function POST(request: Request) {
     const subscription = event.data.object;
     const customerId = subscription.customer as string;
 
-    const isPremium = subscription.status === "active" || subscription.status === "trialing";
+    const isActive = subscription.status === "active" || subscription.status === "trialing";
+    const tier = tierFromPriceId(subscription.items.data[0]?.price.id) ?? "premium";
 
-    // Find user by stripe_customer_id
     const { data: profile } = await supabase
       .from("profiles")
       .select("id")
@@ -45,7 +37,10 @@ export async function POST(request: Request) {
       .single();
 
     if (profile) {
-      await supabase.from("profiles").update({ is_premium: isPremium }).eq("id", profile.id);
+      await supabase
+        .from("profiles")
+        .update({ is_premium: isActive, plan: isActive ? tier : null })
+        .eq("id", profile.id);
     }
   }
 
