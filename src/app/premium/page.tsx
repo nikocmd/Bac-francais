@@ -101,7 +101,7 @@ export default function PremiumPage() {
           {/* Basic mensuel */}
           <PlanCard
             title="Basic"
-            price={<><span className="text-4xl font-black text-white">5€</span><span className="text-[#a0b0d0]">/mois</span></>}
+            price={<><span className="text-4xl font-black text-white">7,50€</span><span className="text-[#a0b0d0]">/mois</span></>}
             subtitle="Sans engagement"
             features={BASIC_FEATURES}
             cta={isBasic ? "Ton offre actuelle" : "Choisir Basic"}

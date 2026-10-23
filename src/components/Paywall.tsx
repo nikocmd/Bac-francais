@@ -10,7 +10,7 @@ interface Props {
 
 export default function Paywall({
   title = "Essai gratuit terminé",
-  description = "Tu as utilisé ton essai gratuit. Choisis une offre pour continuer : Basic dès 5€/mois ou Premium illimité.",
+  description = "Tu as utilisé ton essai gratuit. Choisis une offre pour continuer : Basic dès 7,50€/mois ou Premium illimité.",
 }: Props) {
   const [isBasic, setIsBasic] = useState(false);
 
