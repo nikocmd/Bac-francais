@@ -40,7 +40,7 @@ const mime = (audio.type || "audio/webm").split(";")[0].toLowerCase();
     new Blob([await audio.arrayBuffer()], { type: mime }),
     `audio.${ext}`
   );
-  groqForm.append("model", "whisper-large-v3");
+  groqForm.append("model", "whisper-large-v3-turbo");
   groqForm.append("language", "fr");
   groqForm.append("response_format", "verbose_json");
   groqForm.append("temperature", "0");
