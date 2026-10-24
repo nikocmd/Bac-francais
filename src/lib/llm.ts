@@ -3,10 +3,9 @@ import { trackLLM, trackLLMFailure, type LLMProvider } from "@/lib/metrics";
 // Each model has its own free-tier quota: when one is exhausted or down, the next one answers.
 const CHAIN: { provider: LLMProvider; model: string }[] = [
   { provider: "gemini", model: "gemini-3.1-flash-lite" },
-  { provider: "gemini", model: "gemini-3.5-flash-lite" },
-  { provider: "gemini", model: "gemini-2.5-flash-lite" },
   { provider: "groq", model: "openai/gpt-oss-120b" },
   { provider: "groq", model: "qwen/qwen3.8-27b" },
+  { provider: "gemini", model: "gemini-3-flash-preview" },
   { provider: "gemini", model: "gemini-2.5-flash" },
 ];
 
@@ -22,13 +21,17 @@ class ProviderError extends Error {
 
 type Result = { text: string; inTok: number; outTok: number };
 
+// Plain-text mode on Flash-Lite drops apostrophes with our prompts; JSON mode keeps them, so text is wrapped.
 async function callGemini(model: string, prompt: string, json: boolean, signal: AbortSignal): Promise<Result> {
+  const wrapped = json ? prompt : `${prompt}
+
+Renvoie uniquement un objet JSON de la forme {"texte": "<ta réponse complète, avec une ponctuation française normale>"}.`;
   const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY ?? "" },
     body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.5, ...(json ? { responseMimeType: "application/json" } : {}) },
+      contents: [{ parts: [{ text: wrapped }] }],
+      generationConfig: { temperature: 0.5, responseMimeType: "application/json" },
     }),
     signal,
   });
@@ -36,7 +39,8 @@ async function callGemini(model: string, prompt: string, json: boolean, signal: 
   const data = await res.json();
   const text: string = (data.candidates?.[0]?.content?.parts ?? []).map((p: { text?: string }) => p.text ?? "").join("");
   const inTok = data.usageMetadata?.promptTokenCount ?? 0;
-  return { text, inTok, outTok: Math.max(0, (data.usageMetadata?.totalTokenCount ?? 0) - inTok) };
+  const out = json ? text : unwrapText(text);
+  return { text: out, inTok, outTok: Math.max(0, (data.usageMetadata?.totalTokenCount ?? 0) - inTok) };
 }
 
 async function callGroq(model: string, prompt: string, json: boolean, signal: AbortSignal): Promise<Result> {
@@ -58,6 +62,14 @@ async function callGroq(model: string, prompt: string, json: boolean, signal: Ab
   const data = await res.json();
   const text = String(data.choices?.[0]?.message?.content ?? "").replace(/<think>[\s\S]*?<\/think>/g, "").trim();
   return { text, inTok: data.usage?.prompt_tokens ?? 0, outTok: data.usage?.completion_tokens ?? 0 };
+}
+
+function unwrapText(raw: string) {
+  try {
+    const v = JSON.parse(raw.match(/\{[\s\S]*\}/)?.[0] ?? "");
+    if (typeof v.texte === "string") return v.texte;
+  } catch {}
+  return "";
 }
 
 function isUsable(text: string, json: boolean) {

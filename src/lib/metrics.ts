@@ -30,6 +30,7 @@ const PRICES: Record<string, [number, number]> = {
   "gemini-3.5-flash-lite": [0.3, 2.5],
   "gemini-2.5-flash-lite": [0.1, 0.4],
   "gemini-2.5-flash": [0.3, 2.5],
+  "gemini-3-flash-preview": [0.5, 3],
   "openai/gpt-oss-120b": [0.15, 0.6],
   "qwen/qwen3.8-27b": [0.3, 0.6],
 };

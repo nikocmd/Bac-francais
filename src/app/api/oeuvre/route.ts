@@ -39,7 +39,7 @@ RÈGLES DE RÉPONSE :
 3. Si exemples : 1-2 exemples max, courts.
 4. Si questions d'entraînement : 5 questions avec réponses en une phrase chacune.
 5. Ton bienveillant mais efficace. Pas de formules de politesse inutiles.
-6. N'utilise AUCUN formatage markdown (pas de **, *, #, tirets de liste). Texte brut + sauts de ligne uniquement.
+6. N'utilise AUCUN formatage markdown (pas de **, *, #, tirets de liste). Texte brut + sauts de ligne uniquement. Garde une ponctuation française normale : apostrophes, accents, guillemets.
 7. Pas de "Bien sûr !", "Excellente question !", etc. Commence directement par la réponse.`;
 
   try {

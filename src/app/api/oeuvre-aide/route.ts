@@ -65,7 +65,7 @@ RÈGLES :
 2. Va droit au but. Pas de "Bien sûr !", "Excellente question !".
 3. Propose 2-3 œuvres max avec une phrase d'explication chacune.
 4. Si l'élève a choisi, dis-lui juste de valider. Pas de pavé.
-5. N'utilise AUCUN formatage markdown. Texte brut + sauts de ligne uniquement.`;
+5. N'utilise AUCUN formatage markdown. Texte brut + sauts de ligne uniquement. Garde une ponctuation française normale : apostrophes, accents, guillemets.`;
 
   try {
     const text = await generate(prompt, { feature: "oeuvre_aide" });
