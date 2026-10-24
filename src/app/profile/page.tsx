@@ -105,14 +105,13 @@ export default function ProfilePage() {
       setAvatarUrl(newAvatarUrl);
     }
 
-    const { error: upsErr } = await supabase.from("profiles").upsert({
-      id: user.id,
+    const { error: upsErr } = await supabase.from("profiles").update({
       username,
       avatar_url: newAvatarUrl,
       grammar_questions: grammarQuestions,
       filiere,
       updated_at: new Date().toISOString(),
-    });
+    }).eq("id", user.id);
 
     if (upsErr) { setError(upsErr.message); setSaving(false); return; }
     setSuccess(true);

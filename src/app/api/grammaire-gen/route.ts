@@ -13,7 +13,8 @@ export async function POST(request: Request) {
     return Response.json({ error: "Trop de requêtes. Attends 1 minute." }, { status: 429 });
   }
 
-  const { sujet } = await request.json();
+  const { sujet: raw } = await request.json();
+  const sujet = typeof raw === "string" ? raw : "";
 
   if (!sujet?.trim()) {
     return Response.json({ error: "Le sujet est requis." }, { status: 400 });

@@ -26,7 +26,7 @@ export async function POST() {
 
     return Response.json({ url: session.url });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Erreur inconnue";
-    return Response.json({ error: message }, { status: 500 });
+    console.error("[stripe]", err instanceof Error ? err.message : err);
+    return Response.json({ error: "Erreur de paiement. Réessaie ou contacte le support." }, { status: 500 });
   }
 }

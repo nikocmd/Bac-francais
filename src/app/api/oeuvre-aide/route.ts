@@ -4,6 +4,7 @@ import { checkRateLimit } from "@/lib/rateLimit";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 const MAX_QUESTION = 1_000;
+const cap = (v: unknown, n: number) => (typeof v === "string" ? v.slice(0, n) : "");
 
 export async function POST(request: Request) {
   const usage = await requirePaid();
@@ -14,7 +15,8 @@ export async function POST(request: Request) {
     return Response.json({ error: "Trop de requêtes. Attends 1 minute." }, { status: 429 });
   }
 
-  const { question, contexte } = await request.json();
+  const body = await request.json();
+  const question = cap(body.question, 5_000), contexte = cap(body.contexte, 4_000);
 
   if (!question?.trim()) {
     return Response.json({ error: "La question est requise." }, { status: 400 });

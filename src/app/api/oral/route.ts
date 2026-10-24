@@ -4,6 +4,7 @@ import { checkRateLimit } from "@/lib/rateLimit";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 const MAX_TRANSCRIPTION = 8_000;
+const cap = (v: unknown, n: number) => (typeof v === "string" ? v.slice(0, n) : "");
 
 export async function POST(request: Request) {
   const usage = await checkFeature("oral");
@@ -14,7 +15,8 @@ export async function POST(request: Request) {
     return Response.json({ error: "Trop de requêtes. Attends 1 minute." }, { status: 429 });
   }
 
-  const { transcription, contexte, type } = await request.json();
+  const body = await request.json();
+  const transcription = cap(body.transcription, 20_000), contexte = cap(body.contexte, 500), type = cap(body.type, 100);
 
   if (!transcription?.trim()) {
     return Response.json({ error: "La transcription est requise." }, { status: 400 });
