@@ -1,10 +1,8 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { trackGemini, trackGeminiError } from "@/lib/metrics";
+import { generate, AIBusyError, AI_BUSY_MESSAGE } from "@/lib/llm";
 import { checkFeature, recordUse } from "@/lib/usage";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { analyseSchema, parseBody } from "@/lib/schemas";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(request: Request) {
   const usage = await checkFeature("analyse", true);
@@ -71,11 +69,8 @@ Réponds UNIQUEMENT avec un objet JSON valide (sans markdown, sans texte avant/a
 }`;
 
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-    const t0 = Date.now();
-    const result = await model.generateContent(prompt);
-    trackGemini("analyse", result.response.usageMetadata, t0);
-    const raw = result.response.text();
+    const text = await generate(prompt, { feature: "analyse", json: true });
+    const raw = text;
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       return Response.json({ error: "Réponse invalide de l'IA." }, { status: 500 });
@@ -84,7 +79,7 @@ Réponds UNIQUEMENT avec un objet JSON valide (sans markdown, sans texte avant/a
     if (usage.userId) await recordUse(usage.userId, "analyse");
     return Response.json({ analyse });
   } catch (err) {
-    trackGeminiError(err);
+    if (err instanceof AIBusyError) return Response.json({ error: AI_BUSY_MESSAGE }, { status: 503 });
     console.error(err);
     return Response.json({ error: "Erreur lors de l'analyse." }, { status: 500 });
   }

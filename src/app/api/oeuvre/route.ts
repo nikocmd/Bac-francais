@@ -1,9 +1,7 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { trackGemini, trackGeminiError } from "@/lib/metrics";
+import { generate, AIBusyError, AI_BUSY_MESSAGE } from "@/lib/llm";
 import { checkFeature, recordUse } from "@/lib/usage";
 import { checkRateLimit } from "@/lib/rateLimit";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 const MAX_QUESTION = 1_000;
 const cap = (v: unknown, n: number) => (typeof v === "string" ? v.slice(0, n) : "");
 
@@ -45,15 +43,12 @@ RÈGLES DE RÉPONSE :
 7. Pas de "Bien sûr !", "Excellente question !", etc. Commence directement par la réponse.`;
 
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-    const t0 = Date.now();
-    const result = await model.generateContent(prompt);
-    trackGemini("oeuvre", result.response.usageMetadata, t0);
-    const reponse = result.response.text();
+    const text = await generate(prompt, { feature: "oeuvre" });
+    const reponse = text;
     if (usage.userId) await recordUse(usage.userId, "oeuvre");
     return Response.json({ reponse });
   } catch (err) {
-    trackGeminiError(err);
+    if (err instanceof AIBusyError) return Response.json({ error: AI_BUSY_MESSAGE }, { status: 503 });
     console.error(err);
     return Response.json({ error: "Erreur lors de la réponse." }, { status: 500 });
   }

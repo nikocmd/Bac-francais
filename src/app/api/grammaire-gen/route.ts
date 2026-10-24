@@ -1,9 +1,7 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { trackGemini, trackGeminiError } from "@/lib/metrics";
+import { generate, AIBusyError, AI_BUSY_MESSAGE } from "@/lib/llm";
 import { requirePaid } from "@/lib/usage";
 import { checkRateLimit } from "@/lib/rateLimit";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(request: Request) {
   const usage = await requirePaid();
@@ -44,14 +42,11 @@ Exemples de consignes selon le sujet :
 Génère UNIQUEMENT la question, sans explication, sans titre, sans autre texte.`;
 
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-    const t0 = Date.now();
-    const result = await model.generateContent(prompt);
-    trackGemini("grammaire", result.response.usageMetadata, t0);
-    const question = result.response.text().trim();
+    const text = await generate(prompt, { feature: "grammaire" });
+    const question = text.trim();
     return Response.json({ question });
   } catch (err) {
-    trackGeminiError(err);
+    if (err instanceof AIBusyError) return Response.json({ error: AI_BUSY_MESSAGE }, { status: 503 });
     console.error(err);
     return Response.json({ error: "Erreur lors de la génération." }, { status: 500 });
   }

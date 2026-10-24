@@ -1,6 +1,9 @@
 import { after } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+// after() throws outside a request scope; metrics must never break the caller.
+const later = (task: () => Promise<unknown>) => { try { after(task); } catch {} };
+
 async function track(service: string, metrics: Record<string, number>) {
   try {
     const admin = createAdminClient();
@@ -19,29 +22,45 @@ async function setStatus(service: string, data: Record<string, unknown>) {
   } catch {}
 }
 
-type GeminiUsage = { promptTokenCount?: number; totalTokenCount?: number } | undefined;
+export type LLMProvider = "gemini" | "groq";
 
-// totalTokenCount includes thinking tokens, which are billed as output.
-export function trackGemini(feature: string, usage: GeminiUsage, startedAt: number) {
-  const input = usage?.promptTokenCount ?? 0;
-  const output = Math.max(0, (usage?.totalTokenCount ?? 0) - input);
-  after(() => track("gemini", {
+// USD per 1M tokens (input, output) on paid tiers, used to estimate cost even while on free tiers.
+const PRICES: Record<string, [number, number]> = {
+  "gemini-3.1-flash-lite": [0.25, 1.5],
+  "gemini-3.5-flash-lite": [0.3, 2.5],
+  "gemini-2.5-flash-lite": [0.1, 0.4],
+  "gemini-2.5-flash": [0.3, 2.5],
+  "openai/gpt-oss-120b": [0.15, 0.6],
+  "qwen/qwen3.8-27b": [0.3, 0.6],
+};
+
+const slug = (model: string) => model.replace(/[^a-z0-9]+/gi, "_");
+const serviceOf = (provider: LLMProvider) => (provider === "gemini" ? "gemini" : "groq_llm");
+
+export function trackLLM(provider: LLMProvider, model: string, feature: string, inTok: number, outTok: number, ms: number) {
+  const [pin, pout] = PRICES[model] ?? [0, 0];
+  later(() => track(serviceOf(provider), {
     requests: 1,
     [`req_${feature}`]: 1,
-    input_tokens: input,
-    output_tokens: output,
-    ms: Date.now() - startedAt,
+    [`model_${slug(model)}`]: 1,
+    input_tokens: inTok,
+    output_tokens: outTok,
+    cost_micro_usd: inTok * pin + outTok * pout,
+    ms,
   }));
 }
 
-export function trackGeminiError(err: unknown) {
-  const msg = err instanceof Error ? err.message : String(err);
-  after(() => track("gemini", { errors: 1, rate_limited: /429|quota|exhausted/i.test(msg) ? 1 : 0 }));
+export function trackLLMFailure(provider: LLMProvider, model: string, status: number) {
+  later(() => track(serviceOf(provider), {
+    errors: 1,
+    rate_limited: status === 429 ? 1 : 0,
+    [`fail_${slug(model)}`]: 1,
+  }));
 }
 
 export function trackGroq(res: Response, audioSeconds: number, startedAt: number) {
   const h = (k: string) => res.headers.get(`x-ratelimit-${k}`);
-  after(() => Promise.all([
+  later(() => Promise.all([
     track("groq", {
       requests: 1,
       audio_seconds: audioSeconds,
