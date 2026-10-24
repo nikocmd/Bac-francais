@@ -1,4 +1,5 @@
 import { requirePaid } from "@/lib/usage";
+import { trackGroq } from "@/lib/metrics";
 import { checkRateLimit } from "@/lib/rateLimit";
 
 export const maxDuration = 60;
@@ -41,10 +42,11 @@ const mime = (audio.type || "audio/webm").split(";")[0].toLowerCase();
   );
   groqForm.append("model", "whisper-large-v3");
   groqForm.append("language", "fr");
-  groqForm.append("response_format", "json");
+  groqForm.append("response_format", "verbose_json");
   groqForm.append("temperature", "0");
   groqForm.append("prompt", "Transcription d'un élève de terminale qui présente un oral de bac de français. Il parle de littérature, d'analyse linéaire, de figures de style, de mouvements littéraires, d'auteurs classiques. Vocabulaire : métaphore, hyperbole, oxymore, chiasme, anaphore, péripétie, dénouement, alexandrin, sonnet, tragédie, comédie, baroque, classicisme, romantisme, réalisme, Molière, Racine, Corneille, Hugo, Baudelaire, Flaubert, Zola.");
 
+  const t0 = Date.now();
   const res = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
     method: "POST",
     headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
@@ -52,6 +54,7 @@ const mime = (audio.type || "audio/webm").split(";")[0].toLowerCase();
   });
 
   if (!res.ok) {
+    trackGroq(res, 0, t0);
     const err = await res.text();
     console.error("Groq error:", res.status, err);
     // Invalid/corrupt audio (too short, partial recording) → treat as inaudible
@@ -60,6 +63,7 @@ const mime = (audio.type || "audio/webm").split(";")[0].toLowerCase();
   }
 
   const data = await res.json();
+  trackGroq(res, Number(data.duration) || 0, t0);
   const text = (data.text ?? "").trim();
 
   if (isInaudible(text)) {

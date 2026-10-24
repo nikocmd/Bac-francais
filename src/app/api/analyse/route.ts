@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { trackGemini, trackGeminiError } from "@/lib/metrics";
 import { checkFeature, recordUse } from "@/lib/usage";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { analyseSchema, parseBody } from "@/lib/schemas";
@@ -71,7 +72,9 @@ Réponds UNIQUEMENT avec un objet JSON valide (sans markdown, sans texte avant/a
 
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const t0 = Date.now();
     const result = await model.generateContent(prompt);
+    trackGemini("analyse", result.response.usageMetadata, t0);
     const raw = result.response.text();
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
@@ -81,6 +84,7 @@ Réponds UNIQUEMENT avec un objet JSON valide (sans markdown, sans texte avant/a
     if (usage.userId) await recordUse(usage.userId, "analyse");
     return Response.json({ analyse });
   } catch (err) {
+    trackGeminiError(err);
     console.error(err);
     return Response.json({ error: "Erreur lors de l'analyse." }, { status: 500 });
   }

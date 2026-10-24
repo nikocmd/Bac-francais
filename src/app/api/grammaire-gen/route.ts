@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { trackGemini, trackGeminiError } from "@/lib/metrics";
 import { requirePaid } from "@/lib/usage";
 import { checkRateLimit } from "@/lib/rateLimit";
 
@@ -44,10 +45,13 @@ Génère UNIQUEMENT la question, sans explication, sans titre, sans autre texte.
 
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const t0 = Date.now();
     const result = await model.generateContent(prompt);
+    trackGemini("grammaire", result.response.usageMetadata, t0);
     const question = result.response.text().trim();
     return Response.json({ question });
   } catch (err) {
+    trackGeminiError(err);
     console.error(err);
     return Response.json({ error: "Erreur lors de la génération." }, { status: 500 });
   }

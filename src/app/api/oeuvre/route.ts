@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { trackGemini, trackGeminiError } from "@/lib/metrics";
 import { checkFeature, recordUse } from "@/lib/usage";
 import { checkRateLimit } from "@/lib/rateLimit";
 
@@ -45,11 +46,14 @@ RÈGLES DE RÉPONSE :
 
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const t0 = Date.now();
     const result = await model.generateContent(prompt);
+    trackGemini("oeuvre", result.response.usageMetadata, t0);
     const reponse = result.response.text();
     if (usage.userId) await recordUse(usage.userId, "oeuvre");
     return Response.json({ reponse });
   } catch (err) {
+    trackGeminiError(err);
     console.error(err);
     return Response.json({ error: "Erreur lors de la réponse." }, { status: 500 });
   }
