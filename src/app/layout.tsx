@@ -110,11 +110,6 @@ const jsonLd = {
       name: "BacFrançaisAI",
       description: "L'intelligence artificielle pour réussir le Bac de Français",
       inLanguage: "fr-FR",
-      potentialAction: {
-        "@type": "SearchAction",
-        target: { "@type": "EntryPoint", urlTemplate: `${APP_URL}/analyse` },
-        "query-input": "required name=search_term_string",
-      },
     },
     {
       "@type": "SoftwareApplication",
@@ -129,8 +124,14 @@ const jsonLd = {
       offers: [
         {
           "@type": "Offer",
-          name: "Gratuit",
-          price: "0",
+          name: "Basic",
+          price: "7.50",
+          priceCurrency: "EUR",
+        },
+        {
+          "@type": "Offer",
+          name: "Basic annuel",
+          price: "25.00",
           priceCurrency: "EUR",
         },
         {
@@ -180,7 +181,9 @@ export default function RootLayout({
         <main className="flex-1">{children}</main>
         <footer className="border-t border-[#1e1e2e] py-6 text-center text-sm text-[#6b7280]">
           <p>© {new Date().getFullYear()} BacFrançaisAI</p>
-          <div className="mt-2 flex justify-center gap-4">
+          <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1 px-4">
+            <a href="/guides" className="hover:text-[#e8e8f0] transition-colors">Guides du bac de français</a>
+            <span>·</span>
             <a href="/privacy" className="hover:text-[#e8e8f0] transition-colors">Politique de confidentialité</a>
             <span>·</span>
             <a href="/terms" className="hover:text-[#e8e8f0] transition-colors">CGU</a>
