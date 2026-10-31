@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, ChevronRight } from "lucide-react";
-import { GUIDES, getGuide } from "@/content/guides";
+import { GUIDES, getGuide, type Guide } from "@/content/guides";
 
 const SITE = "https://bacfrancaisai.fr";
 
@@ -25,12 +25,26 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
+const PROGRAMME = "oeuvres-programme-bac-francais-2027";
+
+// Keeps "À lire aussi" focused: a work page links to its siblings, the programme page links to every work.
+function relatedGuides(g: Guide): Guide[] {
+  const pick = (slugs: string[]) => slugs.map((s) => getGuide(s)).filter((x): x is Guide => !!x);
+  const methods = GUIDES.filter((x) => !x.kind && x.slug !== g.slug);
+  const oeuvres = GUIDES.filter((x) => x.kind === "oeuvre" && x.slug !== g.slug);
+  if (g.kind === "oeuvre") {
+    return [...pick([PROGRAMME]), ...oeuvres.filter((x) => x.objet === g.objet), ...pick(["oral-bac-francais-2027", "dissertation-bac-francais-methode"])];
+  }
+  if (g.slug === PROGRAMME) return [...oeuvres, ...pick(["oral-bac-francais-2027", "dissertation-bac-francais-methode"])];
+  return methods;
+}
+
 export default async function GuidePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const g = getGuide(slug);
   if (!g) notFound();
   const url = `${SITE}/guides/${g.slug}`;
-  const autres = GUIDES.filter((x) => x.slug !== g.slug);
+  const autres = relatedGuides(g);
 
   const jsonLd = {
     "@context": "https://schema.org",

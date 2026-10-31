@@ -1,6 +1,8 @@
 export type Section = { h2: string; p?: string[]; list?: string[]; cta?: { label: string; href: string } };
 export type Guide = {
   slug: string;
+  kind?: "oeuvre";
+  objet?: "poesie" | "idees" | "roman" | "theatre";
   title: string;
   description: string;
   h1: string;
@@ -11,7 +13,9 @@ export type Guide = {
   updated: string;
 };
 
-export const GUIDES: Guide[] = [
+import { OEUVRE_GUIDES } from "./oeuvres-guides";
+
+const METHOD_GUIDES: Guide[] = [
   {
     slug: "analyse-lineaire-methode",
     title: "Analyse linéaire : la méthode complète pour le bac de français 2027",
@@ -600,5 +604,7 @@ export const GUIDES: Guide[] = [
     updated: "2026-10-31",
   },
 ];
+
+export const GUIDES: Guide[] = [...METHOD_GUIDES, ...OEUVRE_GUIDES];
 
 export const getGuide = (slug: string) => GUIDES.find((g) => g.slug === slug);
