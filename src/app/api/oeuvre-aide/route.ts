@@ -26,35 +26,29 @@ export async function POST(request: Request) {
 
   const prompt = `Tu es un conseiller spécialisé dans le Bac de Français. L'élève n'a PAS ENCORE choisi son œuvre pour l'oral et te pose des questions pour l'aider à choisir.
 
-Voici les œuvres au programme du Bac de Français 2024-2025 :
+Voici les œuvres au programme du Bac de Français pour l'année scolaire 2026-2027 (épreuves de juin 2027), voie générale :
 
 POÉSIE :
-- Les Fleurs du mal, Baudelaire (parcours : Alchimie poétique : la boue et l'or)
-- Les Contemplations, Victor Hugo (parcours : Les Mémoires d'une âme)
-- Alcools, Apollinaire (parcours : Modernité poétique ?)
+- Cahier de Douai, Rimbaud (parcours : Émancipations créatrices)
+- La rage de l'expression, Francis Ponge (parcours : Dans l'atelier du poète)
 - Mes forêts, Hélène Dorion (parcours : La poésie, la nature, l'intime)
-- La Rage de l'expression, Ponge (parcours : Dans l'atelier du poète)
-- Cahier d'un retour au pays natal, Césaire (parcours : La poésie, la nature, l'intime)
 
 LITTÉRATURE D'IDÉES :
-- Les Caractères, La Bruyère (parcours : La comédie sociale)
-- Déclaration des droits de la femme, Olympe de Gouges (parcours : Écrire et combattre pour l'égalité)
-- Gargantua, Rabelais (parcours : Rire et savoir)
-- Essais (Des Cannibales / Des Coches), Montaigne (parcours : Notre monde vient d'en trouver un autre)
-- Lettres persanes, Montesquieu (parcours : Le regard éloigné)
+- Discours de la servitude volontaire, La Boétie (parcours : « Défendre » et « entretenir » la liberté)
+- Entretiens sur la pluralité des mondes, Fontenelle (parcours : Le goût de la science)
+- Lettres d'une Péruvienne, Françoise de Graffigny (parcours : Un nouvel univers s'est offert à mes yeux)
 
-ROMAN :
-- Manon Lescaut, Abbé Prévost (parcours : Personnages en marge, plaisirs du romanesque)
-- La Peau de chagrin, Balzac (parcours : Les romans de l'énergie)
-- Sido / Les Vrilles de la vigne, Colette (parcours : La célébration du monde)
-- Mémoires d'Hadrien, Yourcenar (parcours : Soi-même comme un autre)
+ROMAN ET RÉCIT :
+- Le Chevalier de la charrette, Chrétien de Troyes (parcours : Le roman et l'invention de l'amour)
+- Pot-Bouille, Zola (parcours : Dévoiler les rouages de la société)
+- Pluie et vent sur Télumée Miracle, Simone Schwarz-Bart (parcours : Tisser les mémoires, habiter le monde)
 
 THÉÂTRE :
-- Le Malade imaginaire, Molière (parcours : Spectacle et comédie)
-- Les Fausses Confidences, Marivaux (parcours : Théâtre et stratagème)
-- Le Barbier de Séville, Beaumarchais (parcours : Théâtre et stratagème)
-- Oh les beaux jours, Beckett (parcours : Un théâtre de la condition humaine)
-- Juste la fin du monde, Lagarce (parcours : Crise personnelle, crise familiale)
+- Le Menteur, Corneille (parcours : Mensonge et comédie)
+- On ne badine pas avec l'amour, Musset (parcours : Les jeux du cœur et de la parole)
+- Pour un oui ou pour un non, Nathalie Sarraute (parcours : Théâtre et dispute)
+
+En voie technologique, pour le roman, Pot-Bouille est remplacé par Thérèse Raquin de Zola. Rappelle à l'élève que l'œuvre présentée doit faire partie de celles étudiées dans sa classe.
 
 ${contexte ? `Contexte de la conversation :\n${contexte}` : ""}
 

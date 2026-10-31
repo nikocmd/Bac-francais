@@ -357,6 +357,248 @@ export const GUIDES: Guide[] = [
     published: "2026-10-31",
     updated: "2026-10-31",
   },
+  {
+    slug: "oeuvres-programme-bac-francais-2027",
+    title: "Œuvres au programme du bac de français 2027 : la liste complète",
+    description: "La liste officielle des 12 œuvres au programme du bac de français 2027 (première 2026-2027) avec leurs parcours : Rimbaud, Ponge, Dorion, La Boétie, Fontenelle, Graffigny, Chrétien de Troyes, Zola, Schwarz-Bart, Corneille, Musset, Sarraute.",
+    h1: "Œuvres au programme du bac de français 2027 : la liste complète et les parcours",
+    intro: [
+      "Le programme de français de première comporte douze œuvres, réparties en quatre objets d'étude. Pour chaque objet d'étude, ton professeur choisit une œuvre parmi trois, avec le parcours qui l'accompagne.",
+      "Voici la liste officielle pour l'année scolaire 2026-2027, c'est-à-dire pour les élèves qui passent les épreuves anticipées de français en juin 2027. Elle est fixée par la note de service publiée au Bulletin officiel n° 30 du 24 juillet 2025.",
+    ],
+    sections: [
+      {
+        h2: "La poésie du XIXe au XXIe siècle",
+        list: [
+          "Arthur Rimbaud, Cahier de Douai — parcours « Émancipations créatrices ». Vingt-deux poèmes de jeunesse écrits en 1870, entre fugues, révolte et liberté, de « Première soirée » à « Ma Bohème ».",
+          "Francis Ponge, La rage de l'expression — parcours « Dans l'atelier du poète ». Des poèmes en prose qui montrent l'écriture en train de se faire, brouillons et reprises compris.",
+          "Hélène Dorion, Mes forêts — parcours « La poésie, la nature, l'intime ». Un recueil contemporain où la forêt devient un miroir de l'intériorité.",
+        ],
+      },
+      {
+        h2: "La littérature d'idées du XVIe au XVIIIe siècle",
+        list: [
+          "Étienne de La Boétie, Discours de la servitude volontaire — parcours « “Défendre” et “entretenir” la liberté ». Pourquoi les peuples acceptent-ils d'obéir à un tyran ?",
+          "Fontenelle, Entretiens sur la pluralité des mondes — parcours « Le goût de la science ». Un dialogue galant avec une marquise pour rendre l'astronomie accessible et plaisante.",
+          "Françoise de Graffigny, Lettres d'une Péruvienne — parcours « Un nouvel univers s'est offert à mes yeux ». Une princesse inca découvre la France et en fait une critique lucide, sous forme de lettres.",
+        ],
+      },
+      {
+        h2: "Le roman et le récit du Moyen Âge au XXIe siècle",
+        list: [
+          "Chrétien de Troyes, Le Chevalier de la charrette (édition bilingue) — parcours « Le roman et l'invention de l'amour ». Lancelot prêt à tout, même au déshonneur, pour la reine Guenièvre : l'amour courtois en récit.",
+          "Émile Zola, Pot-Bouille — parcours « Dévoiler les rouages de la société ». Derrière la façade respectable d'un immeuble bourgeois parisien, l'hypocrisie et les ambitions de ses habitants.",
+          "Simone Schwarz-Bart, Pluie et vent sur Télumée Miracle — parcours « Tisser les mémoires, habiter le monde ». En Guadeloupe, la vie de Télumée et d'une lignée de femmes qui résistent au malheur.",
+        ],
+        p: ["En voie technologique, Pot-Bouille est remplacé par un autre roman de Zola, Thérèse Raquin. Vérifie toujours avec ton professeur l'œuvre et le parcours retenus pour ta classe."],
+      },
+      {
+        h2: "Le théâtre du XVIIe au XXIe siècle",
+        list: [
+          "Pierre Corneille, Le Menteur — parcours « Mensonge et comédie ». Dorante invente sans cesse de nouveaux mensonges, jusqu'à s'y perdre.",
+          "Alfred de Musset, On ne badine pas avec l'amour — parcours « Les jeux du cœur et de la parole ». Perdican et Camille jouent avec leurs sentiments, et le jeu tourne mal.",
+          "Nathalie Sarraute, Pour un oui ou pour un non — parcours « Théâtre et dispute ». Deux amis se déchirent à cause d'une simple intonation.",
+        ],
+      },
+      {
+        h2: "Comment ces œuvres sont évaluées",
+        p: [
+          "À l'écrit, en voie générale, le sujet de dissertation porte sur l'une des œuvres au programme et son parcours. À l'oral, les textes que tu expliques viennent en partie de ces œuvres, et la seconde partie de l'épreuve porte sur une œuvre que tu as choisie parmi celles étudiées dans l'année.",
+          "Pour chaque œuvre étudiée en classe, prépare une fiche avec l'intrigue ou la structure, les personnages ou thèmes principaux, le lien avec le parcours et trois ou quatre passages clés que tu sais commenter.",
+        ],
+        cta: { label: "Réviser ton œuvre avec l'IA", href: "/oeuvre" },
+      },
+    ],
+    faq: [
+      { q: "Combien d'œuvres sont au programme du bac de français 2027 ?", a: "Douze œuvres, trois par objet d'étude (poésie, littérature d'idées, roman et récit, théâtre). Le professeur en choisit une par objet d'étude, soit quatre œuvres étudiées en classe." },
+      { q: "Quelles œuvres sont nouvelles pour 2026-2027 ?", a: "Les œuvres de l'objet d'étude roman et récit sont renouvelées : Le Chevalier de la charrette de Chrétien de Troyes, Pot-Bouille de Zola et Pluie et vent sur Télumée Miracle de Simone Schwarz-Bart. Les autres œuvres sont maintenues." },
+      { q: "Les œuvres sont-elles les mêmes en voie technologique ?", a: "Presque. En voie technologique, pour le roman, Pot-Bouille est remplacé par Thérèse Raquin de Zola. Ton professeur t'indiquera les œuvres retenues pour ta classe." },
+      { q: "Quelle œuvre choisir pour la seconde partie de l'oral ?", a: "Celle que tu connais le mieux et dont tu peux parler de façon personnelle : pourquoi elle t'a marqué, un passage précis, ses thèmes. Choisis-la tôt pour avoir le temps de la relire." },
+    ],
+    published: "2026-10-31",
+    updated: "2026-10-31",
+  },
+  {
+    slug: "commentaire-de-texte-methode",
+    title: "Commentaire de texte au bac de français : méthode et plan",
+    description: "Méthode du commentaire de texte pour l'écrit du bac de français : lecture du texte, problématique, plan en axes, introduction, rédaction et conclusion. Les erreurs à éviter.",
+    h1: "Commentaire de texte au bac de français : la méthode complète",
+    intro: [
+      "Le commentaire de texte est l'un des sujets proposés à l'écrit du bac de français, qui dure quatre heures. Contrairement à l'explication linéaire de l'oral, il ne suit pas l'ordre du texte : il s'organise en axes de lecture.",
+      "Bonne nouvelle : les compétences sont les mêmes. Si tu sais repérer des procédés et les interpréter, tu as déjà fait la moitié du chemin.",
+    ],
+    sections: [
+      {
+        h2: "Étape 1 : lire et annoter le texte (environ 45 minutes)",
+        list: [
+          "Lire le texte plusieurs fois, dont une fois à voix basse pour en sentir le rythme.",
+          "Identifier le genre, le registre, l'énonciation et la situation du passage.",
+          "Surligner les procédés marquants et noter en marge l'effet de chacun.",
+          "Repérer ce qui fait l'originalité du texte : c'est souvent là que se trouve la problématique.",
+        ],
+      },
+      {
+        h2: "Étape 2 : la problématique et le plan",
+        p: [
+          "La problématique est la question à laquelle ton commentaire répond. Elle doit porter sur la spécificité du texte : comment l'auteur fait-il ce qu'il fait, et dans quel but ?",
+          "Le plan comporte en général deux ou trois axes. Chaque axe correspond à une idée sur le texte, pas à un procédé. Dans chaque axe, deux ou trois sous-parties développent l'idée avec des citations analysées.",
+        ],
+      },
+      {
+        h2: "Étape 3 : l'introduction",
+        list: [
+          "Une amorce courte qui situe l'auteur, le mouvement ou le thème.",
+          "La présentation du texte : auteur, œuvre, date, sujet de l'extrait.",
+          "La problématique.",
+          "L'annonce du plan.",
+        ],
+      },
+      {
+        h2: "Étape 4 : rédiger le développement",
+        p: [
+          "Chaque paragraphe suit le même schéma : une idée, une citation courte, le procédé, l'effet, puis le lien avec l'axe. Ménage des transitions entre les parties pour que le correcteur suive ton raisonnement.",
+          "Garde au moins quinze minutes pour te relire : orthographe, accords et clarté comptent dans la note.",
+        ],
+        cta: { label: "Voir les procédés d'un texte avec l'IA", href: "/analyse" },
+      },
+      {
+        h2: "Étape 5 : la conclusion",
+        p: ["Elle répond à la problématique en reprenant l'essentiel de chaque axe, puis ouvre sur un autre texte ou une autre œuvre en lien avec le passage."],
+      },
+      {
+        h2: "Les erreurs à éviter",
+        list: [
+          "Paraphraser le texte au lieu de l'analyser.",
+          "Construire un axe par procédé (« les métaphores », « les allitérations »).",
+          "Citer de longs passages sans les commenter.",
+          "Oublier la problématique en cours de route.",
+          "Plaquer un cours sur l'auteur au lieu de parler du texte.",
+        ],
+      },
+    ],
+    faq: [
+      { q: "Combien de parties faut-il dans un commentaire ?", a: "Deux ou trois axes, chacun divisé en deux ou trois sous-parties. L'important est que chaque axe porte une idée sur le texte." },
+      { q: "Quelle est la différence entre commentaire et explication linéaire ?", a: "Le commentaire, à l'écrit, s'organise en axes thématiques. L'explication linéaire, à l'oral, suit l'ordre du texte du début à la fin." },
+      { q: "Combien de temps dure l'écrit du bac de français ?", a: "L'épreuve écrite dure quatre heures. En voie générale, tu choisis entre le commentaire et la dissertation." },
+    ],
+    published: "2026-10-31",
+    updated: "2026-10-31",
+  },
+  {
+    slug: "dissertation-bac-francais-methode",
+    title: "Dissertation au bac de français : méthode, plan et exemples",
+    description: "Méthode de la dissertation pour le bac de français : analyser le sujet, problématiser, construire un plan, choisir ses exemples dans l'œuvre et le parcours, rédiger introduction et conclusion.",
+    h1: "Dissertation au bac de français : la méthode pas à pas",
+    intro: [
+      "En voie générale, la dissertation porte sur l'une des œuvres au programme et son parcours. Elle demande de discuter une question littéraire en s'appuyant sur des exemples précis.",
+      "Elle fait souvent peur, mais c'est un exercice très codifié : avec une méthode solide et une bonne connaissance de ton œuvre, tu peux y obtenir une très bonne note.",
+    ],
+    sections: [
+      {
+        h2: "Étape 1 : analyser le sujet",
+        list: [
+          "Souligner les mots clés et en chercher le sens précis.",
+          "Repérer le type de sujet : une citation à discuter, une question ouverte, une affirmation.",
+          "Reformuler le sujet avec tes propres mots pour être sûr de l'avoir compris.",
+          "Chercher ce qui pose problème : une tension, une limite, un paradoxe.",
+        ],
+      },
+      {
+        h2: "Étape 2 : la problématique",
+        p: ["La problématique transforme le sujet en vraie question à débattre. Elle doit rester fidèle au sujet et à l'œuvre étudiée, sans le déformer."],
+      },
+      {
+        h2: "Étape 3 : construire le plan",
+        p: [
+          "Le plan dialectique (thèse, nuance, dépassement) convient bien aux sujets qui invitent à discuter une affirmation. Le plan thématique, qui explore plusieurs aspects d'une question, convient aux sujets plus ouverts.",
+          "Chaque partie défend une idée, chaque sous-partie un argument, et chaque argument s'appuie sur un exemple précis tiré de l'œuvre ou du parcours.",
+        ],
+      },
+      {
+        h2: "Étape 4 : choisir ses exemples",
+        p: [
+          "Les meilleurs exemples sont précis : une scène, un personnage, une citation courte, analysés en quelques lignes. Un exemple doit prouver l'argument, pas seulement l'illustrer.",
+          "Prépare dès maintenant, pour chaque œuvre étudiée, une dizaine d'exemples classés par thème : c'est le meilleur investissement pour le jour de l'épreuve.",
+        ],
+        cta: { label: "Préparer des exemples sur ton œuvre", href: "/oeuvre" },
+      },
+      {
+        h2: "Étape 5 : introduction et conclusion",
+        list: [
+          "Introduction : amorce, présentation du sujet, problématique, annonce du plan.",
+          "Conclusion : bilan qui répond à la problématique, puis ouverture vers une autre œuvre ou une autre question.",
+        ],
+      },
+      {
+        h2: "Les erreurs à éviter",
+        list: [
+          "Réciter un cours sur l'œuvre au lieu de répondre au sujet.",
+          "Un plan qui ne répond pas à la problématique.",
+          "Des exemples vagues ou résumés sans analyse.",
+          "Oublier les transitions entre les parties.",
+        ],
+      },
+    ],
+    faq: [
+      { q: "La dissertation porte-t-elle sur une œuvre au programme ?", a: "Oui. En voie générale, le sujet de dissertation porte sur l'une des œuvres au programme et son parcours associé." },
+      { q: "Faut-il un plan en trois parties ?", a: "Pas obligatoirement. Deux ou trois parties sont acceptées, l'essentiel est un plan logique qui répond à la problématique." },
+      { q: "Combien d'exemples faut-il ?", a: "Idéalement un exemple précis et analysé par sous-partie. Mieux vaut moins d'exemples bien exploités que beaucoup d'exemples survolés." },
+    ],
+    published: "2026-10-31",
+    updated: "2026-10-31",
+  },
+  {
+    slug: "mouvements-litteraires-bac-francais",
+    title: "Mouvements littéraires : les repères essentiels pour le bac de français",
+    description: "Les grands mouvements littéraires à connaître pour le bac de français : humanisme, baroque, classicisme, Lumières, romantisme, réalisme, naturalisme, symbolisme, surréalisme. Dates, idées et auteurs.",
+    h1: "Les mouvements littéraires à connaître pour le bac de français",
+    intro: [
+      "Situer un texte dans son mouvement littéraire t'aide à le comprendre, à réussir ton introduction et à trouver une ouverture pertinente. Voici les repères essentiels, du XVIe au XXe siècle, avec les idées clés et quelques auteurs.",
+      "Retiens surtout les idées et les grandes dates : le jury attend des repères justes, pas une liste apprise par cœur.",
+    ],
+    sections: [
+      {
+        h2: "XVIe siècle : l'humanisme",
+        p: ["Confiance en l'homme, redécouverte des textes antiques, importance de l'éducation et de l'esprit critique. Auteurs : Rabelais, Montaigne, Du Bellay, Ronsard, La Boétie."],
+      },
+      {
+        h2: "Fin XVIe et début XVIIe siècle : le baroque",
+        p: ["Goût du mouvement, de l'illusion, des apparences et de l'instabilité du monde. Auteurs : Agrippa d'Aubigné, Jean de Sponde, et le théâtre de Corneille à ses débuts."],
+      },
+      {
+        h2: "XVIIe siècle : le classicisme",
+        p: ["Recherche de l'ordre, de la mesure, de la raison et de la vraisemblance. Au théâtre, la règle des trois unités. Auteurs : Molière, Racine, Corneille, La Fontaine, La Bruyère, Madame de La Fayette."],
+      },
+      {
+        h2: "XVIIIe siècle : les Lumières",
+        p: ["Combat de la raison contre les préjugés, l'intolérance et l'arbitraire du pouvoir. Diffusion des savoirs avec l'Encyclopédie. Auteurs : Voltaire, Montesquieu, Diderot, Rousseau, Fontenelle en précurseur."],
+      },
+      {
+        h2: "Première moitié du XIXe siècle : le romantisme",
+        p: ["Expression du moi, des sentiments, de la nature et de la mélancolie, révolte contre les règles classiques. Auteurs : Victor Hugo, Lamartine, Musset, Vigny, Chateaubriand."],
+      },
+      {
+        h2: "XIXe siècle : réalisme et naturalisme",
+        p: ["Le réalisme veut représenter le réel tel qu'il est, y compris les milieux modestes : Balzac, Stendhal, Flaubert. Le naturalisme pousse cette démarche vers une méthode quasi scientifique, qui étudie l'influence de l'hérédité et du milieu : Zola, Maupassant."],
+      },
+      {
+        h2: "Fin XIXe siècle : le symbolisme",
+        p: ["La poésie suggère plutôt qu'elle ne décrit, par les images, les correspondances et la musique des mots. Auteurs : Baudelaire en précurseur, Verlaine, Rimbaud, Mallarmé."],
+      },
+      {
+        h2: "XXe siècle : surréalisme, absurde et nouvelles formes",
+        p: ["Le surréalisme explore le rêve, l'inconscient et le hasard : Breton, Éluard, Aragon. Après 1945, le théâtre de l'absurde (Ionesco, Beckett) et le Nouveau Roman (Sarraute, Robbe-Grillet) remettent en cause les formes traditionnelles."],
+        cta: { label: "Situer ton texte avec une analyse IA", href: "/analyse" },
+      },
+    ],
+    faq: [
+      { q: "Faut-il connaître les mouvements littéraires pour l'oral ?", a: "Oui, au moins dans les grandes lignes : ils aident à situer le texte dans l'introduction et à proposer une ouverture pertinente en conclusion." },
+      { q: "Quelle est la différence entre réalisme et naturalisme ?", a: "Le réalisme cherche à représenter fidèlement la société. Le naturalisme, avec Zola, va plus loin en adoptant une démarche presque scientifique qui montre l'influence de l'hérédité et du milieu sur les personnages." },
+      { q: "Rimbaud est-il un poète symboliste ?", a: "Rimbaud est souvent rattaché au symbolisme, mais son œuvre déborde les catégories. Le Cahier de Douai, au programme, rassemble ses poèmes de jeunesse marqués par la révolte et le désir de liberté." },
+    ],
+    published: "2026-10-31",
+    updated: "2026-10-31",
+  },
 ];
 
 export const getGuide = (slug: string) => GUIDES.find((g) => g.slug === slug);

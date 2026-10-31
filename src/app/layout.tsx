@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     template: "%s | BacFrançaisAI",
   },
   description:
-    "BacFrançaisAI : l'intelligence artificielle pour le Bac de Français. Analyses linéaires en 30 secondes, simulation d'oral avec jury IA, mode examen BOEN 2024. Terminale générale et technologique.",
+    "BacFrançaisAI : l'intelligence artificielle pour le Bac de Français. Analyses linéaires en 30 secondes, simulation d'oral avec jury IA, mode examen BOEN 2024. Première générale et technologique.",
   keywords: [
     "bac français",
     "bac de français",
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     "oral bac français",
     "préparation oral bac",
     "examen bac français",
-    "bac français terminale",
+    "bac français première",
     "bac français 2024",
     "bac français 2025",
     "simulation oral bac",
@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     siteName: "BacFrançaisAI",
     title: "BacFrançaisAI — L'IA pour réussir ton Bac de Français",
     description:
-      "Analyses linéaires en 30 secondes, simulation d'oral avec jury IA, mode examen BOEN 2024. L'outil IA indispensable pour les élèves de Terminale.",
+      "Analyses linéaires en 30 secondes, simulation d'oral avec jury IA, mode examen BOEN 2024. L'outil IA indispensable pour les élèves de Première.",
     images: [
       {
         url: "/og-image.png",

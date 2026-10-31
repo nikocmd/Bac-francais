@@ -44,7 +44,7 @@ const mime = (audio.type || "audio/webm").split(";")[0].toLowerCase();
   groqForm.append("language", "fr");
   groqForm.append("response_format", "verbose_json");
   groqForm.append("temperature", "0");
-  groqForm.append("prompt", "Transcription d'un élève de terminale qui présente un oral de bac de français. Il parle de littérature, d'analyse linéaire, de figures de style, de mouvements littéraires, d'auteurs classiques. Vocabulaire : métaphore, hyperbole, oxymore, chiasme, anaphore, péripétie, dénouement, alexandrin, sonnet, tragédie, comédie, baroque, classicisme, romantisme, réalisme, Molière, Racine, Corneille, Hugo, Baudelaire, Flaubert, Zola.");
+  groqForm.append("prompt", "Transcription d'un élève de première qui présente un oral de bac de français. Il parle de littérature, d'analyse linéaire, de figures de style, de mouvements littéraires, d'auteurs classiques. Vocabulaire : métaphore, hyperbole, oxymore, chiasme, anaphore, péripétie, dénouement, alexandrin, sonnet, tragédie, comédie, baroque, classicisme, romantisme, réalisme, Rimbaud, Ponge, Dorion, La Boétie, Fontenelle, Graffigny, Chrétien de Troyes, Zola, Schwarz-Bart, Corneille, Musset, Sarraute, Molière, Racine, Hugo, Baudelaire.");
 
   const t0 = Date.now();
   const res = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {

@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import ToolIntro from "@/components/ToolIntro";
 
 export const metadata: Metadata = {
   title: "Mode Examen — Simulation jury Bac de Français",
@@ -14,5 +15,15 @@ export const metadata: Metadata = {
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <ToolIntro
+        titre="Simuler l'oral du bac de français en conditions réelles"
+        texte="Le mode examen reproduit l'épreuve : un texte tiré dans ta liste, 30 minutes de préparation, l'explication linéaire, la question de grammaire, puis la présentation de ton œuvre. Tu reçois une note sur 20 selon le barème de l'épreuve."
+        etapes={["Choisis le mode complet ou express.", "Prépare-toi pendant le temps imparti.", "Passe l'oral et reçois ton évaluation détaillée."]}
+        guides={["oral-bac-francais-2027", "question-de-grammaire-bac-francais", "oeuvres-programme-bac-francais-2027"]}
+      />
+    </>
+  );
 }
