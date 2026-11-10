@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, ChevronRight } from "lucide-react";
 import { GUIDES, getGuide, type Guide } from "@/content/guides";
+import { ANALYSES } from "@/content/analyses";
 
 const SITE = "https://bacfrancaisai.fr";
 
@@ -45,6 +46,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
   if (!g) notFound();
   const url = `${SITE}/guides/${g.slug}`;
   const autres = relatedGuides(g);
+  const analyses = ANALYSES.filter((a) => a.oeuvreGuide === g.slug || g.slug === "analyse-lineaire-methode");
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -112,6 +114,17 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
           )}
         </section>
       ))}
+
+      {analyses.length > 0 && (
+        <section className="mt-12">
+          <h2 className="text-2xl font-black text-white">Analyses linéaires rédigées</h2>
+          <ul className="mt-4 space-y-2 pl-5 list-disc marker:text-[#1a9fff]">
+            {analyses.map((a) => (
+              <li key={a.slug}><Link href={`/analyses-lineaires/${a.slug}`} className="text-[#1a9fff] hover:text-[#00d9ff]">{a.h1}</Link></li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="mt-14">
         <h2 className="text-2xl font-black text-white">Questions fréquentes</h2>

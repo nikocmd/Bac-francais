@@ -184,6 +184,8 @@ export default function RootLayout({
           <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1 px-4">
             <a href="/guides" className="hover:text-[#e8e8f0] transition-colors">Guides du bac de français</a>
             <span>·</span>
+            <a href="/analyses-lineaires" className="hover:text-[#e8e8f0] transition-colors">Analyses linéaires</a>
+            <span>·</span>
             <a href="/privacy" className="hover:text-[#e8e8f0] transition-colors">Politique de confidentialité</a>
             <span>·</span>
             <a href="/terms" className="hover:text-[#e8e8f0] transition-colors">CGU</a>

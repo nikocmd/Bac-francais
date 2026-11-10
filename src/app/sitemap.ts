@@ -1,5 +1,6 @@
 import { MetadataRoute } from "next";
 import { GUIDES } from "@/content/guides";
+import { ANALYSES } from "@/content/analyses";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = "https://bacfrancaisai.fr";
@@ -12,6 +13,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/premium`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
     { url: `${base}/guides`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
     ...GUIDES.map((g) => ({ url: `${base}/guides/${g.slug}`, lastModified: new Date(g.updated), changeFrequency: "monthly" as const, priority: 0.7 })),
+    { url: `${base}/analyses-lineaires`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.8 },
+    ...ANALYSES.map((a) => ({ url: `${base}/analyses-lineaires/${a.slug}`, lastModified: new Date(a.updated), changeFrequency: "monthly" as const, priority: 0.7 })),
     { url: `${base}/privacy`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.3 },
     { url: `${base}/terms`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.3 },
   ];

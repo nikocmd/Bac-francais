@@ -2,6 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BookOpen, Mic, Library, GraduationCap, ArrowRight, CheckCircle, Crown, Zap } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { GUIDES } from "@/content/guides";
+import { ANALYSES } from "@/content/analyses";
 
 const VITRINE_ANALYSE = {
   texte: `C'est un trou de verdure où chante une rivière,
@@ -317,6 +319,31 @@ export default async function Home() {
               <h3 className="text-base font-black text-white mb-2 group-hover:text-[#00d9ff] transition-colors">{title}</h3>
               <p className="text-[#6b7280] text-sm leading-relaxed">{desc}</p>
             </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ── RESSOURCES ── */}
+      <section className="py-8 space-y-6">
+        <div className="text-center space-y-2">
+          <h2 className="text-3xl font-black text-white">Réviser le bac de français 2027</h2>
+          <p className="text-[#6b7280] text-sm">Méthodes, fiches des œuvres au programme et analyses linéaires rédigées, en accès libre.</p>
+        </div>
+        <div className="grid gap-5 md:grid-cols-3">
+          {[
+            { titre: "Méthodes", href: "/guides", tout: "Tous les guides", liens: GUIDES.filter((g) => !g.kind).map((g) => ({ href: `/guides/${g.slug}`, label: g.title.split(" : ")[0] })) },
+            { titre: "Œuvres au programme", href: "/guides/oeuvres-programme-bac-francais-2027", tout: "La liste complète", liens: GUIDES.filter((g) => g.kind === "oeuvre").map((g) => ({ href: `/guides/${g.slug}`, label: g.title.split(" : ")[0] })) },
+            { titre: "Analyses linéaires", href: "/analyses-lineaires", tout: "Toutes les analyses", liens: ANALYSES.map((a) => ({ href: `/analyses-lineaires/${a.slug}`, label: a.h1.split(" : ")[0] })) },
+          ].map((col) => (
+            <div key={col.titre} className="p-6 rounded-2xl bg-[#0a1543]/60 border border-[#1a9fff]/20">
+              <h3 className="text-base font-black text-white">{col.titre}</h3>
+              <ul className="mt-3 space-y-2 text-sm">
+                {col.liens.map((l) => (
+                  <li key={l.href}><Link href={l.href} className="text-[#a0b0d0] hover:text-[#00d9ff] transition-colors">{l.label}</Link></li>
+                ))}
+              </ul>
+              <Link href={col.href} className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-[#1a9fff] hover:text-[#00d9ff]">{col.tout} <ArrowRight size={14} /></Link>
+            </div>
           ))}
         </div>
       </section>
